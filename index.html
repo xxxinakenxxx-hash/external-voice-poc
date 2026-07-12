@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>外部音声入力検証</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f1ea;
+        --panel: #ffffff;
+        --panel-soft: #fbfaf7;
+        --text: #1e2936;
+        --muted: #5d6877;
+        --accent: #1b4d72;
+        --accent-soft: #e5eff7;
+        --accent-strong: #d97706;
+        --accent-strong-soft: #fff3db;
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+        --success: #157347;
+        --border: #d7dee6;
+        --shadow: 0 16px 42px rgba(27, 77, 114, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(217, 119, 6, 0.10), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(27, 77, 114, 0.12), transparent 26%),
+          linear-gradient(180deg, #faf8f3 0%, var(--bg) 100%);
+      }
+
+      main {
+        width: min(100%, 760px);
+        margin: 0 auto;
+        padding: 14px 12px 28px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 20px 18px;
+        background: linear-gradient(135deg, rgba(27, 77, 114, 0.98), rgba(25, 58, 91, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -50px;
+        top: -50px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.7rem;
+        line-height: 1.2;
+      }
+
+      .hero p {
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .section-title {
+        margin: 0 0 8px;
+        font-size: 0.94rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        color: var(--muted);
+      }
+
+      .explain {
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid #f2d7a9;
+        background: var(--accent-strong-soft);
+        color: #8a4d0b;
+        font-weight: 700;
+      }
+
+      .control-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .button-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mic-button,
+      .clear-button {
+        appearance: none;
+        border: none;
+        border-radius: 18px;
+        min-height: 48px;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .mic-button {
+        background: linear-gradient(180deg, #ef9b34 0%, #d97706 100%);
+        color: #fff;
+        box-shadow: 0 14px 24px rgba(217, 119, 6, 0.26);
+      }
+
+      .mic-button.is-listening {
+        background: linear-gradient(180deg, #e45545 0%, #b42318 100%);
+        box-shadow: 0 14px 24px rgba(180, 35, 24, 0.24);
+      }
+
+      .clear-button {
+        background: #eef3f7;
+        color: var(--accent);
+        border: 1px solid var(--border);
+      }
+
+      .mic-button:active,
+      .clear-button:active {
+        transform: translateY(1px);
+      }
+
+      .mic-button:disabled,
+      .clear-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.56;
+        box-shadow: none;
+      }
+
+      .status {
+        min-height: 1.5em;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .status.is-listening {
+        color: #b55a00;
+      }
+
+      .status.is-error {
+        color: var(--danger);
+      }
+
+      .status.is-success {
+        color: var(--success);
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 220px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 14px 16px;
+        resize: vertical;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text);
+        background: #fff;
+        outline: none;
+      }
+
+      .textarea:focus {
+        border-color: #9ab7cf;
+        box-shadow: 0 0 0 4px rgba(27, 77, 114, 0.12);
+      }
+
+      .textarea::placeholder {
+        color: #8794a3;
+      }
+
+      .textarea-wrap,
+      .env-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .subnote {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+
+      .message {
+        margin: 0;
+        border-radius: 16px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        word-break: break-word;
+      }
+
+      .message.is-error {
+        background: var(--danger-soft);
+        border-color: #f5c2c7;
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .message.is-info {
+        background: var(--accent-soft);
+        border-color: #c9dcea;
+        color: var(--accent);
+      }
+
+      .env-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .env-item {
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .env-key {
+        margin: 0 0 4px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .env-value {
+        margin: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (min-width: 640px) {
+        main {
+          padding: 24px 16px 36px;
+        }
+
+        .hero {
+          padding: 26px 24px;
+        }
+
+        h1 {
+          font-size: 1.9rem;
+        }
+
+        .button-row {
+          grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="stack">
+        <section class="hero" aria-label="検証画面の見出し">
+          <p class="eyebrow">External HTTPS Voice POC</p>
+          <h1>外部音声入力検証</h1>
+          <p>GAS、AI、スプレッドシートには接続しない、Web Speech API の動作確認だけを行う静的ページです。</p>
+        </section>
+
+        <section class="card" aria-labelledby="about-title">
+          <p class="section-title" id="about-title">検証の説明</p>
+          <p class="explain">
+            このページは GitHub＋Vercel などの通常の HTTPS 環境で開き、マイク開始・停止・追記・復元だけを確認します。
+          </p>
+        </section>
+
+        <section class="card control-grid" aria-labelledby="control-title">
+          <div>
+            <p class="section-title" id="control-title">音声入力</p>
+            <div id="recognitionStatus" class="status">待機中</div>
+          </div>
+
+          <div class="button-row">
+            <button id="micButton" class="mic-button" type="button" aria-pressed="false">マイク開始</button>
+            <button id="clearButton" class="clear-button" type="button">入力内容を消去</button>
+          </div>
+
+          <div class="textarea-wrap">
+            <label class="section-title" for="textInput">認識結果・編集欄</label>
+            <textarea id="textInput" class="textarea" placeholder="認識した文章が末尾へ追記されます。ここで編集もできます。"></textarea>
+            <p class="subnote">確定結果だけを追記します。途中結果は保存しません。</p>
+          </div>
+
+          <p id="errorMessage" class="message is-error hidden" role="alert" aria-live="assertive"></p>
+          <p id="infoMessage" class="message is-info hidden" aria-live="polite"></p>
+        </section>
+
+        <section class="card env-grid" aria-labelledby="env-title">
+          <p class="section-title" id="env-title">環境確認欄</p>
+          <div class="env-list" id="envList"></div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const STORAGE_KEY = 'external_voice_poc_text';
+
+      const elements = {
+        micButton: document.getElementById('micButton'),
+        clearButton: document.getElementById('clearButton'),
+        textInput: document.getElementById('textInput'),
+        recognitionStatus: document.getElementById('recognitionStatus'),
+        errorMessage: document.getElementById('errorMessage'),
+        infoMessage: document.getElementById('infoMessage'),
+        envList: document.getElementById('envList'),
+      };
+
+      const state = {
+        recognition: null,
+        supported: false,
+        listening: false,
+        starting: false,
+      };
+
+      function safeString(value) {
+        return String(value == null ? '' : value);
+      }
+
+      function toggleHidden(element, hidden) {
+        element.classList.toggle('hidden', hidden);
+      }
+
+      function renderStatus(text, kind) {
+        elements.recognitionStatus.textContent = text;
+        elements.recognitionStatus.className = 'status';
+        if (kind) {
+          elements.recognitionStatus.classList.add(`is-${kind}`);
+        }
+      }
+
+      function showError(message) {
+        elements.errorMessage.textContent = message;
+        toggleHidden(elements.errorMessage, false);
+      }
+
+      function clearError() {
+        elements.errorMessage.textContent = '';
+        toggleHidden(elements.errorMessage, true);
+      }
+
+      function showInfo(message) {
+        elements.infoMessage.textContent = message;
+        toggleHidden(elements.infoMessage, false);
+      }
+
+      function clearInfo() {
+        elements.infoMessage.textContent = '';
+        toggleHidden(elements.infoMessage, true);
+      }
+
+      function saveText() {
+        const value = elements.textInput.value;
+        if (!value) {
+          localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+
+        localStorage.setItem(STORAGE_KEY, value);
+      }
+
+      function restoreText() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === null) {
+          return;
+        }
+
+        elements.textInput.value = saved;
+      }
+
+      function clearSavedText() {
+        elements.textInput.value = '';
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      function appendTranscript(transcript) {
+        const text = safeString(transcript).trim();
+        if (!text) {
+          return;
+        }
+
+        const current = elements.textInput.value;
+        elements.textInput.value = current ? `${current}\n${text}` : text;
+        elements.textInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+        const length = elements.textInput.value.length;
+        if (typeof elements.textInput.setSelectionRange === 'function') {
+          elements.textInput.focus();
+          elements.textInput.setSelectionRange(length, length);
+        }
+      }
+
+      function getSpeechRecognitionConstructor() {
+        return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+      }
+
+      function setButtonState() {
+        elements.micButton.disabled = !state.supported;
+        elements.clearButton.disabled = false;
+        elements.micButton.classList.toggle('is-listening', state.listening);
+        elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
+        elements.micButton.textContent = state.listening ? 'マイク停止' : 'マイク開始';
+      }
+
+      function updateIdleState() {
+        state.listening = false;
+        state.starting = false;
+        renderStatus('待機中', '');
+        setButtonState();
+      }
+
+      function updateListeningState() {
+        state.listening = true;
+        state.starting = false;
+        renderStatus('認識中', 'listening');
+        clearError();
+        setButtonState();
+      }
+
+      function handleSpeechError(errorCode) {
+        const code = safeString(errorCode);
+        let message = '音声入力を開始できませんでした。もう一度お試しください。';
+
+        if (code === 'not-allowed' || code === 'service-not-allowed') {
+          message = 'マイクの使用が許可されていません。ブラウザのマイク権限を確認してください。';
+        } else if (code === 'no-speech') {
+          message = '音声を認識できませんでした。もう一度マイクを押してください。';
+        } else if (code === 'audio-capture') {
+          message = 'マイクを利用できません。端末のマイク設定を確認してください。';
+        } else if (code === 'network') {
+          message = '音声認識サービスへ接続できませんでした。';
+        }
+
+        if (code) {
+          message = `${message}（${code}）`;
+        }
+
+        showError(message);
+        renderStatus('エラー', 'error');
+      }
+
+      function stopRecognition() {
+        if (!state.recognition) {
+          return;
+        }
+
+        try {
+          state.recognition.stop();
+        } catch (error) {
+          updateIdleState();
+        }
+      }
+
+      function startRecognition() {
+        if (!state.recognition || state.listening || state.starting) {
+          return;
+        }
+
+        clearError();
+        clearInfo();
+        state.starting = true;
+        renderStatus('認識を開始しています…', '');
+
+        try {
+          state.recognition.start();
+        } catch (error) {
+          state.starting = false;
+          handleSpeechError(error && error.name ? error.name : '');
+        }
+      }
+
+      function toggleRecognition() {
+        if (!state.supported) {
+          return;
+        }
+
+        if (state.listening) {
+          stopRecognition();
+          return;
+        }
+
+        startRecognition();
+      }
+
+      function createRecognition() {
+        const Ctor = getSpeechRecognitionConstructor();
+        if (!Ctor) {
+          state.supported = false;
+          renderStatus('このブラウザは Web Speech API に非対応です', 'error');
+          showInfo('この端末では音声認識を開始できません。入力欄の編集のみ利用できます。');
+          setButtonState();
+          return null;
+        }
+
+        state.supported = true;
+        const recognition = new Ctor();
+        recognition.lang = 'ja-JP';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          updateListeningState();
+        };
+
+        recognition.onresult = (event) => {
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (result && result.isFinal && result[0] && result[0].transcript) {
+              appendTranscript(result[0].transcript);
+            }
+          }
+        };
+
+        recognition.onerror = (event) => {
+          state.starting = false;
+          state.listening = false;
+          const errorCode = event && event.error ? event.error : '';
+          handleSpeechError(errorCode);
+          setButtonState();
+        };
+
+        recognition.onend = () => {
+          state.starting = false;
+          state.listening = false;
+          if (!elements.errorMessage.classList.contains('hidden')) {
+            renderStatus('停止しました', 'error');
+          } else {
+            renderStatus('待機中', '');
+          }
+          setButtonState();
+        };
+
+        return recognition;
+      }
+
+      function renderEnvironment() {
+        const rows = [
+          ['window.isSecureContext', String(window.isSecureContext)],
+          ['window.location.origin', String(window.location.origin)],
+          ['window.top === window.self', String(window.top === window.self)],
+          ['typeof window.SpeechRecognition', typeof window.SpeechRecognition],
+          ['typeof window.webkitSpeechRecognition', typeof window.webkitSpeechRecognition],
+          ['userAgent', navigator.userAgent],
+        ];
+
+        elements.envList.innerHTML = rows
+          .map(([key, value]) => `
+            <div class="env-item">
+              <p class="env-key">${key}</p>
+              <p class="env-value">${value}</p>
+            </div>
+          `)
+          .join('');
+      }
+
+      function syncSavedStateNotice() {
+        if (elements.textInput.value) {
+          showInfo('入力途中の内容を保存しています。再アクセス時に復元できます。');
+        } else {
+          clearInfo();
+        }
+      }
+
+      function handleTextChange() {
+        saveText();
+        syncSavedStateNotice();
+      }
+
+      function handleClearClick() {
+        if (state.listening) {
+          stopRecognition();
+        }
+
+        clearSavedText();
+        clearError();
+        clearInfo();
+        updateIdleState();
+        elements.textInput.focus();
+      }
+
+      function bindEvents() {
+        elements.micButton.addEventListener('click', toggleRecognition);
+        elements.clearButton.addEventListener('click', handleClearClick);
+        elements.textInput.addEventListener('input', handleTextChange);
+        elements.textInput.addEventListener('change', handleTextChange);
+        elements.textInput.addEventListener('blur', saveText);
+        window.addEventListener('pagehide', saveText);
+      }
+
+      function initializePage() {
+        renderEnvironment();
+        restoreText();
+        bindEvents();
+
+        state.recognition = createRecognition();
+        syncSavedStateNotice();
+        setButtonState();
+
+        if (elements.textInput.value) {
+          renderStatus('復元済みの入力があります', '');
+        } else if (!state.supported) {
+          renderStatus('このブラウザは Web Speech API に非対応です', 'error');
+        } else {
+          renderStatus('待機中', '');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+  </body>
+</html>
