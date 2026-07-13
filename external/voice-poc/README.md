@@ -20,6 +20,12 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - 使用する Content-Type は、不要なプリフライトを避けるための `text/plain;charset=UTF-8` です
 - 応答は成功・失敗・返ってきたJSON本文の表示で確認します
 
+## EX-03R 追記
+
+- 送信先URL の入力欄は、EX-03R の送信API 用デプロイB URL を貼り付けて差し替える想定です
+- 音声入力部分は変更しません
+- 送信データは EX-02 と同じ固定値を維持します
+
 ## 確認対象端末
 
 - Android + Chrome

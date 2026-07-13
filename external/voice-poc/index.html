@@ -416,16 +416,16 @@
         <section class="card gas-grid" aria-labelledby="gas-title">
           <p class="section-title" id="gas-title">GAS通信検証</p>
           <p class="explain">
-            検証専用GASへ、固定の検証データだけをPOSTして応答を表示します。GAS URLは手入力です。
+            検証専用GASへ、固定の検証データだけをPOSTして応答を表示します。送信先はデプロイBのURLを手入力で差し替えます。
           </p>
 
           <div class="gas-form">
-            <label class="section-title" for="gasUrlInput">GAS検証用URL</label>
+            <label class="section-title" for="gasUrlInput">送信先URL</label>
             <input
               id="gasUrlInput"
               class="text-input"
               type="url"
-              placeholder="https://script.google.com/macros/s/.../exec"
+              placeholder="デプロイBのURLを貼り付ける"
               autocomplete="off"
               autocapitalize="off"
               spellcheck="false"
