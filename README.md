@@ -11,6 +11,15 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - `index.html` だけで動く静的ページです
 - GitHub＋Vercel で HTTPS 公開して確認する想定です
 
+## EX-02 通信検証
+
+- 画面下部に、検証専用GASへPOSTするための入力欄と送信ボタンがあります
+- GAS URL はコードに固定せず、入力欄へ手入力します
+- 送信する値は固定で、`token=EX02_DUMMY_TOKEN` と `text=EX-02 communication test` だけです
+- URL や検証データは localStorage に保存しません
+- 使用する Content-Type は、不要なプリフライトを避けるための `text/plain;charset=UTF-8` です
+- 応答は成功・失敗・返ってきたJSON本文の表示で確認します
+
 ## 確認対象端末
 
 - Android + Chrome
@@ -41,4 +50,4 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - `external_voice_poc_text` を localStorage のキーとして使います
 - `unsent_text` は読み書きしません
 - interimResults の途中結果は保存しません
-
+- EX-02 の検証UIは、音声入力側の localStorage 保存とは別扱いです
