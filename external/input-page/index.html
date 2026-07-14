@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>外部入力専用マイクページ</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f5f5;
+        --surface: #ffffff;
+        --surface-soft: #f7f9fc;
+        --text: #163047;
+        --muted: #5f6f81;
+        --line: #d7e0ea;
+        --primary: #1a3a5c;
+        --primary-soft: #dbe7f3;
+        --accent: #e8913a;
+        --accent-soft: #fff1dd;
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+        --success: #157347;
+        --shadow: 0 18px 40px rgba(22, 48, 71, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(232, 145, 58, 0.15), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(26, 58, 92, 0.12), transparent 26%),
+          linear-gradient(180deg, #fafbfc 0%, var(--bg) 100%);
+      }
+
+      main {
+        width: min(100%, 780px);
+        margin: 0 auto;
+        padding: 16px 12px 28px;
+      }
+
+      .page {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 20px 18px 18px;
+        color: #fff;
+        background: linear-gradient(145deg, #24476d 0%, #1a3a5c 100%);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        top: -42px;
+        right: -34px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        line-height: 1.18;
+      }
+
+      .hero p {
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .panel {
+        background: var(--surface);
+        padding: 16px;
+      }
+
+      .section-title {
+        margin: 0 0 8px;
+        font-size: 0.94rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--muted);
+      }
+
+      .notice,
+      .status,
+      .result {
+        border-radius: 16px;
+        border: 1px solid var(--line);
+      }
+
+      .notice {
+        margin: 0;
+        padding: 12px 14px;
+        background: var(--accent-soft);
+        color: #8a4d0b;
+        font-weight: 700;
+      }
+
+      .status {
+        min-height: 1.5em;
+        margin: 0;
+        padding: 10px 12px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .status.is-listening {
+        background: #fff5eb;
+        color: #a55409;
+      }
+
+      .status.is-error {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .status.is-success {
+        background: #eaf6ef;
+        color: var(--success);
+      }
+
+      .mic-button,
+      .send-button,
+      .secondary-button {
+        appearance: none;
+        border: none;
+        min-height: 52px;
+        width: 100%;
+        border-radius: 18px;
+        padding: 14px 16px;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .mic-button {
+        color: #fff;
+        background: linear-gradient(180deg, #f0a54a 0%, var(--accent) 100%);
+        box-shadow: 0 16px 26px rgba(232, 145, 58, 0.26);
+      }
+
+      .mic-button.is-listening {
+        background: linear-gradient(180deg, #e05244 0%, #b42318 100%);
+        box-shadow: 0 16px 26px rgba(180, 35, 24, 0.26);
+      }
+
+      .send-button {
+        color: #fff;
+        background: linear-gradient(180deg, #24527f 0%, var(--primary) 100%);
+        box-shadow: 0 16px 26px rgba(26, 58, 92, 0.22);
+      }
+
+      .secondary-button {
+        color: var(--primary);
+        background: #eef3f8;
+        border: 1px solid var(--line);
+      }
+
+      .mic-button:active,
+      .send-button:active,
+      .secondary-button:active {
+        transform: translateY(1px);
+      }
+
+      .mic-button:disabled,
+      .send-button:disabled,
+      .secondary-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.56;
+        box-shadow: none;
+      }
+
+      .button-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field-label {
+        margin: 0;
+        font-size: 0.94rem;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 240px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px 16px;
+        resize: vertical;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text);
+        background: #fff;
+        outline: none;
+      }
+
+      .textarea:focus {
+        border-color: #98b3cb;
+        box-shadow: 0 0 0 4px rgba(26, 58, 92, 0.12);
+      }
+
+      .textarea::placeholder {
+        color: #8795a6;
+      }
+
+      .actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .result {
+        min-height: 120px;
+        margin: 0;
+        padding: 12px 14px;
+        background: var(--surface-soft);
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .result.is-empty {
+        color: #7f8d9b;
+      }
+
+      .helper-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (min-width: 640px) {
+        main {
+          padding: 24px 16px 36px;
+        }
+
+        .hero {
+          padding: 26px 24px 24px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .button-row {
+          grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="page">
+        <section class="hero" aria-label="外部入力専用マイクページの見出し">
+          <p class="eyebrow">External Input Page</p>
+          <h1>外部入力専用マイクページ</h1>
+          <p>音声入力を主手段にした、本番用の外部入力ページです。GAS にはまだ接続しません。</p>
+        </section>
+
+        <section class="panel" aria-labelledby="purpose-title">
+          <p class="section-title" id="purpose-title">このページの役割</p>
+          <p class="notice">ここでは音声認識、手入力、未送信テキストの保全だけを扱います。送信先は EX-06 で接続します。</p>
+        </section>
+
+        <section class="panel" aria-labelledby="voice-title">
+          <p class="section-title" id="voice-title">音声入力</p>
+          <p id="voiceStatus" class="status">待機中</p>
+          <div class="button-row" style="margin-top: 10px;">
+            <button id="micButton" class="mic-button" type="button" aria-pressed="false">マイク開始</button>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label class="field-label" for="memoInput">入力欄</label>
+            <textarea
+              id="memoInput"
+              class="textarea"
+              placeholder="認識した内容が末尾へ追記されます。手入力や編集もできます。"
+            ></textarea>
+            <p class="helper-text">認識結果は上書きせず、末尾へ追記します。</p>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="send-title">
+          <p class="section-title" id="send-title">送信</p>
+          <div class="actions">
+            <button id="sendButton" class="send-button" type="button">送信</button>
+            <p id="sendStatus" class="status">未送信</p>
+            <p id="unsentNotice" class="notice hidden">前回の入力が未送信です。送信してください</p>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <p class="field-label">結果表示</p>
+            <pre id="resultArea" class="result is-empty" aria-live="polite">（EX-06で接続予定）</pre>
+            <p class="helper-text">本工程では POST を行わず、ダミー表示で処理を終えます。</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const STORAGE_KEY = 'unsent_text';
+
+      const elements = {
+        micButton: document.getElementById('micButton'),
+        resetButton: document.getElementById('resetButton'),
+        memoInput: document.getElementById('memoInput'),
+        voiceStatus: document.getElementById('voiceStatus'),
+        sendButton: document.getElementById('sendButton'),
+        sendStatus: document.getElementById('sendStatus'),
+        unsentNotice: document.getElementById('unsentNotice'),
+        resultArea: document.getElementById('resultArea'),
+      };
+
+      const state = {
+        recognition: null,
+        supported: false,
+        listening: false,
+        starting: false,
+        sending: false,
+      };
+
+      function setStatus(element, text, kind) {
+        element.textContent = text;
+        element.className = 'status';
+        if (kind) {
+          element.classList.add(`is-${kind}`);
+        }
+      }
+
+      function setResult(text, empty) {
+        elements.resultArea.textContent = text;
+        elements.resultArea.classList.toggle('is-empty', Boolean(empty));
+      }
+
+      function showUnsentNotice(show) {
+        elements.unsentNotice.classList.toggle('hidden', !show);
+      }
+
+      function readSavedText() {
+        return localStorage.getItem(STORAGE_KEY);
+      }
+
+      function saveUnsentText(text) {
+        localStorage.setItem(STORAGE_KEY, text);
+        showUnsentNotice(true);
+      }
+
+      function restoreUnsentText() {
+        const saved = readSavedText();
+        if (saved === null) {
+          showUnsentNotice(false);
+          return false;
+        }
+
+        elements.memoInput.value = saved;
+        showUnsentNotice(true);
+        return true;
+      }
+
+      function clearUnsentTextAfterWriteSuccess() {
+        // EX-06 で書き込み成功後に実装するための枠だけ残す。
+      }
+
+      function updateMicButton() {
+        elements.micButton.disabled = !state.supported;
+        elements.micButton.classList.toggle('is-listening', state.listening);
+        elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
+        elements.micButton.textContent = state.listening ? 'マイク停止' : 'マイク開始';
+      }
+
+      function updateSendButton() {
+        elements.sendButton.disabled = state.sending;
+        elements.sendButton.textContent = state.sending ? '記録しています…' : '送信';
+      }
+
+      function getRecognitionConstructor() {
+        return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+      }
+
+      function appendTranscript(transcript) {
+        const text = String(transcript || '').trim();
+        if (!text) {
+          return;
+        }
+
+        const current = elements.memoInput.value.trim();
+        elements.memoInput.value = current ? `${current}\n${text}` : text;
+      }
+
+      function stopRecognition() {
+        if (!state.recognition) {
+          return;
+        }
+
+        try {
+          state.recognition.stop();
+        } catch (error) {
+          state.listening = false;
+          state.starting = false;
+          setStatus(elements.voiceStatus, '待機中', '');
+          updateMicButton();
+        }
+      }
+
+      function startRecognition() {
+        if (!state.supported || !state.recognition || state.listening || state.starting) {
+          return;
+        }
+
+        state.starting = true;
+        setStatus(elements.voiceStatus, '認識を開始しています…', '');
+
+        try {
+          state.recognition.start();
+        } catch (error) {
+          state.starting = false;
+          state.listening = false;
+          setStatus(elements.voiceStatus, '音声入力を開始できませんでした', 'error');
+        }
+      }
+
+      function toggleRecognition() {
+        if (!state.supported) {
+          return;
+        }
+
+        if (state.listening) {
+          stopRecognition();
+          return;
+        }
+
+        startRecognition();
+      }
+
+      function createRecognition() {
+        const Recognition = getRecognitionConstructor();
+        if (!Recognition) {
+          state.supported = false;
+          setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
+          updateMicButton();
+          return null;
+        }
+
+        state.supported = true;
+        const recognition = new Recognition();
+        recognition.lang = 'ja-JP';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          state.listening = true;
+          state.starting = false;
+          setStatus(elements.voiceStatus, '録音中…', 'listening');
+          updateMicButton();
+        };
+
+        recognition.onresult = (event) => {
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (result && result.isFinal && result[0] && result[0].transcript) {
+              appendTranscript(result[0].transcript);
+            }
+          }
+        };
+
+        recognition.onerror = (event) => {
+          const code = event && event.error ? String(event.error) : '';
+          state.starting = false;
+          state.listening = false;
+
+          let message = '音声入力を開始できませんでした。';
+          if (code === 'not-allowed' || code === 'service-not-allowed') {
+            message = 'マイクの使用が許可されていません。';
+          } else if (code === 'no-speech') {
+            message = '音声を認識できませんでした。もう一度マイクを押してください。';
+          } else if (code === 'audio-capture') {
+            message = 'マイクを利用できません。端末の設定を確認してください。';
+          } else if (code === 'network') {
+            message = '音声認識サービスへ接続できませんでした。';
+          }
+
+          setStatus(elements.voiceStatus, code ? `${message} (${code})` : message, 'error');
+          updateMicButton();
+        };
+
+        recognition.onend = () => {
+          state.starting = false;
+          state.listening = false;
+          setStatus(elements.voiceStatus, '待機中', '');
+          updateMicButton();
+        };
+
+        return recognition;
+      }
+
+      function handleMemoInput() {
+        // 送信前の編集は可能。保存は送信押下時のみ行う。
+        if (readSavedText() !== null) {
+          showUnsentNotice(true);
+        }
+      }
+
+      function setSendingMode(isSending) {
+        state.sending = isSending;
+        setStatus(elements.sendStatus, isSending ? '記録しています…' : '未送信', isSending ? 'success' : '');
+        updateSendButton();
+      }
+
+      function handleSend() {
+        const text = elements.memoInput.value.trim();
+        if (!text) {
+          setStatus(elements.sendStatus, '入力がありません。', 'error');
+          setResult('入力が空のため送信していません。', true);
+          return;
+        }
+
+        saveUnsentText(elements.memoInput.value);
+        setSendingMode(true);
+        setResult('（EX-06で接続予定）', false);
+
+        window.setTimeout(() => {
+          setSendingMode(false);
+        }, 700);
+      }
+
+      function bindEvents() {
+        elements.micButton.addEventListener('click', toggleRecognition);
+        elements.sendButton.addEventListener('click', handleSend);
+        elements.memoInput.addEventListener('input', handleMemoInput);
+        elements.memoInput.addEventListener('change', handleMemoInput);
+        window.addEventListener('pagehide', () => {
+          // 未送信の保存は送信押下時のみだが、念のため現入力を維持する。
+          if (elements.memoInput.value.trim()) {
+            showUnsentNotice(true);
+          }
+        });
+      }
+
+      function initialize() {
+        bindEvents();
+        const hasSaved = restoreUnsentText();
+        state.recognition = createRecognition();
+        setResult('（EX-06で接続予定）', !hasSaved);
+        setSendingMode(false);
+        updateMicButton();
+
+        if (!state.supported) {
+          setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
+        } else if (hasSaved) {
+          setStatus(elements.voiceStatus, '復元済みの未送信入力があります', '');
+        } else {
+          setStatus(elements.voiceStatus, '待機中', '');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+  </body>
+</html>
