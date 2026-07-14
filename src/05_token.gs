@@ -61,6 +61,10 @@ function verifyToken(token) {
     return createTokenValidationResult_(false, '', 'トークンの内容を解析できませんでした。');
   }
 
+  if (!isTokenPayloadObject_(payloadObject)) {
+    return createTokenValidationResult_(false, '', 'トークンの内容が不正です。');
+  }
+
   const expectedSignature = computeHmacBase64Url_(payloadToken, secret);
   if (signatureToken !== expectedSignature) {
     return createTokenValidationResult_(false, '', 'トークンの署名が一致しません。');
@@ -86,7 +90,7 @@ function verifyToken(token) {
     return createTokenValidationResult_(false, '', '担当者を特定できませんでした。');
   }
 
-  if (userMatch.activeFlag === '無効') {
+  if (userMatch.activeFlag !== '有効') {
     return createTokenValidationResult_(false, '', '無効な担当者のためトークンを利用できません。');
   }
 
@@ -170,6 +174,19 @@ function createTokenValidationResult_(valid, userKey, errorMessage) {
   };
 }
 
+function isTokenPayloadObject_(payloadObject) {
+  if (!payloadObject || Object.prototype.toString.call(payloadObject) !== '[object Object]') {
+    return false;
+  }
+
+  const keys = Object.keys(payloadObject);
+  if (keys.length !== 2) {
+    return false;
+  }
+
+  return keys.includes('uh') && keys.includes('exp');
+}
+
 function computeUserHash_(email, secret) {
   return computeHmacBase64Url_(String(email || '').trim(), secret);
 }
@@ -221,7 +238,7 @@ function getUserMasterRows_() {
       userKey,
       userName: String(row[nameIndex] || '').trim(),
       branchName: String(row[branchIndex] || '').trim(),
-      activeFlag: String(row[activeIndex] || '').trim(),
+      activeFlag: String(row[activeIndex] || ''),
     });
   }
 
