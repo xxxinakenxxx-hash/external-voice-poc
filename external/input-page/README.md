@@ -45,4 +45,5 @@
 - 外部ライブラリや CDN は使いません
 - Web Speech API は `window.SpeechRecognition || window.webkitSpeechRecognition` を利用します
 - 送信先 URL は `external/input-page/index.html` 内の定数で1か所にまとめています
+- 現在の送信先は送信API用デプロイB `https://script.google.com/macros/s/AKfycbyji7sp3rftUVwQIRunFp1ClXc_9m_UDzXASkFHDq6P4_-j3srqWrr7I0XSfrj0FTk/exec` です
 - token は localStorage ではなく sessionStorage に保存します
