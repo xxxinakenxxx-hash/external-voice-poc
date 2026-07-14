@@ -216,6 +216,10 @@
         color: #8794a3;
       }
 
+      .token-textarea {
+        min-height: 150px;
+      }
+
       .textarea-wrap,
       .env-grid {
         display: grid;
@@ -230,6 +234,17 @@
       .gas-form {
         display: grid;
         gap: 10px;
+      }
+
+      .gas-field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .gas-help {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
       }
 
       .text-input {
@@ -414,22 +429,51 @@
         </section>
 
         <section class="card gas-grid" aria-labelledby="gas-title">
-          <p class="section-title" id="gas-title">GAS通信検証</p>
+          <p class="section-title" id="gas-title">GAS送信検証</p>
           <p class="explain">
-            検証専用GASへ、固定の検証データだけをPOSTして応答を表示します。送信先はデプロイBのURLを手入力で差し替えます。
+            トークンの正否を確かめるための検証専用ページです。GAS送信先URL、トークン、inputText を手入力して送信し、HTTPステータスと応答本文を表示します。
           </p>
 
           <div class="gas-form">
-            <label class="section-title" for="gasUrlInput">送信先URL</label>
-            <input
-              id="gasUrlInput"
-              class="text-input"
-              type="url"
-              placeholder="デプロイBのURLを貼り付ける"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-            >
+            <div class="gas-field">
+              <label class="section-title" for="gasUrlInput">GAS送信先URL</label>
+              <input
+                id="gasUrlInput"
+                class="text-input"
+                type="url"
+                placeholder="デプロイBのURLを貼り付ける"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasTokenInput">トークン</label>
+              <textarea
+                id="gasTokenInput"
+                class="textarea token-textarea"
+                placeholder="#token= から自動反映されます。空欄送信も可能です。"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              ></textarea>
+              <p class="gas-help">自動反映後も手動編集・全削除できます。改ざん確認や空欄確認に使います。</p>
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasInputTextInput">inputText</label>
+              <input
+                id="gasInputTextInput"
+                class="text-input"
+                type="text"
+                value="EX-05R test"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
+            </div>
+
             <button id="gasTestButton" class="gas-button" type="button">GAS通信テスト</button>
           </div>
 
@@ -441,7 +485,7 @@
           <div class="textarea-wrap">
             <p class="section-title">GAS応答内容</p>
             <pre id="gasResponse" class="response-box is-empty" aria-live="polite">応答はまだありません。</pre>
-            <p class="subnote">送信データは token=EX02_DUMMY_TOKEN と text=EX-02 communication test のみです。</p>
+            <p class="subnote">送信データは JSON で `{token, inputText}` をそのままPOSTします。Content-Type は `text/plain;charset=UTF-8` のままです。</p>
           </div>
         </section>
       </div>
@@ -459,6 +503,8 @@
         infoMessage: document.getElementById('infoMessage'),
         envList: document.getElementById('envList'),
         gasUrlInput: document.getElementById('gasUrlInput'),
+        gasTokenInput: document.getElementById('gasTokenInput'),
+        gasInputTextInput: document.getElementById('gasInputTextInput'),
         gasTestButton: document.getElementById('gasTestButton'),
         gasStatus: document.getElementById('gasStatus'),
         gasMessage: document.getElementById('gasMessage'),
@@ -554,6 +600,25 @@
       function clearSavedText() {
         elements.textInput.value = '';
         localStorage.removeItem(STORAGE_KEY);
+      }
+
+      function getTokenFromHash() {
+        const hash = String(window.location.hash || '').replace(/^#/, '');
+        if (!hash) {
+          return '';
+        }
+
+        const params = new URLSearchParams(hash);
+        return safeString(params.get('token')).trim();
+      }
+
+      function syncTokenFromHash() {
+        const token = getTokenFromHash();
+        if (!token) {
+          return;
+        }
+
+        elements.gasTokenInput.value = token;
       }
 
       function appendTranscript(transcript) {
@@ -723,14 +788,9 @@
 
       function buildGasRequestBody() {
         return JSON.stringify({
-          token: 'EX02_DUMMY_TOKEN',
-          text: 'EX-02 communication test',
+          token: safeString(elements.gasTokenInput.value),
+          inputText: safeString(elements.gasInputTextInput.value),
         });
-      }
-
-      function normalizeGasResponseText(responseText) {
-        const text = safeString(responseText).trim();
-        return text || '(空の応答)';
       }
 
       async function sendGasTest() {
@@ -753,36 +813,21 @@
         setGasButtonState();
 
         try {
-          // 単純な text/plain 送信で、不要なプリフライトを避ける。
           const response = await fetch(gasUrl, {
             method: 'POST',
             mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=UTF-8',
+            },
             body: buildGasRequestBody(),
           });
 
           const responseText = await response.text();
-          let parsedResponse = null;
-
-          try {
-            parsedResponse = JSON.parse(responseText);
-          } catch (error) {
-            parsedResponse = null;
-          }
-
-          if (parsedResponse) {
-            renderGasResponse(JSON.stringify(parsedResponse, null, 2), false);
+          renderGasResponse(responseText.trim() || '(空の応答)', false);
+          renderGasStatus(`HTTP ${response.status}`, response.ok ? 'success' : 'error');
+          if (response.ok) {
+            showGasMessage('HTTP応答を取得しました。本文を確認してください。');
           } else {
-            renderGasResponse(normalizeGasResponseText(responseText), false);
-          }
-
-          if (response.ok && parsedResponse && parsedResponse.success === true) {
-            renderGasStatus(`成功 (HTTP ${response.status})`, 'success');
-            showGasMessage('GASからJSON応答を読み取れました。');
-          } else if (response.ok) {
-            renderGasStatus(`応答あり (HTTP ${response.status})`, 'error');
-            showGasMessage('応答本文は取得できましたが、success=true のJSONではありませんでした。');
-          } else {
-            renderGasStatus(`失敗 (HTTP ${response.status})`, 'error');
             showGasMessage('HTTPエラー応答でした。公開設定やURLを確認してください。');
           }
         } catch (error) {
@@ -850,13 +895,18 @@
         elements.textInput.addEventListener('input', handleTextChange);
         elements.textInput.addEventListener('change', handleTextChange);
         elements.textInput.addEventListener('blur', saveText);
+        elements.gasTokenInput.addEventListener('input', () => {
+          clearGasMessage();
+        });
         window.addEventListener('pagehide', saveText);
+        window.addEventListener('hashchange', syncTokenFromHash);
       }
 
       function initializePage() {
         renderEnvironment();
         restoreText();
         bindEvents();
+        syncTokenFromHash();
 
         state.recognition = createRecognition();
         renderGasStatus('未送信', '');

@@ -39,6 +39,28 @@ function issueToken(email) {
   return `${payloadToken}.${signatureToken}`;
 }
 
+function issueShortLivedTokenForTest_() {
+  const testEmail = 'inamori240@marubishi-group.co.jp';
+  const normalizedEmail = String(testEmail || '').trim();
+  if (!normalizedEmail) {
+    throw new Error('テスト用メールアドレスが空です。');
+  }
+
+  const secret = getTokenSecret();
+  const payload = {
+    uh: computeUserHash_(normalizedEmail, secret),
+    exp: Math.floor(new Date().getTime() / 1000) + 60,
+  };
+
+  const payloadText = JSON.stringify(payload);
+  const payloadToken = encodeBase64Url_(payloadText);
+  const signatureToken = computeHmacBase64Url_(payloadToken, secret);
+  const token = `${payloadToken}.${signatureToken}`;
+
+  Logger.log(token);
+  return token;
+}
+
 function verifyToken(token) {
   const tokenText = String(token || '').trim();
   if (!tokenText) {

@@ -9,22 +9,32 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - 本番の入力画面ではありません
 - GAS、認証、AI、スプレッドシートには接続しません
 - `index.html` だけで動く静的ページです
-- GitHub＋Vercel で HTTPS 公開して確認する想定です
+- GitHub Pages で HTTPS 公開して確認する想定です
 
-## EX-02 通信検証
+## EX-05R トークン検証の確認手段
 
-- 画面下部に、検証専用GASへPOSTするための入力欄と送信ボタンがあります
-- GAS URL はコードに固定せず、入力欄へ手入力します
-- 送信する値は固定で、`token=EX02_DUMMY_TOKEN` と `text=EX-02 communication test` だけです
-- URL や検証データは localStorage に保存しません
-- 使用する Content-Type は、不要なプリフライトを避けるための `text/plain;charset=UTF-8` です
-- 応答は成功・失敗・返ってきたJSON本文の表示で確認します
+- 画面下部に、検証専用GASへPOSTするための入力欄があります
+- 入力欄は `GAS送信先URL`、`トークン`、`inputText` の3つです
+- トークン欄は `#token=` のフラグメントから自動反映しますが、手動編集・全削除もできます
+- トークン欄が空でも送信自体は実行し、GAS側で拒否されるかを確認します
+- 送信する値は JSON の `{ token, inputText }` です
+- Content-Type は `text/plain;charset=UTF-8` のままです
+- 応答は HTTP ステータスと応答本文そのままを表示します
 
-## EX-03R 追記
+## 確認用途
 
-- 送信先URL の入力欄は、EX-03R の送信API 用デプロイB URL を貼り付けて差し替える想定です
-- 音声入力部分は変更しません
-- 送信データは EX-02 と同じ固定値を維持します
+- 正しいトークン
+- 1文字改ざんトークン
+- 空欄トークン
+- 期限切れトークン
+
+## 短命トークン発行関数
+
+- `issueShortLivedTokenForTest_` は、期限切れ確認のための検証専用関数です
+- 有効期限60秒の短命トークンを発行します
+- GASエディタからの手動実行専用です
+- `doGet`、`doPost`、本番処理からは呼びません
+- EX-06完了後に削除します
 
 ## 確認対象端末
 
@@ -43,8 +53,7 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 ## この工程では確認しない内容
 
 - Googleログイン
-- 署名付きトークン
-- GAS API
+- GAS API の本接続
 - OpenAI API
 - `deal_records` 書き込み
 - 店舗選び
@@ -56,4 +65,4 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - `external_voice_poc_text` を localStorage のキーとして使います
 - `unsent_text` は読み書きしません
 - interimResults の途中結果は保存しません
-- EX-02 の検証UIは、音声入力側の localStorage 保存とは別扱いです
+- 検証用ページは本番入力ページとは別物です
