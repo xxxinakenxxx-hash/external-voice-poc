@@ -30,7 +30,7 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 
 ## 短命トークン発行関数
 
-- `issueShortLivedTokenForTest_` は、期限切れ確認のための検証専用関数です
+- `issueShortLivedTokenForTest` は、期限切れ確認のための検証専用関数です
 - 有効期限60秒の短命トークンを発行します
 - GASエディタからの手動実行専用です
 - `doGet`、`doPost`、本番処理からは呼びません

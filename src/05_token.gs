@@ -39,7 +39,7 @@ function issueToken(email) {
   return `${payloadToken}.${signatureToken}`;
 }
 
-function issueShortLivedTokenForTest_() {
+function issueShortLivedTokenForTest() {
   const testEmail = 'inamori240@marubishi-group.co.jp';
   const normalizedEmail = String(testEmail || '').trim();
   if (!normalizedEmail) {
