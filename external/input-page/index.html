@@ -299,12 +299,12 @@
         <section class="hero" aria-label="外部入力専用マイクページの見出し">
           <p class="eyebrow">External Input Page</p>
           <h1>外部入力専用マイクページ</h1>
-          <p>音声入力を主手段にした、本番用の外部入力ページです。GAS にはまだ接続しません。</p>
+          <p>TOP画面から受け取った token を使って、入力内容を本番 GAS に送信します。</p>
         </section>
 
         <section class="panel" aria-labelledby="purpose-title">
           <p class="section-title" id="purpose-title">このページの役割</p>
-          <p class="notice">ここでは音声認識、手入力、未送信テキストの保全だけを扱います。送信先は EX-06 で接続します。</p>
+          <p class="notice">ここでは音声認識、手入力、未送信テキストの保全、GAS 送信だけを扱います。</p>
         </section>
 
         <section class="panel" aria-labelledby="voice-title">
@@ -329,25 +329,28 @@
           <p class="section-title" id="send-title">送信</p>
           <div class="actions">
             <button id="sendButton" class="send-button" type="button">送信</button>
-            <p id="sendStatus" class="status">未送信</p>
+            <p id="sendStatus" class="status">TOP画面からアクセスしてください</p>
             <p id="unsentNotice" class="notice hidden">前回の入力が未送信です。送信してください</p>
           </div>
 
           <div class="field" style="margin-top: 14px;">
             <p class="field-label">結果表示</p>
-            <pre id="resultArea" class="result is-empty" aria-live="polite">（EX-06で接続予定）</pre>
-            <p class="helper-text">本工程では POST を行わず、ダミー表示で処理を終えます。</p>
+            <pre id="resultArea" class="result is-empty" aria-live="polite">（保存結果がここに表示されます）</pre>
+            <p class="helper-text">送信時は token と inputText のみを GAS に POST します。</p>
           </div>
         </section>
       </div>
     </main>
 
     <script>
+      const GAS_SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbyEMewUR6V3g_he1Ayr7CFOkM3JbFNNogHm3qWy5qC6g-Cgn9j2jAhzPMzQWdDZJBuh/exec';
+      const TOKEN_STORAGE_KEY = 'input_page_token';
       const STORAGE_KEY = 'unsent_text';
+      const TOP_ACCESS_MESSAGE = 'TOP画面からアクセスしてください';
+      const SENDING_MESSAGE = '記録しています…';
 
       const elements = {
         micButton: document.getElementById('micButton'),
-        resetButton: document.getElementById('resetButton'),
         memoInput: document.getElementById('memoInput'),
         voiceStatus: document.getElementById('voiceStatus'),
         sendButton: document.getElementById('sendButton'),
@@ -362,7 +365,12 @@
         listening: false,
         starting: false,
         sending: false,
+        token: '',
       };
+
+      function safeString(value) {
+        return value === undefined || value === null ? '' : String(value);
+      }
 
       function setStatus(element, text, kind) {
         element.textContent = text;
@@ -386,8 +394,20 @@
       }
 
       function saveUnsentText(text) {
-        localStorage.setItem(STORAGE_KEY, text);
-        showUnsentNotice(true);
+        const normalizedText = safeString(text);
+        if (normalizedText.trim()) {
+          localStorage.setItem(STORAGE_KEY, normalizedText);
+          showUnsentNotice(true);
+          return;
+        }
+
+        localStorage.removeItem(STORAGE_KEY);
+        showUnsentNotice(false);
+      }
+
+      function clearUnsentTextAfterWriteSuccess() {
+        localStorage.removeItem(STORAGE_KEY);
+        showUnsentNotice(false);
       }
 
       function restoreUnsentText() {
@@ -402,34 +422,19 @@
         return true;
       }
 
-      function clearUnsentTextAfterWriteSuccess() {
-        // EX-06 で書き込み成功後に実装するための枠だけ残す。
-      }
-
-      function updateMicButton() {
-        elements.micButton.disabled = !state.supported;
-        elements.micButton.classList.toggle('is-listening', state.listening);
-        elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
-        elements.micButton.textContent = state.listening ? 'マイク停止' : 'マイク開始';
-      }
-
-      function updateSendButton() {
-        elements.sendButton.disabled = state.sending;
-        elements.sendButton.textContent = state.sending ? '記録しています…' : '送信';
-      }
-
       function getRecognitionConstructor() {
         return window.SpeechRecognition || window.webkitSpeechRecognition || null;
       }
 
       function appendTranscript(transcript) {
-        const text = String(transcript || '').trim();
+        const text = safeString(transcript).trim();
         if (!text) {
           return;
         }
 
         const current = elements.memoInput.value.trim();
         elements.memoInput.value = current ? `${current}\n${text}` : text;
+        saveUnsentText(elements.memoInput.value);
       }
 
       function stopRecognition() {
@@ -540,45 +545,185 @@
       }
 
       function handleMemoInput() {
-        // 送信前の編集は可能。保存は送信押下時のみ行う。
-        if (readSavedText() !== null) {
-          showUnsentNotice(true);
-        }
+        saveUnsentText(elements.memoInput.value);
+      }
+
+      function updateMicButton() {
+        elements.micButton.disabled = !state.supported;
+        elements.micButton.classList.toggle('is-listening', state.listening);
+        elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
+        elements.micButton.textContent = state.listening ? 'マイク停止' : 'マイク開始';
+      }
+
+      function updateSendButton() {
+        elements.sendButton.disabled = state.sending || !state.token;
+        elements.sendButton.textContent = '送信';
       }
 
       function setSendingMode(isSending) {
         state.sending = isSending;
-        setStatus(elements.sendStatus, isSending ? '記録しています…' : '未送信', isSending ? 'success' : '');
+        setStatus(elements.sendStatus, isSending ? SENDING_MESSAGE : (state.token ? '未送信' : TOP_ACCESS_MESSAGE), isSending ? 'success' : (state.token ? '' : 'error'));
         updateSendButton();
       }
 
-      function handleSend() {
-        const text = elements.memoInput.value.trim();
-        if (!text) {
-          setStatus(elements.sendStatus, '入力がありません。', 'error');
-          setResult('入力が空のため送信していません。', true);
+      function getStoredToken() {
+        return safeString(sessionStorage.getItem(TOKEN_STORAGE_KEY)).trim();
+      }
+
+      function storeToken(token) {
+        const normalizedToken = safeString(token).trim();
+        if (normalizedToken) {
+          sessionStorage.setItem(TOKEN_STORAGE_KEY, normalizedToken);
+          state.token = normalizedToken;
           return;
         }
 
-        saveUnsentText(elements.memoInput.value);
-        setSendingMode(true);
-        setResult('（EX-06で接続予定）', false);
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        state.token = '';
+      }
 
-        window.setTimeout(() => {
-          setSendingMode(false);
-        }, 700);
+      function clearTokenFragment() {
+        if (!window.location.hash) {
+          return;
+        }
+
+        const nextUrl = `${window.location.pathname}${window.location.search}`;
+        history.replaceState(null, document.title, nextUrl);
+      }
+
+      function restoreTokenFromHash() {
+        const hash = safeString(window.location.hash).replace(/^#/, '');
+        if (!hash) {
+          return '';
+        }
+
+        const params = new URLSearchParams(hash);
+        const token = safeString(params.get('token')).trim();
+        if (token) {
+          storeToken(token);
+        }
+
+        clearTokenFragment();
+        return token;
+      }
+
+      function syncTokenState() {
+        const tokenFromHash = restoreTokenFromHash();
+        if (!tokenFromHash) {
+          state.token = getStoredToken();
+        }
+
+        if (!state.token) {
+          setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
+        } else {
+          setStatus(elements.sendStatus, '未送信', '');
+        }
+
+        updateSendButton();
+      }
+
+      function buildRequestBody() {
+        return JSON.stringify({
+          token: state.token,
+          inputText: safeString(elements.memoInput.value),
+        });
+      }
+
+      function formatRecordLine(record, index) {
+        const customerName = safeString(record && (record.customerName ?? record.customer_name)).trim() || '（顧客名なし）';
+        const dealTheme = safeString(record && (record.dealTheme ?? record.deal_theme)).trim() || '（案件テーマなし）';
+        const todoItem = safeString(record && (record.todoItem ?? record.todo_item)).trim();
+        const todoLabel = todoItem ? 'あり' : 'なし';
+        return `${index}. 顧客名: ${customerName} / 案件テーマ: ${dealTheme} / 宿題: ${todoLabel}`;
+      }
+
+      function renderSuccess(payload) {
+        const recordCount = Number(payload && payload.recordCount);
+        const records = Array.isArray(payload && payload.records) ? payload.records : [];
+        const lines = [`保存しました`, `件数: ${Number.isFinite(recordCount) && recordCount > 0 ? recordCount : records.length}件`];
+
+        if (records.length > 0) {
+          records.forEach((record, index) => {
+            lines.push(formatRecordLine(record, index + 1));
+          });
+        }
+
+        setStatus(elements.sendStatus, '保存しました', 'success');
+        setResult(lines.join('\n'), false);
+      }
+
+      function renderFailure(message) {
+        const text = safeString(message).trim() || '保存に失敗しました。';
+        setStatus(elements.sendStatus, text, 'error');
+        setResult(text, false);
+      }
+
+      async function handleSend() {
+        if (state.sending) {
+          return;
+        }
+
+        if (!state.token) {
+          setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
+          updateSendButton();
+          return;
+        }
+
+        const inputText = safeString(elements.memoInput.value);
+        if (!inputText.trim()) {
+          renderFailure('入力がありません。');
+          return;
+        }
+
+        saveUnsentText(inputText);
+        setSendingMode(true);
+
+        try {
+          if (!safeString(GAS_SUBMIT_URL).trim()) {
+            throw new Error('送信先URLが設定されていません。');
+          }
+
+          const response = await fetch(GAS_SUBMIT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=UTF-8',
+            },
+            body: buildRequestBody(),
+          });
+
+          const responseText = await response.text();
+          let payload;
+          try {
+            payload = JSON.parse(responseText);
+          } catch (error) {
+            throw new Error('GAS 応答を解析できませんでした。');
+          }
+
+          if (!response.ok || !payload || payload.success !== true) {
+            throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : `HTTP ${response.status}`));
+          }
+
+          clearUnsentTextAfterWriteSuccess();
+          renderSuccess(payload);
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          renderFailure(message);
+        } finally {
+          state.sending = false;
+          updateSendButton();
+        }
       }
 
       function bindEvents() {
         elements.micButton.addEventListener('click', toggleRecognition);
-        elements.sendButton.addEventListener('click', handleSend);
+        elements.sendButton.addEventListener('click', () => {
+          void handleSend();
+        });
         elements.memoInput.addEventListener('input', handleMemoInput);
         elements.memoInput.addEventListener('change', handleMemoInput);
         window.addEventListener('pagehide', () => {
-          // 未送信の保存は送信押下時のみだが、念のため現入力を維持する。
-          if (elements.memoInput.value.trim()) {
-            showUnsentNotice(true);
-          }
+          saveUnsentText(elements.memoInput.value);
         });
       }
 
@@ -586,16 +731,18 @@
         bindEvents();
         const hasSaved = restoreUnsentText();
         state.recognition = createRecognition();
-        setResult('（EX-06で接続予定）', !hasSaved);
-        setSendingMode(false);
+        syncTokenState();
+        setResult(hasSaved ? '前回の入力が復元されました。' : '（保存結果がここに表示されます）', !hasSaved);
         updateMicButton();
 
         if (!state.supported) {
           setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
-        } else if (hasSaved) {
-          setStatus(elements.voiceStatus, '復元済みの未送信入力があります', '');
         } else {
-          setStatus(elements.voiceStatus, '待機中', '');
+          setStatus(elements.voiceStatus, hasSaved ? '復元済みの未送信入力があります' : '待機中', '');
+        }
+
+        if (!state.token) {
+          setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
         }
       }
 
