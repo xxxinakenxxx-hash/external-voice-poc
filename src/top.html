@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= model.pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4efe6;
+        --panel: #ffffff;
+        --panel-soft: #faf7f1;
+        --text: #1f2937;
+        --muted: #5b6776;
+        --accent: #173d5f;
+        --accent-strong: #f0892b;
+        --border: #d9e0e8;
+        --shadow: 0 18px 48px rgba(23, 61, 95, 0.12);
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.14), transparent 34%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 30%),
+          linear-gradient(180deg, #fdf8ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: min(100%, 720px);
+        margin: 0 auto;
+        padding: 18px 14px 36px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 22px 18px;
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -50px;
+        top: -52px;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .label {
+        margin: 0 0 8px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .user-name {
+        margin: 0;
+        color: var(--accent);
+        font-size: 1.18rem;
+        font-weight: 900;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .notice--error {
+        border-color: #f5c2c7;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 58px;
+        border-radius: 18px;
+        border: none;
+        padding: 12px 18px;
+        text-decoration: none;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font-size: 1.02rem;
+        font-weight: 800;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.24);
+      }
+
+      .helper {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 0.96rem;
+        line-height: 1.7;
+      }
+
+      @media (min-width: 640px) {
+        main {
+          padding: 28px 16px 40px;
+        }
+
+        .hero {
+          padding: 28px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="stack">
+        <section class="hero" aria-label="TOP画面">
+          <p class="eyebrow">営業AI音声メモ</p>
+          <h1>TOP</h1>
+          <p class="subtext">ログイン中の担当者を確認して、署名付きトークン付きの入力画面リンクを案内します。</p>
+        </section>
+
+        <section class="card" aria-live="polite">
+          <p class="label">担当者名</p>
+          <p class="user-name"><?= model.userName ?></p>
+        </section>
+
+        <? if (model.noticeMessage) { ?>
+          <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <? if (model.inputPageLinkUrl) { ?>
+          <section class="card">
+            <p class="label">入力画面リンク</p>
+            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">入力画面へ</a>
+            <p class="helper">リンク先のフラグメントに署名付きトークンを載せています。メールアドレスや営業所名は載せていません。</p>
+          </section>
+        <? } ?>
+      </div>
+    </main>
+  </body>
+</html>
