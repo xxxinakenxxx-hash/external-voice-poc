@@ -39,28 +39,6 @@ function issueToken(email) {
   return `${payloadToken}.${signatureToken}`;
 }
 
-function issueShortLivedTokenForTest() {
-  const testEmail = 'inamori240@marubishi-group.co.jp';
-  const normalizedEmail = String(testEmail || '').trim();
-  if (!normalizedEmail) {
-    throw new Error('テスト用メールアドレスが空です。');
-  }
-
-  const secret = getTokenSecret();
-  const payload = {
-    uh: computeUserHash_(normalizedEmail, secret),
-    exp: Math.floor(new Date().getTime() / 1000) + 60,
-  };
-
-  const payloadText = JSON.stringify(payload);
-  const payloadToken = encodeBase64Url_(payloadText);
-  const signatureToken = computeHmacBase64Url_(payloadToken, secret);
-  const token = `${payloadToken}.${signatureToken}`;
-
-  Logger.log(token);
-  return token;
-}
-
 function verifyToken(token) {
   const tokenText = String(token || '').trim();
   if (!tokenText) {
@@ -120,23 +98,55 @@ function verifyToken(token) {
 }
 
 function doPost(e) {
-  const requestPayload = parseRequestPayload_(e);
-  const token = String(requestPayload.token || '').trim();
-  const inputText = String(requestPayload.inputText || '').trim();
-  void inputText;
-
-  let verification;
   try {
-    verification = verifyToken(token);
-  } catch (error) {
-    verification = createTokenValidationResult_(
-      false,
-      '',
-      String(error && error.message ? error.message : 'トークンの検証に失敗しました。'),
-    );
-  }
+    const requestPayload = parseRequestPayload_(e);
+    const token = String(requestPayload.token || '').trim();
+    const verification = verifyToken(token);
+    const action = String(requestPayload.action || 'submit').trim() || 'submit';
 
-  return createJsonResponse_(verification);
+    if (!verification || verification.valid !== true) {
+      return createJsonResponse_({
+        success: false,
+        errorMessage: String(verification && verification.errorMessage ? verification.errorMessage : 'トークンが無効です。'),
+      });
+    }
+
+    if (action === 'storeCandidates') {
+      const latitude = requestPayload.latitude;
+      const longitude = requestPayload.longitude;
+      return createJsonResponse_({
+        success: true,
+        action,
+        candidates: getStoreCandidates(latitude, longitude),
+      });
+    }
+
+    if (action === 'storeSearch') {
+      return createJsonResponse_({
+        success: true,
+        action,
+        candidates: searchStoresByName(requestPayload.keyword),
+      });
+    }
+
+    if (action === 'submit') {
+      return createJsonResponse_(submitMemo({
+        userKey: verification.userKey,
+        inputText: String(requestPayload.inputText || ''),
+      }));
+    }
+
+    return createJsonResponse_({
+      success: false,
+      errorMessage: `action が不明です: ${action}`,
+    });
+  } catch (error) {
+    logError('DO_POST_ERROR', error && error.message ? error.message : String(error), {});
+    return createJsonResponse_({
+      success: false,
+      errorMessage: '保存に失敗しました。しばらく経ってから再度お試しください',
+    });
+  }
 }
 
 function parseRequestPayload_(e) {
@@ -298,7 +308,7 @@ function padBase64_(text) {
 }
 
 function createJsonResponse_(payload) {
-  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.TEXT);
 }
 
 function safeDecodeURIComponent_(text) {
@@ -307,4 +317,178 @@ function safeDecodeURIComponent_(text) {
   } catch (error) {
     return String(text || '');
   }
+}
+
+function getStoreCandidates(lat, lng) {
+  const inputLatitude = parseStoreCoordinate_(lat);
+  const inputLongitude = parseStoreCoordinate_(lng);
+
+  if (inputLatitude === null || inputLongitude === null) {
+    return [];
+  }
+
+  let storeRows;
+  try {
+    storeRows = getStoreMasterRows_();
+  } catch (error) {
+    throw error;
+  }
+
+  const candidates = [];
+
+  for (const row of storeRows) {
+    if (!row || row.activeFlag !== '有効') {
+      continue;
+    }
+
+    if (!isFiniteNumber_(row.latitude) || !isFiniteNumber_(row.longitude)) {
+      continue;
+    }
+
+    const distanceKm = calculateDistanceKm_(
+      inputLatitude,
+      inputLongitude,
+      Number(row.latitude),
+      Number(row.longitude),
+    );
+
+    if (!Number.isFinite(distanceKm)) {
+      continue;
+    }
+
+    candidates.push({
+      storeId: row.storeId,
+      storeName: row.storeName,
+      latitude: Number(row.latitude),
+      longitude: Number(row.longitude),
+      activeFlag: row.activeFlag,
+      distanceKm,
+    });
+  }
+
+  candidates.sort((left, right) => {
+    if (left.distanceKm < right.distanceKm) {
+      return -1;
+    }
+    if (left.distanceKm > right.distanceKm) {
+      return 1;
+    }
+    return String(left.storeId || '').localeCompare(String(right.storeId || ''), 'ja');
+  });
+
+  return candidates.slice(0, 4);
+}
+
+function searchStoresByName(name) {
+  const searchText = String(name || '').trim();
+  if (!searchText) {
+    return [];
+  }
+
+  const storeRows = getStoreMasterRows_();
+  const matches = [];
+
+  for (const row of storeRows) {
+    if (!row || row.activeFlag !== '有効') {
+      continue;
+    }
+
+    const storeName = String(row.storeName || '').trim();
+    if (!storeName || !storeName.includes(searchText)) {
+      continue;
+    }
+
+    matches.push({
+      storeId: row.storeId,
+      storeName,
+      latitude: isFiniteNumber_(row.latitude) ? Number(row.latitude) : '',
+      longitude: isFiniteNumber_(row.longitude) ? Number(row.longitude) : '',
+      activeFlag: row.activeFlag,
+    });
+  }
+
+  matches.sort((left, right) => {
+    return String(left.storeId || '').localeCompare(String(right.storeId || ''), 'ja');
+  });
+
+  return matches;
+}
+
+function getStoreMasterRows_() {
+  const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
+  const sheet = spreadsheet.getSheetByName('store_master');
+
+  if (!sheet) {
+    throw new Error('store_master シートが見つかりません');
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return [];
+  }
+
+  const headers = values[0].map((header) => String(header || '').trim());
+  const storeIdIndex = headers.indexOf('store_id');
+  const storeNameIndex = headers.indexOf('store_name');
+  const latitudeIndex = headers.indexOf('latitude');
+  const longitudeIndex = headers.indexOf('longitude');
+  const activeIndex = headers.indexOf('active_flag');
+
+  if ([storeIdIndex, storeNameIndex, latitudeIndex, longitudeIndex, activeIndex].some((index) => index < 0)) {
+    throw new Error('store_master の見出しが不正です');
+  }
+
+  const rows = [];
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const storeId = String(row[storeIdIndex] || '').trim();
+    const storeName = String(row[storeNameIndex] || '').trim();
+    if (!storeId || !storeName) {
+      continue;
+    }
+
+    rows.push({
+      storeId,
+      storeName,
+      latitude: row[latitudeIndex],
+      longitude: row[longitudeIndex],
+      activeFlag: String(row[activeIndex] || '').trim(),
+    });
+  }
+
+  return rows;
+}
+
+function parseStoreCoordinate_(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function isFiniteNumber_(value) {
+  if (value === '' || value === null || value === undefined) {
+    return false;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue);
+}
+
+function calculateDistanceKm_(lat1, lng1, lat2, lng2) {
+  const earthRadiusKm = 6371;
+  const toRadians = (degree) => (degree * Math.PI) / 180;
+
+  const deltaLat = toRadians(lat2 - lat1);
+  const deltaLng = toRadians(lng2 - lng1);
+  const startLat = toRadians(lat1);
+  const endLat = toRadians(lat2);
+
+  const a = Math.sin(deltaLat / 2) ** 2
+    + Math.cos(startLat) * Math.cos(endLat) * Math.sin(deltaLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
 }

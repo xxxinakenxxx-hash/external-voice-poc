@@ -449,6 +449,16 @@
             </div>
 
             <div class="gas-field">
+              <label class="section-title" for="gasActionSelect">action</label>
+              <select id="gasActionSelect" class="text-input" aria-label="action">
+                <option value="storeCandidates">storeCandidates</option>
+                <option value="storeSearch">storeSearch</option>
+                <option value="submit" selected>submit</option>
+              </select>
+              <p class="gas-help">action に応じて送信する本文を切り替えます。</p>
+            </div>
+
+            <div class="gas-field">
               <label class="section-title" for="gasTokenInput">トークン</label>
               <textarea
                 id="gasTokenInput"
@@ -459,6 +469,47 @@
                 spellcheck="false"
               ></textarea>
               <p class="gas-help">自動反映後も手動編集・全削除できます。改ざん確認や空欄確認に使います。</p>
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasLatitudeInput">latitude</label>
+              <input
+                id="gasLatitudeInput"
+                class="text-input"
+                type="text"
+                inputmode="decimal"
+                placeholder="例: 35.681236"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasLongitudeInput">longitude</label>
+              <input
+                id="gasLongitudeInput"
+                class="text-input"
+                type="text"
+                inputmode="decimal"
+                placeholder="例: 139.767125"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasKeywordInput">keyword</label>
+              <input
+                id="gasKeywordInput"
+                class="text-input"
+                type="text"
+                placeholder="店舗名の一部を入力"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
             </div>
 
             <div class="gas-field">
@@ -485,7 +536,7 @@
           <div class="textarea-wrap">
             <p class="section-title">GAS応答内容</p>
             <pre id="gasResponse" class="response-box is-empty" aria-live="polite">応答はまだありません。</pre>
-            <p class="subnote">送信データは JSON で `{token, inputText}` をそのままPOSTします。Content-Type は `text/plain;charset=UTF-8` のままです。</p>
+            <p class="subnote">送信データは JSON で action ごとに切り替えます。Content-Type は `text/plain;charset=UTF-8` のままです。</p>
           </div>
         </section>
       </div>
@@ -503,7 +554,11 @@
         infoMessage: document.getElementById('infoMessage'),
         envList: document.getElementById('envList'),
         gasUrlInput: document.getElementById('gasUrlInput'),
+        gasActionSelect: document.getElementById('gasActionSelect'),
         gasTokenInput: document.getElementById('gasTokenInput'),
+        gasLatitudeInput: document.getElementById('gasLatitudeInput'),
+        gasLongitudeInput: document.getElementById('gasLongitudeInput'),
+        gasKeywordInput: document.getElementById('gasKeywordInput'),
         gasInputTextInput: document.getElementById('gasInputTextInput'),
         gasTestButton: document.getElementById('gasTestButton'),
         gasStatus: document.getElementById('gasStatus'),
@@ -576,6 +631,10 @@
       function renderGasResponse(text, isEmpty) {
         elements.gasResponse.textContent = text;
         elements.gasResponse.classList.toggle('is-empty', Boolean(isEmpty));
+      }
+
+      function getSelectedGasAction() {
+        return safeString(elements.gasActionSelect.value || 'submit').trim() || 'submit';
       }
 
       function saveText() {
@@ -787,10 +846,44 @@
       }
 
       function buildGasRequestBody() {
-        return JSON.stringify({
+        const action = getSelectedGasAction();
+        const payload = {
           token: safeString(elements.gasTokenInput.value),
-          inputText: safeString(elements.gasInputTextInput.value),
-        });
+          action,
+        };
+
+        if (action === 'storeCandidates') {
+          payload.latitude = safeString(elements.gasLatitudeInput.value);
+          payload.longitude = safeString(elements.gasLongitudeInput.value);
+        } else if (action === 'storeSearch') {
+          payload.keyword = safeString(elements.gasKeywordInput.value);
+        } else {
+          payload.inputText = safeString(elements.gasInputTextInput.value);
+        }
+
+        return JSON.stringify(payload);
+      }
+
+      function updateGasActionHint() {
+        const action = getSelectedGasAction();
+        let buttonText = 'GAS通信テスト';
+        let statusText = '未送信';
+
+        if (action === 'storeCandidates') {
+          buttonText = '店舗候補を取得';
+          statusText = '候補取得待ち';
+        } else if (action === 'storeSearch') {
+          buttonText = '店舗名を検索';
+          statusText = '検索待ち';
+        } else if (action === 'submit') {
+          buttonText = '送信テスト';
+          statusText = '未送信';
+        }
+
+        elements.gasTestButton.textContent = buttonText;
+        if (elements.gasStatus.textContent === '未送信' || elements.gasStatus.textContent === '候補取得待ち' || elements.gasStatus.textContent === '検索待ち') {
+          renderGasStatus(statusText, '');
+        }
       }
 
       async function sendGasTest() {
@@ -898,6 +991,14 @@
         elements.gasTokenInput.addEventListener('input', () => {
           clearGasMessage();
         });
+        elements.gasActionSelect.addEventListener('change', () => {
+          clearGasMessage();
+          updateGasActionHint();
+        });
+        elements.gasLatitudeInput.addEventListener('input', clearGasMessage);
+        elements.gasLongitudeInput.addEventListener('input', clearGasMessage);
+        elements.gasKeywordInput.addEventListener('input', clearGasMessage);
+        elements.gasInputTextInput.addEventListener('input', clearGasMessage);
         window.addEventListener('pagehide', saveText);
         window.addEventListener('hashchange', syncTokenFromHash);
       }
@@ -914,6 +1015,7 @@
         setGasButtonState();
         syncSavedStateNotice();
         setButtonState();
+        updateGasActionHint();
 
         if (elements.textInput.value) {
           renderStatus('復元済みの入力があります', '');

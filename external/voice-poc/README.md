@@ -11,13 +11,16 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - `index.html` だけで動く静的ページです
 - GitHub Pages で HTTPS 公開して確認する想定です
 
-## EX-05R トークン検証の確認手段
+## EX-08 検証手段
 
 - 画面下部に、検証専用GASへPOSTするための入力欄があります
-- 入力欄は `GAS送信先URL`、`トークン`、`inputText` の3つです
+- 入力欄は `GAS送信先URL`、`action`、`トークン`、`latitude`、`longitude`、`keyword`、`inputText` です
 - トークン欄は `#token=` のフラグメントから自動反映しますが、手動編集・全削除もできます
 - トークン欄が空でも送信自体は実行し、GAS側で拒否されるかを確認します
-- 送信する値は JSON の `{ token, inputText }` です
+- action に応じて送信する値を切り替えます
+- `storeCandidates` は `{ token, action, latitude, longitude }`
+- `storeSearch` は `{ token, action, keyword }`
+- `submit` は `{ token, action, inputText }`
 - Content-Type は `text/plain;charset=UTF-8` のままです
 - 応答は HTTP ステータスと応答本文そのままを表示します
 
@@ -27,14 +30,15 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 - 1文字改ざんトークン
 - 空欄トークン
 - 期限切れトークン
+- 店舗候補取得
+- 店舗名部分一致検索
+- 既存 submit の維持確認
 
-## 短命トークン発行関数
+## 期限切れ確認
 
-- `issueShortLivedTokenForTest` は、期限切れ確認のための検証専用関数です
-- 有効期限60秒の短命トークンを発行します
-- GASエディタからの手動実行専用です
-- `doGet`、`doPost`、本番処理からは呼びません
-- EX-06完了後に削除します
+- `issueShortLivedTokenForTest` は削除済みです
+- 期限切れ確認用のトークンが手元に無い場合は、TASK_CURRENT.md に準備待ちとして記録します
+- このページは action 振り分けと店舗検索の疎通確認にも使います
 
 ## 確認対象端末
 
@@ -53,7 +57,7 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 ## この工程では確認しない内容
 
 - Googleログイン
-- GAS API の本接続
+- 本番入力ページ `external/input-page/`
 - OpenAI API
 - `deal_records` 書き込み
 - 店舗選び
