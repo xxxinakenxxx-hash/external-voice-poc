@@ -39,7 +39,7 @@
       main {
         width: min(100%, 720px);
         margin: 0 auto;
-        padding: 18px 14px 36px;
+        padding: calc(14px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
       }
 
       .stack {
@@ -160,15 +160,46 @@
           padding: 28px 24px;
         }
       }
+
+      @media (max-width: 480px) {
+        main {
+          padding-top: calc(12px + env(safe-area-inset-top));
+          padding-bottom: calc(24px + env(safe-area-inset-bottom));
+        }
+
+        .hero {
+          border-radius: 20px;
+          padding: 18px 16px;
+        }
+
+        .card {
+          border-radius: 18px;
+          padding: 14px;
+        }
+
+        h1 {
+          font-size: 1.55rem;
+        }
+
+        .subtext {
+          font-size: 0.96rem;
+        }
+
+        .link-button {
+          min-height: 60px;
+          border-radius: 16px;
+          font-size: 1rem;
+        }
+      }
     </style>
   </head>
   <body>
     <main>
       <div class="stack">
-        <section class="hero" aria-label="TOP画面">
-          <p class="eyebrow">営業AI音声メモ</p>
-          <h1>TOP</h1>
-          <p class="subtext">ログイン中の担当者を確認して、署名付きトークン付きの入力画面リンクを案内します。</p>
+        <section class="hero" aria-label="営業AIメモの入口画面">
+          <p class="eyebrow">営業AIメモ</p>
+          <h1>営業AIメモ</h1>
+          <p class="subtext">ログイン中の担当者を確認して、商談メモの入力画面へ進みます。</p>
         </section>
 
         <section class="card" aria-live="polite">
@@ -182,9 +213,9 @@
 
         <? if (model.inputPageLinkUrl) { ?>
           <section class="card">
-            <p class="label">入力画面リンク</p>
-            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">入力画面へ</a>
-            <p class="helper">リンク先のフラグメントに署名付きトークンを載せています。メールアドレスや営業所名は載せていません。</p>
+            <p class="label">入力画面</p>
+            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+            <p class="helper">ログイン中の担当者ごとに入力画面へ進みます。</p>
           </section>
         <? } ?>
       </div>

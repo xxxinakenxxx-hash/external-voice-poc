@@ -10,7 +10,7 @@ function doGet(e) {
 
   return template
     .evaluate()
-    .setTitle('営業AI音声メモ | TOP')
+    .setTitle('営業AIメモ')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -18,7 +18,7 @@ function createTopPageModel_() {
   const validation = validateUser();
 
   const model = {
-    pageTitle: '営業AI音声メモ | TOP',
+    pageTitle: '営業AIメモ',
     validation,
     userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
     inputPageLinkUrl: '',
