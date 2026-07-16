@@ -402,6 +402,42 @@
           </p>
         </section>
 
+        <section class="card gas-grid" aria-labelledby="gas-connection-title">
+          <p class="section-title" id="gas-connection-title">GAS接続設定</p>
+          <p class="explain">
+            送信先URLとトークンはここで確認・編集します。`#token=` の自動反映後も、手動編集・全削除ができます。
+          </p>
+
+          <div class="gas-form">
+            <div class="gas-field">
+              <label class="section-title" for="gasUrlInput">GAS送信先URL</label>
+              <input
+                id="gasUrlInput"
+                class="text-input"
+                type="url"
+                value="https://script.google.com/macros/s/AKfycbyji7sp3rftUVwQIRunFp1ClXc_9m_UDzXASkFHDq6P4_-j3srqWrr7I0XSfrj0FTk/exec"
+                placeholder="デプロイBのURLを貼り付ける"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
+            </div>
+
+            <div class="gas-field">
+              <label class="section-title" for="gasTokenInput">トークン</label>
+              <textarea
+                id="gasTokenInput"
+                class="textarea token-textarea"
+                placeholder="#token= から自動反映されます。空欄送信も可能です。"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              ></textarea>
+              <p class="gas-help">自動反映後も手動編集・全削除できます。改ざん確認や空欄確認に使います。</p>
+            </div>
+          </div>
+        </section>
+
         <section class="card control-grid" aria-labelledby="control-title">
           <div>
             <p class="section-title" id="control-title">音声入力</p>
@@ -436,19 +472,6 @@
 
           <div class="gas-form">
             <div class="gas-field">
-              <label class="section-title" for="gasUrlInput">GAS送信先URL</label>
-              <input
-                id="gasUrlInput"
-                class="text-input"
-                type="url"
-                placeholder="デプロイBのURLを貼り付ける"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              >
-            </div>
-
-            <div class="gas-field">
               <label class="section-title" for="gasActionSelect">action</label>
               <select id="gasActionSelect" class="text-input" aria-label="action">
                 <option value="storeCandidates">storeCandidates</option>
@@ -456,19 +479,6 @@
                 <option value="submit" selected>submit</option>
               </select>
               <p class="gas-help">action に応じて送信する本文を切り替えます。</p>
-            </div>
-
-            <div class="gas-field">
-              <label class="section-title" for="gasTokenInput">トークン</label>
-              <textarea
-                id="gasTokenInput"
-                class="textarea token-textarea"
-                placeholder="#token= から自動反映されます。空欄送信も可能です。"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              ></textarea>
-              <p class="gas-help">自動反映後も手動編集・全削除できます。改ざん確認や空欄確認に使います。</p>
             </div>
 
             <div class="gas-field">
@@ -544,6 +554,7 @@
 
     <script>
       const STORAGE_KEY = 'external_voice_poc_text';
+      const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyji7sp3rftUVwQIRunFp1ClXc_9m_UDzXASkFHDq6P4_-j3srqWrr7I0XSfrj0FTk/exec';
 
       const elements = {
         micButton: document.getElementById('micButton'),
@@ -859,6 +870,9 @@
           payload.keyword = safeString(elements.gasKeywordInput.value);
         } else {
           payload.inputText = safeString(elements.gasInputTextInput.value);
+          payload.latitude = safeString(elements.gasLatitudeInput.value);
+          payload.longitude = safeString(elements.gasLongitudeInput.value);
+          payload.storeName = '';
         }
 
         return JSON.stringify(payload);
@@ -988,6 +1002,7 @@
         elements.textInput.addEventListener('input', handleTextChange);
         elements.textInput.addEventListener('change', handleTextChange);
         elements.textInput.addEventListener('blur', saveText);
+        elements.gasUrlInput.addEventListener('input', clearGasMessage);
         elements.gasTokenInput.addEventListener('input', () => {
           clearGasMessage();
         });
@@ -1007,6 +1022,7 @@
         renderEnvironment();
         restoreText();
         bindEvents();
+        elements.gasUrlInput.value = DEFAULT_GAS_URL;
         syncTokenFromHash();
 
         state.recognition = createRecognition();

@@ -39,6 +39,26 @@ function issueToken(email) {
   return `${payloadToken}.${signatureToken}`;
 }
 
+function issueShortLivedTokenForTest() {
+  // 検証専用: EX-08の期限切れ確認だけに使う短命トークン発行関数
+  const validation = validateUser();
+
+  if (!validation || validation.valid !== true) {
+    throw new Error(String(validation && validation.errorMessage ? validation.errorMessage : '有効な担当者ではありません。'));
+  }
+
+  const secret = getTokenSecret();
+  const payload = {
+    uh: computeUserHash_(validation.userKey, secret),
+    exp: Math.floor(new Date().getTime() / 1000) + 60,
+  };
+
+  const payloadToken = encodeBase64Url_(JSON.stringify(payload));
+  const signatureToken = computeHmacBase64Url_(payloadToken, secret);
+
+  return `${payloadToken}.${signatureToken}`;
+}
+
 function verifyToken(token) {
   const tokenText = String(token || '').trim();
   if (!tokenText) {

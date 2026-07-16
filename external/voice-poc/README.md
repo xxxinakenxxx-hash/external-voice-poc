@@ -13,14 +13,16 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 
 ## EX-08 検証手段
 
-- 画面下部に、検証専用GASへPOSTするための入力欄があります
-- 入力欄は `GAS送信先URL`、`action`、`トークン`、`latitude`、`longitude`、`keyword`、`inputText` です
+- 画面上部に、検証専用GASの `GAS送信先URL` と `トークン` の入力欄があります
+- `GAS送信先URL` は初期値としてデプロイBのURLを入れています
 - トークン欄は `#token=` のフラグメントから自動反映しますが、手動編集・全削除もできます
+- 画面下部に、検証専用GASへPOSTするための入力欄があります
+- 入力欄は `action`、`latitude`、`longitude`、`keyword`、`inputText` です
 - トークン欄が空でも送信自体は実行し、GAS側で拒否されるかを確認します
 - action に応じて送信する値を切り替えます
 - `storeCandidates` は `{ token, action, latitude, longitude }`
 - `storeSearch` は `{ token, action, keyword }`
-- `submit` は `{ token, action, inputText }`
+- `submit` は `{ token, action, inputText, latitude, longitude, storeName }`
 - Content-Type は `text/plain;charset=UTF-8` のままです
 - 応答は HTTP ステータスと応答本文そのままを表示します
 
@@ -36,8 +38,8 @@ GAS HtmlService の iframe 外に置いた通常の HTTPS ページで、Web Spe
 
 ## 期限切れ確認
 
-- `issueShortLivedTokenForTest` は削除済みです
-- 期限切れ確認用のトークンが手元に無い場合は、TASK_CURRENT.md に準備待ちとして記録します
+- `issueShortLivedTokenForTest` は EX-08 の実機確認用に再追加しています
+- EX-08 完了後に削除する残件として、`TASK_CURRENT.md` に記録します
 - このページは action 振り分けと店舗検索の疎通確認にも使います
 
 ## 確認対象端末
