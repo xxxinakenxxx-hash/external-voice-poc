@@ -103,7 +103,7 @@
 
       .panel {
         background: var(--surface);
-        padding: 16px;
+        padding: 12px 14px;
       }
 
       .section-title {
@@ -124,46 +124,51 @@
 
       .notice {
         margin: 0;
-        padding: 12px 14px;
+        padding: 10px 12px;
         background: var(--accent-soft);
         color: #8a4d0b;
         font-weight: 700;
       }
 
+      .notice--subtle {
+        background: #f3f6fa;
+        color: var(--text);
+      }
+
       .status {
-        min-height: 1.5em;
         margin: 0;
-        padding: 10px 12px;
-        background: var(--surface-soft);
+        padding: 0;
+        min-height: 0;
+        background: transparent;
         color: var(--muted);
-        font-weight: 800;
+        font-size: 0.92rem;
+        font-weight: 600;
       }
 
       .status-group {
         display: grid;
-        gap: 10px;
+        gap: 6px;
       }
 
       .status.is-listening {
-        background: #fff5eb;
         color: #a55409;
       }
 
       .status.is-error {
-        background: var(--danger-soft);
         color: var(--danger);
       }
 
       .status.is-success {
-        background: #eaf6ef;
         color: var(--success);
       }
 
       .summary {
         margin: 0;
-        padding: 12px 14px;
+        padding: 10px 12px;
         background: #eef4fa;
         color: var(--text);
+        border-radius: 14px;
+        font-weight: 700;
       }
 
       .summary strong {
@@ -189,7 +194,7 @@
       .completion-message {
         margin: 0;
         color: var(--primary);
-        font-size: 1.32rem;
+        font-size: 1.18rem;
         font-weight: 900;
       }
 
@@ -228,10 +233,10 @@
       .store-button {
         appearance: none;
         border: none;
-        min-height: 52px;
+        min-height: 50px;
         width: 100%;
-        border-radius: 18px;
-        padding: 14px 16px;
+        border-radius: 16px;
+        padding: 13px 16px;
         font-size: 1rem;
         font-weight: 800;
         cursor: pointer;
@@ -296,7 +301,7 @@
       .actions,
       .store-grid {
         display: grid;
-        gap: 10px;
+        gap: 8px;
       }
 
       .field-label {
@@ -321,7 +326,9 @@
       }
 
       .textarea {
-        min-height: 240px;
+        min-height: 180px;
+        max-height: 260px;
+        overflow: auto;
       }
 
       .text-input {
@@ -406,11 +413,11 @@
 
       @media (min-width: 640px) {
         main {
-          padding: 24px 16px 36px;
+          padding: 18px 16px 28px;
         }
 
         .hero {
-          padding: 26px 24px 24px;
+          padding: 22px 22px 20px;
         }
 
         h1 {
@@ -430,7 +437,7 @@
 
       @media (max-width: 480px) {
         main {
-          padding: 12px 10px 24px;
+          padding: 10px 8px 18px;
         }
 
         .hero,
@@ -439,7 +446,7 @@
         }
 
         .hero {
-          padding: 18px 16px 16px;
+          padding: 16px 14px 14px;
         }
 
         h1 {
@@ -454,12 +461,12 @@
         .send-button,
         .secondary-button,
         .store-button {
-          min-height: 56px;
-          border-radius: 16px;
+          min-height: 52px;
+          border-radius: 14px;
         }
 
         .textarea {
-          min-height: 220px;
+          min-height: 160px;
         }
 
         .completion-message {
@@ -474,37 +481,36 @@
         <section class="hero view-section" aria-label="営業AIメモの商談メモ入力画面の見出し">
           <p class="eyebrow">営業AIメモ</p>
           <h1>営業AIメモ / 商談メモ入力</h1>
-          <p>ログイン中の担当者で商談メモを入力します。</p>
+          <p>商談内容を話すか入力し、訪問先を選んで送信してください。</p>
         </section>
 
-        <section class="panel view-section" aria-labelledby="voice-title">
-          <p class="section-title" id="voice-title">音声入力</p>
-          <p id="voiceStatus" class="status">待機中</p>
-          <div class="button-row" style="margin-top: 10px;">
-            <button id="micButton" class="mic-button" type="button" aria-pressed="false">マイク開始</button>
+        <section class="panel view-section" aria-labelledby="input-title">
+          <p class="section-title" id="input-title">1　商談内容を入力</p>
+          <p class="helper-text">話した内容はここに入ります。必要ならここで修正できます。</p>
+          <div class="button-row">
+            <button id="micButton" class="mic-button" type="button" aria-pressed="false">話し始める</button>
+            <p id="voiceStatus" class="status">待機中</p>
           </div>
-        </section>
-
-        <section class="panel view-section" aria-labelledby="memo-title">
-          <p class="section-title" id="memo-title">入力文章</p>
           <div class="field">
-            <label class="field-label" for="memoInput">商談メモ</label>
+            <label class="field-label" for="memoInput">確認・修正する文章</label>
             <textarea
               id="memoInput"
               class="textarea"
               placeholder="認識した内容が末尾へ追記されます。"
             ></textarea>
           </div>
+          <p id="unsentNotice" class="notice notice--subtle hidden">前回入力した文章が残っています。内容を確認して送信してください。</p>
         </section>
 
         <section class="panel view-section" aria-labelledby="store-title">
-          <p class="section-title" id="store-title">訪問先店舗</p>
+          <p class="section-title" id="store-title">2　訪問先を選ぶ</p>
           <div class="store-shell">
-            <p id="selectedStoreSummary" class="summary is-empty">店舗名はまだ確定していません</p>
-            <button id="storeToggleButton" class="secondary-button store-toggle" type="button">訪問先店舗を選ぶ</button>
+            <p id="selectedStoreSummary" class="summary is-empty">訪問先がまだ選ばれていません</p>
+            <p class="helper-text">訪問先が分からない場合は、選ばずに送信できます。</p>
+            <button id="storeToggleButton" class="secondary-button store-toggle" type="button">訪問先を選ぶ</button>
             <div id="storeSelectionPanel" class="store-panel hidden">
               <div class="status-group">
-                <p id="gpsStatus" class="status">現在地の取得を待っています</p>
+                <p id="gpsStatus" class="status">現在地を確認中です</p>
                 <p id="candidateStatus" class="status">近い店舗候補はまだありません</p>
               </div>
               <div class="store-grid">
@@ -533,11 +539,10 @@
         </section>
 
         <section class="panel view-section" aria-labelledby="send-title">
-          <p class="section-title" id="send-title">送信</p>
+          <p class="section-title" id="send-title">3　内容を送信</p>
+          <p id="sendStatus" class="status">入力がありません</p>
           <div class="actions">
-            <button id="sendButton" class="send-button" type="button">送信</button>
-            <p id="sendStatus" class="status">入口画面から開いてください</p>
-            <p id="unsentNotice" class="notice hidden">前回の入力が未送信です。送信してください</p>
+            <button id="sendButton" class="send-button" type="button">この内容を送信する</button>
             <p id="sendFeedback" class="notice hidden" aria-live="polite"></p>
           </div>
         </section>
@@ -653,7 +658,7 @@
       }
 
       function updateStoreSelectionToggle() {
-        elements.storeToggleButton.textContent = state.storeSelectionOpen ? '訪問先店舗を閉じる' : '訪問先店舗を選ぶ';
+        elements.storeToggleButton.textContent = state.storeSelectionOpen ? '訪問先を閉じる' : '訪問先を選ぶ';
       }
 
       function setStoreSelectionExpanded(isExpanded) {
@@ -664,6 +669,30 @@
 
       function toggleStoreSelectionPanel() {
         setStoreSelectionExpanded(!state.storeSelectionOpen);
+      }
+
+      function updateSendStatusLabel() {
+        if (!state.token) {
+          setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
+          return;
+        }
+
+        if (state.sending) {
+          setStatus(elements.sendStatus, SENDING_MESSAGE, 'success');
+          return;
+        }
+
+        const hasInput = safeString(elements.memoInput.value).trim().length > 0;
+        if (!hasInput) {
+          setStatus(elements.sendStatus, '入力がありません', '');
+          return;
+        }
+
+        if (state.nearby.selectedId || state.search.selectedId) {
+          setStatus(elements.sendStatus, '入力あり・訪問先確定済み', 'success');
+        } else {
+          setStatus(elements.sendStatus, '入力あり・訪問先未選択', '');
+        }
       }
 
       function showUnsentNotice(show) {
@@ -852,13 +881,16 @@
 
       function handleMemoInput() {
         saveUnsentText(elements.memoInput.value);
+        if (!state.completed) {
+          updateSendStatusLabel();
+        }
       }
 
       function updateMicButton() {
         elements.micButton.disabled = !state.supported || state.sending || state.completed;
         elements.micButton.classList.toggle('is-listening', state.listening);
         elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
-        elements.micButton.textContent = state.listening ? 'マイク停止' : 'マイク開始';
+        elements.micButton.textContent = state.listening ? '音声入力を停止' : '話し始める';
       }
 
       function updateSendButton() {
@@ -868,11 +900,7 @@
 
       function setSendingMode(isSending) {
         state.sending = isSending;
-        setStatus(
-          elements.sendStatus,
-          isSending ? SENDING_MESSAGE : (state.token ? '未送信' : TOP_ACCESS_MESSAGE),
-          isSending ? 'success' : (state.token ? '' : 'error'),
-        );
+        updateSendStatusLabel();
         updateSendButton();
         updateMicButton();
       }
@@ -930,7 +958,7 @@
           setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
           setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
         } else {
-          setStatus(elements.sendStatus, '未送信', '');
+          updateSendStatusLabel();
         }
 
         updateSendButton();
@@ -1010,6 +1038,7 @@
             state.nearby.selectedId = safeString(item.storeId).trim();
             renderNearbyStoreList();
             updateStoreSummary();
+            updateSendStatusLabel();
             setStoreSelectionExpanded(false);
           });
           container.appendChild(button);
@@ -1042,6 +1071,7 @@
             state.search.selectedId = safeString(item.storeId).trim();
             renderSearchStoreList();
             updateStoreSummary();
+            updateSendStatusLabel();
             setStoreSelectionExpanded(false);
           });
           container.appendChild(button);
@@ -1535,6 +1565,7 @@
         renderNearbyStoreList();
         scheduleStoreSearch();
         updateStoreSummary();
+        updateSendStatusLabel();
       }
 
       function bindEvents() {
@@ -1568,8 +1599,8 @@
           renderNearbyStoreList();
           renderSearchStoreList(SEARCH_IDLE_MESSAGE);
           updateStoreSummary();
+          updateSendStatusLabel();
           setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
-          setStatus(elements.sendStatus, '未送信', '');
           updateMicButton();
           updateSendButton();
         });
@@ -1612,7 +1643,7 @@
         if (!state.supported) {
           setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
         } else {
-          setStatus(elements.voiceStatus, hasSaved ? '復元済みの未送信入力があります' : '待機中', '');
+          setStatus(elements.voiceStatus, '待機中', '');
         }
 
         if (!state.token) {
