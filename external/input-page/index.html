@@ -359,6 +359,22 @@
         font-size: 0.95rem;
       }
 
+      .store-shell,
+      .completion-summary {
+        display: grid;
+        gap: 10px;
+      }
+
+      .store-toggle {
+        width: 100%;
+      }
+
+      .store-panel {
+        display: grid;
+        gap: 12px;
+        padding-top: 4px;
+      }
+
       .store-list {
         display: grid;
         gap: 10px;
@@ -458,53 +474,7 @@
         <section class="hero view-section" aria-label="営業AIメモの商談メモ入力画面の見出し">
           <p class="eyebrow">営業AIメモ</p>
           <h1>営業AIメモ / 商談メモ入力</h1>
-          <p>ログイン中の担当者で、商談メモの入力と訪問先店舗の確認を行います。</p>
-        </section>
-
-        <section class="panel view-section" aria-labelledby="purpose-title">
-          <p class="section-title" id="purpose-title">この画面の使い方</p>
-          <p class="notice">音声入力、手入力、未送信テキストの保全、現在地の自動取得、訪問先店舗の選択、送信をまとめて扱います。</p>
-        </section>
-
-        <section class="panel view-section" aria-labelledby="gps-title">
-          <p class="section-title" id="gps-title">訪問先店舗</p>
-          <div class="status-group">
-            <p id="gpsStatus" class="status">現在地の取得を待っています</p>
-            <p id="candidateStatus" class="status">近い店舗候補はまだありません</p>
-          </div>
-          <p id="selectedStoreSummary" class="summary is-empty">店舗名はまだ確定していません</p>
-          <div class="two-col" style="margin-top: 12px;">
-            <div class="store-grid">
-              <p class="field-label">近い店舗候補</p>
-              <div id="nearbyStoreList" class="store-list"></div>
-            </div>
-            <div class="store-grid">
-              <p class="field-label">現在地の案内</p>
-              <p class="helper-text">ページを開いた直後に現在地を取得し、近い店舗候補を表示します。拒否や失敗でも入力と送信は続けられます。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel view-section" aria-labelledby="store-title">
-          <p class="section-title" id="store-title">候補にない場合</p>
-          <p id="searchStatus" class="status">店舗名を入力すると候補を表示します</p>
-          <div class="field" style="margin-top: 12px;">
-            <label class="field-label" for="storeManualInput">候補にない場合の店舗名</label>
-            <input
-              id="storeManualInput"
-              class="text-input"
-              type="text"
-              placeholder="候補にない場合は店舗名を入力してください"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-            >
-            <p class="helper-text">確定順は「近い店舗候補」→「候補一覧」→「手入力」です。候補がない場合は入力した店舗名をそのまま使えます。</p>
-          </div>
-          <div class="store-grid" style="margin-top: 12px;">
-            <p class="field-label">候補一覧</p>
-            <div id="searchStoreList" class="store-list"></div>
-          </div>
+          <p>ログイン中の担当者で商談メモを入力します。</p>
         </section>
 
         <section class="panel view-section" aria-labelledby="voice-title">
@@ -513,15 +483,52 @@
           <div class="button-row" style="margin-top: 10px;">
             <button id="micButton" class="mic-button" type="button" aria-pressed="false">マイク開始</button>
           </div>
+        </section>
 
-          <div class="field" style="margin-top: 14px;">
-            <label class="field-label" for="memoInput">入力欄</label>
+        <section class="panel view-section" aria-labelledby="memo-title">
+          <p class="section-title" id="memo-title">入力文章</p>
+          <div class="field">
+            <label class="field-label" for="memoInput">商談メモ</label>
             <textarea
               id="memoInput"
               class="textarea"
-              placeholder="認識した内容が末尾へ追記されます。手入力や編集もできます。"
+              placeholder="認識した内容が末尾へ追記されます。"
             ></textarea>
-            <p class="helper-text">認識結果は上書きせず、末尾へ追記します。手動編集も可能です。</p>
+          </div>
+        </section>
+
+        <section class="panel view-section" aria-labelledby="store-title">
+          <p class="section-title" id="store-title">訪問先店舗</p>
+          <div class="store-shell">
+            <p id="selectedStoreSummary" class="summary is-empty">店舗名はまだ確定していません</p>
+            <button id="storeToggleButton" class="secondary-button store-toggle" type="button">訪問先店舗を選ぶ</button>
+            <div id="storeSelectionPanel" class="store-panel hidden">
+              <div class="status-group">
+                <p id="gpsStatus" class="status">現在地の取得を待っています</p>
+                <p id="candidateStatus" class="status">近い店舗候補はまだありません</p>
+              </div>
+              <div class="store-grid">
+                <p class="field-label">近い店舗候補</p>
+                <div id="nearbyStoreList" class="store-list"></div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="storeManualInput">候補にない場合の店舗名</label>
+                <input
+                  id="storeManualInput"
+                  class="text-input"
+                  type="text"
+                  placeholder="店舗名を入力してください"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                >
+              </div>
+              <p id="searchStatus" class="status">店舗名を入力すると候補を表示します</p>
+              <div class="store-grid">
+                <p class="field-label">候補一覧</p>
+                <div id="searchStoreList" class="store-list"></div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -538,23 +545,15 @@
         <section id="completionPanel" class="panel completion-panel view-section hidden" aria-labelledby="completion-title">
           <p class="section-title" id="completion-title">保存完了</p>
           <div class="completion-card">
-            <p id="completionMessage" class="completion-message">保存しました</p>
+            <p id="completionMessage" class="completion-message">記録しました</p>
             <dl class="completion-list">
               <div class="completion-item">
                 <dt>件数</dt>
                 <dd id="completionCount">-</dd>
               </div>
               <div class="completion-item">
-                <dt>顧客名</dt>
-                <dd id="completionCustomerName">-</dd>
-              </div>
-              <div class="completion-item">
-                <dt>案件テーマ</dt>
-                <dd id="completionDealTheme">-</dd>
-              </div>
-              <div class="completion-item">
-                <dt>宿題の有無</dt>
-                <dd id="completionTodoFlag">-</dd>
+                <dt>概要</dt>
+                <dd id="completionSummary">-</dd>
               </div>
             </dl>
             <button id="continueButton" class="secondary-button" type="button">続けて入力する</button>
@@ -593,15 +592,15 @@
         candidateStatus: document.getElementById('candidateStatus'),
         searchStatus: document.getElementById('searchStatus'),
         selectedStoreSummary: document.getElementById('selectedStoreSummary'),
+        storeToggleButton: document.getElementById('storeToggleButton'),
+        storeSelectionPanel: document.getElementById('storeSelectionPanel'),
         nearbyStoreList: document.getElementById('nearbyStoreList'),
         searchStoreList: document.getElementById('searchStoreList'),
         storeManualInput: document.getElementById('storeManualInput'),
         completionPanel: document.getElementById('completionPanel'),
         completionMessage: document.getElementById('completionMessage'),
         completionCount: document.getElementById('completionCount'),
-        completionCustomerName: document.getElementById('completionCustomerName'),
-        completionDealTheme: document.getElementById('completionDealTheme'),
-        completionTodoFlag: document.getElementById('completionTodoFlag'),
+        completionSummary: document.getElementById('completionSummary'),
         continueButton: document.getElementById('continueButton'),
       };
 
@@ -612,6 +611,7 @@
         starting: false,
         sending: false,
         completed: false,
+        storeSelectionOpen: false,
         token: '',
         gps: {
           status: 'idle',
@@ -650,6 +650,20 @@
       function setSummary(text, empty) {
         elements.selectedStoreSummary.textContent = text;
         elements.selectedStoreSummary.classList.toggle('is-empty', Boolean(empty));
+      }
+
+      function updateStoreSelectionToggle() {
+        elements.storeToggleButton.textContent = state.storeSelectionOpen ? '訪問先店舗を閉じる' : '訪問先店舗を選ぶ';
+      }
+
+      function setStoreSelectionExpanded(isExpanded) {
+        state.storeSelectionOpen = Boolean(isExpanded);
+        elements.storeSelectionPanel.classList.toggle('hidden', !state.storeSelectionOpen);
+        updateStoreSelectionToggle();
+      }
+
+      function toggleStoreSelectionPanel() {
+        setStoreSelectionExpanded(!state.storeSelectionOpen);
       }
 
       function showUnsentNotice(show) {
@@ -996,6 +1010,7 @@
             state.nearby.selectedId = safeString(item.storeId).trim();
             renderNearbyStoreList();
             updateStoreSummary();
+            setStoreSelectionExpanded(false);
           });
           container.appendChild(button);
         });
@@ -1027,6 +1042,7 @@
             state.search.selectedId = safeString(item.storeId).trim();
             renderSearchStoreList();
             updateStoreSummary();
+            setStoreSelectionExpanded(false);
           });
           container.appendChild(button);
         });
@@ -1075,14 +1091,7 @@
           return;
         }
 
-        const labels = {
-          nearby: '近い店舗候補',
-          search: '候補一覧',
-          manual: '手入力',
-        };
-
-        const suffix = labels[resolved.source] ? `（${labels[resolved.source]}）` : '';
-        setSummary(`選択中の店舗: ${resolved.storeName}${suffix}`, false);
+        setSummary(`選択中の店舗: ${resolved.storeName}`, false);
       }
 
       function setGpsIdle() {
@@ -1437,14 +1446,13 @@
         renderNearbyStoreList();
         renderSearchStoreList('店舗名を入力すると候補を表示します。');
         updateStoreSummary();
+        setStoreSelectionExpanded(false);
 
-        setStatus(elements.sendStatus, '保存しました', 'success');
+        setStatus(elements.sendStatus, '記録しました', 'success');
         clearSendFeedback();
-        elements.completionMessage.textContent = '保存しました';
+        elements.completionMessage.textContent = '記録しました';
         elements.completionCount.textContent = countText;
-        elements.completionCustomerName.textContent = customerName;
-        elements.completionDealTheme.textContent = dealTheme;
-        elements.completionTodoFlag.textContent = todoItem ? 'あり' : 'なし';
+        elements.completionSummary.textContent = `顧客名: ${customerName} / 案件テーマ: ${dealTheme} / 宿題: ${todoItem ? 'あり' : 'なし'}`;
         state.completed = true;
         setViewMode('complete');
         updateMicButton();
@@ -1531,6 +1539,13 @@
 
       function bindEvents() {
         elements.micButton.addEventListener('click', toggleRecognition);
+        elements.storeToggleButton.addEventListener('click', () => {
+          if (state.completed) {
+            return;
+          }
+
+          toggleStoreSelectionPanel();
+        });
         elements.sendButton.addEventListener('click', () => {
           void handleSend();
         });
@@ -1542,6 +1557,7 @@
           state.search.selectedId = '';
           state.search.items = [];
           state.search.status = 'idle';
+          setStoreSelectionExpanded(false);
           if (state.search.timerId !== null) {
             window.clearTimeout(state.search.timerId);
             state.search.timerId = null;
@@ -1573,6 +1589,7 @@
         state.search.status = 'idle';
         state.search.items = [];
         state.search.selectedId = '';
+        setStoreSelectionExpanded(false);
         setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
         setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
         setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
@@ -1587,6 +1604,7 @@
         state.recognition = createRecognition();
         syncTokenState();
         state.completed = false;
+        setStoreSelectionExpanded(false);
         setViewMode('input');
         clearSendFeedback();
         updateMicButton();
