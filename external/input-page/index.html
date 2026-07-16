@@ -188,43 +188,77 @@
 
       .completion-card {
         display: grid;
-        gap: 14px;
-      }
-
-      .completion-message {
-        margin: 0;
-        color: var(--primary);
-        font-size: 1.18rem;
-        font-weight: 900;
-      }
-
-      .completion-list {
-        display: grid;
         gap: 12px;
-        margin: 0;
       }
 
-      .completion-item {
+      .completion-stat {
         display: grid;
-        gap: 4px;
+        gap: 6px;
         padding: 12px 14px;
         border-radius: 16px;
         background: #f7fafc;
         border: 1px solid var(--line);
       }
 
-      .completion-item dt {
-        font-size: 0.9rem;
-        font-weight: 800;
+      .completion-label {
+        margin: 0;
         color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 800;
       }
 
-      .completion-item dd {
+      .completion-count {
         margin: 0;
-        font-size: 1.02rem;
-        font-weight: 800;
+        font-size: 1.12rem;
+        font-weight: 900;
+        color: var(--primary);
+      }
+
+      .completion-summary {
+        margin: 0;
         color: var(--text);
-        word-break: break-word;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.7;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+      }
+
+      .completion-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .completion-actions .secondary-button {
+        width: 100%;
+        min-height: 52px;
+      }
+
+      .completion-actions .secondary-button:first-child {
+        color: #fff;
+        background: linear-gradient(180deg, #24527f 0%, var(--primary) 100%);
+        border: none;
+        box-shadow: 0 16px 26px rgba(26, 58, 92, 0.22);
+      }
+
+      .completion-actions .secondary-button:last-child {
+        color: var(--primary);
+        background: #eef3f8;
+        border: 1px solid var(--line);
+        box-shadow: none;
+      }
+
+      .completion-actions .secondary-button:active {
+        transform: translateY(1px);
+      }
+
+      .completion-actions .secondary-button:disabled {
+        opacity: 0.56;
+        box-shadow: none;
+      }
+
+      .completion-summary.is-empty {
+        color: #7f8d9b;
       }
 
       .mic-button,
@@ -366,8 +400,7 @@
         font-size: 0.95rem;
       }
 
-      .store-shell,
-      .completion-summary {
+      .store-shell {
         display: grid;
         gap: 10px;
       }
@@ -433,6 +466,10 @@
           gap: 12px;
           grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
+
+        .completion-actions {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
       }
 
       @media (max-width: 480px) {
@@ -469,8 +506,8 @@
           min-height: 160px;
         }
 
-        .completion-message {
-          font-size: 1.18rem;
+        .completion-actions {
+          gap: 8px;
         }
       }
     </style>
@@ -548,20 +585,20 @@
         </section>
 
         <section id="completionPanel" class="panel completion-panel view-section hidden" aria-labelledby="completion-title">
-          <p class="section-title" id="completion-title">保存完了</p>
+          <p class="section-title" id="completion-title">記録しました</p>
           <div class="completion-card">
-            <p id="completionMessage" class="completion-message">記録しました</p>
-            <dl class="completion-list">
-              <div class="completion-item">
-                <dt>件数</dt>
-                <dd id="completionCount">-</dd>
-              </div>
-              <div class="completion-item">
-                <dt>概要</dt>
-                <dd id="completionSummary">-</dd>
-              </div>
-            </dl>
-            <button id="continueButton" class="secondary-button" type="button">続けて入力する</button>
+            <div class="completion-stat">
+              <p class="completion-label">保存件数</p>
+              <p id="completionCount" class="completion-count">-</p>
+            </div>
+            <div class="completion-stat">
+              <p class="completion-label">保存内容の概要</p>
+              <p id="completionSummary" class="completion-summary">-</p>
+            </div>
+            <div class="completion-actions">
+              <button id="continueButton" class="secondary-button" type="button">続けて入力する</button>
+              <button id="topButton" class="secondary-button" type="button">TOPへ戻る</button>
+            </div>
           </div>
         </section>
       </div>
@@ -569,6 +606,7 @@
 
     <script>
       const GAS_SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbyji7sp3rftUVwQIRunFp1ClXc_9m_UDzXASkFHDq6P4_-j3srqWrr7I0XSfrj0FTk/exec';
+      const TOP_PAGE_URL = 'https://script.google.com/a/macros/marubishi-group.co.jp/s/AKfycbzjuy5sRg9508tMq2EY2_LJfwe8Vky4HQlITv6xkeACfU_cQHIETRNTrfgLsicvsIA/exec';
       const TOKEN_STORAGE_KEY = 'input_page_token';
       const STORAGE_KEY = 'unsent_text';
       const TOP_ACCESS_MESSAGE = '入口画面から開いてください';
@@ -603,10 +641,10 @@
         searchStoreList: document.getElementById('searchStoreList'),
         storeManualInput: document.getElementById('storeManualInput'),
         completionPanel: document.getElementById('completionPanel'),
-        completionMessage: document.getElementById('completionMessage'),
         completionCount: document.getElementById('completionCount'),
         completionSummary: document.getElementById('completionSummary'),
         continueButton: document.getElementById('continueButton'),
+        topButton: document.getElementById('topButton'),
       };
 
       const state = {
@@ -1457,8 +1495,8 @@
         const records = Array.isArray(payload && payload.records) ? payload.records : [];
         const firstRecord = records.length > 0 ? records[0] : null;
         const countText = `${Number.isFinite(recordCount) && recordCount > 0 ? recordCount : records.length}件`;
-        const customerName = safeString(firstRecord && (firstRecord.customerName ?? firstRecord.customer_name)).trim() || '（顧客名なし）';
-        const dealTheme = safeString(firstRecord && (firstRecord.dealTheme ?? firstRecord.deal_theme)).trim() || '（案件テーマなし）';
+        const customerName = safeString(firstRecord && (firstRecord.customerName ?? firstRecord.customer_name)).trim() || '（未入力）';
+        const dealTheme = safeString(firstRecord && (firstRecord.dealTheme ?? firstRecord.deal_theme)).trim() || '（未入力）';
         const todoItem = safeString(firstRecord && (firstRecord.todoItem ?? firstRecord.todo_item)).trim();
 
         elements.memoInput.value = '';
@@ -1480,9 +1518,8 @@
 
         setStatus(elements.sendStatus, '記録しました', 'success');
         clearSendFeedback();
-        elements.completionMessage.textContent = '記録しました';
         elements.completionCount.textContent = countText;
-        elements.completionSummary.textContent = `顧客名: ${customerName} / 案件テーマ: ${dealTheme} / 宿題: ${todoItem ? 'あり' : 'なし'}`;
+        elements.completionSummary.textContent = `顧客名：${customerName}\n案件テーマ：${dealTheme}\n宿題・ToDo：${todoItem || '（なし）'}`;
         state.completed = true;
         setViewMode('complete');
         updateMicButton();
@@ -1603,6 +1640,9 @@
           setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
           updateMicButton();
           updateSendButton();
+        });
+        elements.topButton.addEventListener('click', () => {
+          window.location.href = TOP_PAGE_URL;
         });
         elements.memoInput.addEventListener('input', handleMemoInput);
         elements.memoInput.addEventListener('change', handleMemoInput);
