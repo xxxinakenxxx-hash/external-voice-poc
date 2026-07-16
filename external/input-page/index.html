@@ -116,7 +116,8 @@
 
       .notice,
       .status,
-      .result {
+      .result,
+      .summary {
         border-radius: 16px;
         border: 1px solid var(--line);
       }
@@ -153,9 +154,27 @@
         color: var(--success);
       }
 
+      .summary {
+        margin: 0;
+        padding: 12px 14px;
+        background: #eef4fa;
+        color: var(--text);
+      }
+
+      .summary strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--primary);
+      }
+
+      .summary.is-empty {
+        color: #7f8d9b;
+      }
+
       .mic-button,
       .send-button,
-      .secondary-button {
+      .secondary-button,
+      .store-button {
         appearance: none;
         border: none;
         min-height: 52px;
@@ -165,7 +184,7 @@
         font-size: 1rem;
         font-weight: 800;
         cursor: pointer;
-        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
       }
 
       .mic-button {
@@ -191,6 +210,21 @@
         border: 1px solid var(--line);
       }
 
+      .store-button {
+        text-align: left;
+        background: #fff;
+        border: 1px solid var(--line);
+        display: grid;
+        gap: 4px;
+      }
+
+      .store-button.is-selected {
+        border-color: var(--primary);
+        background: #edf4fb;
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1);
+      }
+
+      .store-button:active,
       .mic-button:active,
       .send-button:active,
       .secondary-button:active {
@@ -199,20 +233,19 @@
 
       .mic-button:disabled,
       .send-button:disabled,
-      .secondary-button:disabled {
+      .secondary-button:disabled,
+      .store-button:disabled {
         cursor: not-allowed;
         opacity: 0.56;
         box-shadow: none;
       }
 
-      .button-row {
+      .button-row,
+      .field,
+      .actions,
+      .store-grid {
         display: grid;
         gap: 10px;
-      }
-
-      .field {
-        display: grid;
-        gap: 8px;
       }
 
       .field-label {
@@ -222,9 +255,9 @@
         color: var(--muted);
       }
 
-      .textarea {
+      .textarea,
+      .text-input {
         width: 100%;
-        min-height: 240px;
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 14px 16px;
@@ -236,18 +269,23 @@
         outline: none;
       }
 
-      .textarea:focus {
+      .textarea {
+        min-height: 240px;
+      }
+
+      .text-input {
+        min-height: 48px;
+      }
+
+      .textarea:focus,
+      .text-input:focus {
         border-color: #98b3cb;
         box-shadow: 0 0 0 4px rgba(26, 58, 92, 0.12);
       }
 
-      .textarea::placeholder {
+      .textarea::placeholder,
+      .text-input::placeholder {
         color: #8795a6;
-      }
-
-      .actions {
-        display: grid;
-        gap: 10px;
       }
 
       .result {
@@ -270,6 +308,31 @@
         font-size: 0.95rem;
       }
 
+      .store-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .store-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .store-meta {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .store-empty {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        background: #fbfcfe;
+      }
+
       .hidden {
         display: none !important;
       }
@@ -290,6 +353,12 @@
         .button-row {
           grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
         }
+
+        .two-col {
+          display: grid;
+          gap: 12px;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
       }
     </style>
   </head>
@@ -299,12 +368,53 @@
         <section class="hero" aria-label="外部入力専用マイクページの見出し">
           <p class="eyebrow">External Input Page</p>
           <h1>外部入力専用マイクページ</h1>
-          <p>TOP画面から受け取った token を使って、入力内容を本番 GAS に送信します。</p>
+          <p>TOP画面から受け取った token を使って、入力内容と店舗情報を本番 GAS に送信します。</p>
         </section>
 
         <section class="panel" aria-labelledby="purpose-title">
           <p class="section-title" id="purpose-title">このページの役割</p>
-          <p class="notice">ここでは音声認識、手入力、未送信テキストの保全、GAS 送信だけを扱います。</p>
+          <p class="notice">音声認識、手入力、未送信テキストの保全、GPS取得、店舗選択、GAS送信をまとめて扱います。</p>
+        </section>
+
+        <section class="panel" aria-labelledby="gps-title">
+          <p class="section-title" id="gps-title">GPS・店舗候補</p>
+          <div class="status-group">
+            <p id="gpsStatus" class="status">トークン受領後にGPSを取得します</p>
+            <p id="candidateStatus" class="status">近隣店舗候補はまだ取得していません</p>
+          </div>
+          <p id="selectedStoreSummary" class="summary is-empty">店舗名はまだ確定していません</p>
+          <div class="two-col" style="margin-top: 12px;">
+            <div class="store-grid">
+              <p class="field-label">近隣店舗候補</p>
+              <div id="nearbyStoreList" class="store-list"></div>
+            </div>
+            <div class="store-grid">
+              <p class="field-label">GPS状態</p>
+              <p class="helper-text">ページを開いた直後にブラウザ標準の位置情報許可ダイアログを使用します。拒否や失敗でも入力と送信は続けられます。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="store-title">
+          <p class="section-title" id="store-title">店舗名手入力・名寄せ</p>
+          <p id="searchStatus" class="status">店舗名を入力すると部分一致候補を表示します</p>
+          <div class="field" style="margin-top: 12px;">
+            <label class="field-label" for="storeManualInput">店舗名手入力</label>
+            <input
+              id="storeManualInput"
+              class="text-input"
+              type="text"
+              placeholder="該当候補がない場合は店舗名を入力してください"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+            >
+            <p class="helper-text">確定順は「近隣候補」→「名寄せ候補」→「手入力」です。候補がない場合は手入力文字列をそのまま使えます。</p>
+          </div>
+          <div class="store-grid" style="margin-top: 12px;">
+            <p class="field-label">部分一致候補</p>
+            <div id="searchStoreList" class="store-list"></div>
+          </div>
         </section>
 
         <section class="panel" aria-labelledby="voice-title">
@@ -321,7 +431,7 @@
               class="textarea"
               placeholder="認識した内容が末尾へ追記されます。手入力や編集もできます。"
             ></textarea>
-            <p class="helper-text">認識結果は上書きせず、末尾へ追記します。</p>
+            <p class="helper-text">認識結果は上書きせず、末尾へ追記します。手動編集も可能です。</p>
           </div>
         </section>
 
@@ -336,7 +446,7 @@
           <div class="field" style="margin-top: 14px;">
             <p class="field-label">結果表示</p>
             <pre id="resultArea" class="result is-empty" aria-live="polite">（保存結果がここに表示されます）</pre>
-            <p class="helper-text">送信時は token と inputText のみを GAS に POST します。</p>
+            <p class="helper-text">送信時は token、inputText、latitude、longitude、storeName をまとめて POST します。GPS失敗時は緯度・経度を空欄にできます。</p>
           </div>
         </section>
       </div>
@@ -348,6 +458,17 @@
       const STORAGE_KEY = 'unsent_text';
       const TOP_ACCESS_MESSAGE = 'TOP画面からアクセスしてください';
       const SENDING_MESSAGE = '記録しています…';
+      const GPS_WAITING_MESSAGE = 'トークン受領後にGPSを取得します';
+      const GPS_LOADING_MESSAGE = 'GPSを取得しています…';
+      const GPS_SUCCESS_MESSAGE = 'GPSを取得しました';
+      const GPS_UNSUPPORTED_MESSAGE = 'このブラウザは位置情報取得に対応していません';
+      const GPS_PERMISSION_MESSAGE = 'GPSの使用が許可されていません。手入力で続行できます。';
+      const GPS_TIMEOUT_MESSAGE = 'GPS取得がタイムアウトしました。手入力で続行できます。';
+      const GPS_UNAVAILABLE_MESSAGE = 'GPSを取得できませんでした。手入力で続行できます。';
+      const CANDIDATE_IDLE_MESSAGE = '近隣店舗候補はまだ取得していません';
+      const CANDIDATE_LOADING_MESSAGE = '近隣店舗候補を取得しています…';
+      const SEARCH_IDLE_MESSAGE = '店舗名を入力すると部分一致候補を表示します';
+      const SEARCH_LOADING_MESSAGE = '名寄せ候補を取得しています…';
 
       const elements = {
         micButton: document.getElementById('micButton'),
@@ -357,6 +478,13 @@
         sendStatus: document.getElementById('sendStatus'),
         unsentNotice: document.getElementById('unsentNotice'),
         resultArea: document.getElementById('resultArea'),
+        gpsStatus: document.getElementById('gpsStatus'),
+        candidateStatus: document.getElementById('candidateStatus'),
+        searchStatus: document.getElementById('searchStatus'),
+        selectedStoreSummary: document.getElementById('selectedStoreSummary'),
+        nearbyStoreList: document.getElementById('nearbyStoreList'),
+        searchStoreList: document.getElementById('searchStoreList'),
+        storeManualInput: document.getElementById('storeManualInput'),
       };
 
       const state = {
@@ -366,6 +494,26 @@
         starting: false,
         sending: false,
         token: '',
+        gps: {
+          status: 'idle',
+          latitude: '',
+          longitude: '',
+          errorMessage: '',
+          requestSeq: 0,
+        },
+        nearby: {
+          status: 'idle',
+          items: [],
+          selectedId: '',
+          requestSeq: 0,
+        },
+        search: {
+          status: 'idle',
+          items: [],
+          selectedId: '',
+          timerId: null,
+          requestSeq: 0,
+        },
       };
 
       function safeString(value) {
@@ -378,6 +526,11 @@
         if (kind) {
           element.classList.add(`is-${kind}`);
         }
+      }
+
+      function setSummary(text, empty) {
+        elements.selectedStoreSummary.textContent = text;
+        elements.selectedStoreSummary.classList.toggle('is-empty', Boolean(empty));
       }
 
       function setResult(text, empty) {
@@ -562,7 +715,11 @@
 
       function setSendingMode(isSending) {
         state.sending = isSending;
-        setStatus(elements.sendStatus, isSending ? SENDING_MESSAGE : (state.token ? '未送信' : TOP_ACCESS_MESSAGE), isSending ? 'success' : (state.token ? '' : 'error'));
+        setStatus(
+          elements.sendStatus,
+          isSending ? SENDING_MESSAGE : (state.token ? '未送信' : TOP_ACCESS_MESSAGE),
+          isSending ? 'success' : (state.token ? '' : 'error'),
+        );
         updateSendButton();
       }
 
@@ -615,6 +772,9 @@
 
         if (!state.token) {
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
+          setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
+          setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
+          setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
         } else {
           setStatus(elements.sendStatus, '未送信', '');
         }
@@ -622,11 +782,496 @@
         updateSendButton();
       }
 
-      function buildRequestBody() {
-        return JSON.stringify({
-          token: state.token,
-          inputText: safeString(elements.memoInput.value),
+      function formatCoordinate(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number.toFixed(6) : '';
+      }
+
+      function formatDistance(distanceKm) {
+        const value = Number(distanceKm);
+        if (!Number.isFinite(value)) {
+          return '';
+        }
+
+        return value < 1 ? `${value.toFixed(2)} km` : `${value.toFixed(1)} km`;
+      }
+
+      function escapeHtml(text) {
+        return safeString(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function createStoreButton(item, selected, detailText, onClick) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'store-button';
+        if (selected) {
+          button.classList.add('is-selected');
+        }
+
+        const name = document.createElement('span');
+        name.className = 'store-name';
+        name.textContent = safeString(item.storeName).trim() || '（店舗名なし）';
+
+        const meta = document.createElement('span');
+        meta.className = 'store-meta';
+        meta.textContent = detailText;
+
+        button.append(name, meta);
+        button.addEventListener('click', onClick);
+        return button;
+      }
+
+      function renderNearbyStoreList(messageKind) {
+        const container = elements.nearbyStoreList;
+        container.innerHTML = '';
+
+        if (state.nearby.status === 'loading') {
+          const loading = document.createElement('p');
+          loading.className = 'store-empty';
+          loading.textContent = '近隣店舗候補を取得しています…';
+          container.appendChild(loading);
+          return;
+        }
+
+        if (!state.nearby.items.length) {
+          const empty = document.createElement('p');
+          empty.className = 'store-empty';
+          empty.textContent = messageKind || 'GPS取得後に近い順4件の候補を表示します。';
+          container.appendChild(empty);
+          return;
+        }
+
+        state.nearby.items.forEach((item) => {
+          const selected = state.nearby.selectedId && state.nearby.selectedId === item.storeId;
+          const detail = [
+            item.storeId ? `ID: ${item.storeId}` : '',
+            formatDistance(item.distanceKm),
+          ].filter(Boolean).join(' / ');
+          const button = createStoreButton(item, selected, detail, () => {
+            state.nearby.selectedId = safeString(item.storeId).trim();
+            renderNearbyStoreList();
+            updateStoreSummary();
+          });
+          container.appendChild(button);
         });
+      }
+
+      function renderSearchStoreList(messageText) {
+        const container = elements.searchStoreList;
+        container.innerHTML = '';
+
+        if (state.search.status === 'loading') {
+          const loading = document.createElement('p');
+          loading.className = 'store-empty';
+          loading.textContent = '名寄せ候補を取得しています…';
+          container.appendChild(loading);
+          return;
+        }
+
+        if (!state.search.items.length) {
+          const empty = document.createElement('p');
+          empty.className = 'store-empty';
+          empty.textContent = messageText || '該当する候補がありません。手入力文字列をそのまま使えます。';
+          container.appendChild(empty);
+          return;
+        }
+
+        state.search.items.forEach((item) => {
+          const selected = state.search.selectedId && state.search.selectedId === item.storeId;
+          const detail = [
+            item.storeId ? `ID: ${item.storeId}` : '',
+            item.latitude !== '' && item.latitude !== null && item.latitude !== undefined ? `lat ${item.latitude}` : '',
+            item.longitude !== '' && item.longitude !== null && item.longitude !== undefined ? `lng ${item.longitude}` : '',
+          ].filter(Boolean).join(' / ');
+          const button = createStoreButton(item, selected, detail || '名寄せ候補', () => {
+            state.search.selectedId = safeString(item.storeId).trim();
+            renderSearchStoreList();
+            updateStoreSummary();
+          });
+          container.appendChild(button);
+        });
+      }
+
+      function resolveStoreSelection() {
+        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
+        if (nearby) {
+          return {
+            source: 'nearby',
+            storeName: safeString(nearby.storeName).trim(),
+            item: nearby,
+          };
+        }
+
+        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
+        if (search) {
+          return {
+            source: 'search',
+            storeName: safeString(search.storeName).trim(),
+            item: search,
+          };
+        }
+
+        const manual = safeString(elements.storeManualInput.value).trim();
+        if (manual) {
+          return {
+            source: 'manual',
+            storeName: manual,
+            item: null,
+          };
+        }
+
+        return {
+          source: '',
+          storeName: '',
+          item: null,
+        };
+      }
+
+      function updateStoreSummary() {
+        const resolved = resolveStoreSelection();
+
+        if (!resolved.storeName) {
+          setSummary('店舗名はまだ確定していません', true);
+          return;
+        }
+
+        const labels = {
+          nearby: '近隣候補',
+          search: '名寄せ候補',
+          manual: '手入力',
+        };
+
+        const suffix = labels[resolved.source] ? `（${labels[resolved.source]}）` : '';
+        setSummary(`選択中の店舗: ${resolved.storeName}${suffix}`, false);
+      }
+
+      function setGpsIdle() {
+        state.gps.status = 'idle';
+        state.gps.latitude = '';
+        state.gps.longitude = '';
+        state.gps.errorMessage = '';
+        renderNearbyStoreList('GPS取得後に近い順4件を表示します。');
+        updateStoreSummary();
+      }
+
+      function startGpsFlow() {
+        if (!state.token) {
+          setGpsIdle();
+          setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
+          setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
+          setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
+          return;
+        }
+
+        if (!navigator.geolocation) {
+          state.gps.status = 'error';
+          state.gps.errorMessage = GPS_UNSUPPORTED_MESSAGE;
+          setStatus(elements.gpsStatus, GPS_UNSUPPORTED_MESSAGE, 'error');
+          setStatus(elements.candidateStatus, 'GPS取得に失敗したため近隣店舗候補は表示できません', 'error');
+          renderNearbyStoreList('GPS取得に失敗したため近隣店舗候補はありません。手入力で続行できます。');
+          updateStoreSummary();
+          return;
+        }
+
+        const requestSeq = state.gps.requestSeq + 1;
+        state.gps.requestSeq = requestSeq;
+        state.gps.status = 'loading';
+        state.gps.errorMessage = '';
+        setStatus(elements.gpsStatus, GPS_LOADING_MESSAGE, 'listening');
+        setStatus(elements.candidateStatus, CANDIDATE_LOADING_MESSAGE, 'listening');
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            if (state.gps.requestSeq !== requestSeq) {
+              return;
+            }
+
+            const latitude = Number(position && position.coords ? position.coords.latitude : NaN);
+            const longitude = Number(position && position.coords ? position.coords.longitude : NaN);
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+              handleGpsError(requestSeq, GPS_UNAVAILABLE_MESSAGE);
+              return;
+            }
+
+            state.gps.status = 'success';
+            state.gps.latitude = Number(latitude.toFixed(6));
+            state.gps.longitude = Number(longitude.toFixed(6));
+            state.gps.errorMessage = '';
+            setStatus(
+              elements.gpsStatus,
+              `${GPS_SUCCESS_MESSAGE}（${formatCoordinate(state.gps.latitude)}, ${formatCoordinate(state.gps.longitude)}）`,
+              'success',
+            );
+            fetchNearbyStoreCandidates(requestSeq);
+          },
+          (error) => {
+            const code = error && error.code !== undefined ? Number(error.code) : 0;
+            let message = GPS_UNAVAILABLE_MESSAGE;
+            if (code === error.PERMISSION_DENIED) {
+              message = GPS_PERMISSION_MESSAGE;
+            } else if (code === error.TIMEOUT) {
+              message = GPS_TIMEOUT_MESSAGE;
+            } else if (code === error.POSITION_UNAVAILABLE) {
+              message = GPS_UNAVAILABLE_MESSAGE;
+            }
+
+            handleGpsError(requestSeq, message);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          },
+        );
+      }
+
+      function handleGpsError(requestSeq, message) {
+        if (state.gps.requestSeq !== requestSeq) {
+          return;
+        }
+
+        state.gps.status = 'error';
+        state.gps.latitude = '';
+        state.gps.longitude = '';
+        state.gps.errorMessage = message;
+        setStatus(elements.gpsStatus, message, 'error');
+        setStatus(elements.candidateStatus, 'GPS取得が失敗したため近隣店舗候補は表示できません', 'error');
+        renderNearbyStoreList('GPS取得に失敗したため近隣店舗候補はありません。手入力で続行できます。');
+        updateStoreSummary();
+      }
+
+      async function fetchNearbyStoreCandidates(requestSeq) {
+        if (!state.token || state.gps.requestSeq !== requestSeq) {
+          return;
+        }
+
+        state.nearby.status = 'loading';
+        renderNearbyStoreList();
+
+        try {
+          const payload = await postGasJson({
+            action: 'storeCandidates',
+            token: state.token,
+            latitude: state.gps.latitude,
+            longitude: state.gps.longitude,
+          });
+
+          if (state.gps.requestSeq !== requestSeq) {
+            return;
+          }
+
+          if (!payload || payload.success !== true) {
+            throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : '候補の取得に失敗しました。'));
+          }
+
+          const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+          state.nearby.status = 'success';
+          state.nearby.items = candidates;
+          if (!state.nearby.items.some((item) => safeString(item.storeId).trim() === state.nearby.selectedId)) {
+            state.nearby.selectedId = '';
+          }
+
+          if (candidates.length > 0) {
+            setStatus(elements.candidateStatus, `近隣店舗候補を ${candidates.length} 件取得しました`, 'success');
+            renderNearbyStoreList();
+          } else {
+            setStatus(elements.candidateStatus, '近隣店舗候補はありません。手入力で続行できます。', 'success');
+            renderNearbyStoreList('GPSに合う近隣店舗候補はありません。手入力で続行できます。');
+          }
+          updateStoreSummary();
+        } catch (error) {
+          if (state.gps.requestSeq !== requestSeq) {
+            return;
+          }
+
+          state.nearby.status = 'error';
+          state.nearby.items = [];
+          state.nearby.selectedId = '';
+          setStatus(elements.candidateStatus, safeString(error && error.message ? error.message : '近隣店舗候補の取得に失敗しました。'), 'error');
+          renderNearbyStoreList('近隣店舗候補の取得に失敗しました。手入力で続行できます。');
+          updateStoreSummary();
+        }
+      }
+
+      function scheduleStoreSearch() {
+        if (!state.token) {
+          state.search.status = 'idle';
+          state.search.items = [];
+          state.search.selectedId = '';
+          if (state.search.timerId !== null) {
+            window.clearTimeout(state.search.timerId);
+            state.search.timerId = null;
+          }
+          setStatus(elements.searchStatus, TOP_ACCESS_MESSAGE, 'error');
+          renderSearchStoreList('トークン受領後に部分一致検索を使えます。');
+          updateStoreSummary();
+          return;
+        }
+
+        const query = safeString(elements.storeManualInput.value).trim();
+        state.search.query = query;
+
+        if (state.search.timerId !== null) {
+          window.clearTimeout(state.search.timerId);
+          state.search.timerId = null;
+        }
+
+        if (!query) {
+          state.search.status = 'idle';
+          state.search.items = [];
+          state.search.selectedId = '';
+          setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
+          renderSearchStoreList('店舗名を入力すると部分一致候補を表示します。');
+          updateStoreSummary();
+          return;
+        }
+
+        state.search.status = 'typing';
+        state.search.items = [];
+        state.search.selectedId = '';
+        setStatus(elements.searchStatus, '入力を受け付けました。候補検索を待っています…', '');
+        renderSearchStoreList('入力待ちのため候補はまだ表示していません。');
+
+        state.search.timerId = window.setTimeout(() => {
+          state.search.timerId = null;
+          void fetchStoreSearchCandidates(query);
+        }, 500);
+      }
+
+      async function fetchStoreSearchCandidates(query) {
+        const trimmedQuery = safeString(query).trim();
+        if (!trimmedQuery || !state.token) {
+          return;
+        }
+
+        const requestSeq = state.search.requestSeq + 1;
+        state.search.requestSeq = requestSeq;
+        state.search.status = 'loading';
+        setStatus(elements.searchStatus, SEARCH_LOADING_MESSAGE, 'listening');
+        renderSearchStoreList();
+
+        try {
+          const payload = await postGasJson({
+            action: 'storeSearch',
+            token: state.token,
+            keyword: trimmedQuery,
+          });
+
+          if (state.search.requestSeq !== requestSeq || safeString(elements.storeManualInput.value).trim() !== trimmedQuery) {
+            return;
+          }
+
+          if (!payload || payload.success !== true) {
+            throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : '名寄せ候補の取得に失敗しました。'));
+          }
+
+          const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+          state.search.status = 'success';
+          state.search.items = candidates;
+          if (!state.search.items.some((item) => safeString(item.storeId).trim() === state.search.selectedId)) {
+            state.search.selectedId = '';
+          }
+
+          if (candidates.length > 0) {
+            setStatus(elements.searchStatus, `部分一致候補を ${candidates.length} 件取得しました`, 'success');
+            renderSearchStoreList();
+          } else {
+            setStatus(elements.searchStatus, '該当する候補がありません。手入力文字列をそのまま使えます。', 'success');
+            renderSearchStoreList('該当する候補がありません。手入力文字列をそのまま使えます。');
+          }
+          updateStoreSummary();
+        } catch (error) {
+          if (state.search.requestSeq !== requestSeq) {
+            return;
+          }
+
+          state.search.status = 'error';
+          state.search.items = [];
+          state.search.selectedId = '';
+          setStatus(elements.searchStatus, safeString(error && error.message ? error.message : '名寄せ候補の取得に失敗しました。'), 'error');
+          renderSearchStoreList('名寄せ候補の取得に失敗しました。手入力をそのまま使えます。');
+          updateStoreSummary();
+        }
+      }
+
+      function getSelectedStoreName() {
+        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
+        if (nearby) {
+          return safeString(nearby.storeName).trim();
+        }
+
+        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
+        if (search) {
+          return safeString(search.storeName).trim();
+        }
+
+        return safeString(elements.storeManualInput.value).trim();
+      }
+
+      function getSelectedStoreSource() {
+        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
+        if (nearby) {
+          return 'nearby';
+        }
+
+        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
+        if (search) {
+          return 'search';
+        }
+
+        if (safeString(elements.storeManualInput.value).trim()) {
+          return 'manual';
+        }
+
+        return '';
+      }
+
+      function buildRequestBody(payload) {
+        return JSON.stringify(payload);
+      }
+
+      function getJsonResponseErrorMessage(payload, fallbackMessage) {
+        if (payload && payload.errorMessage) {
+          return String(payload.errorMessage);
+        }
+        if (payload && payload.message) {
+          return String(payload.message);
+        }
+        return fallbackMessage;
+      }
+
+      async function postGasJson(payload) {
+        if (!safeString(GAS_SUBMIT_URL).trim()) {
+          throw new Error('送信先URLが設定されていません。');
+        }
+
+        const response = await fetch(GAS_SUBMIT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=UTF-8',
+          },
+          body: buildRequestBody(payload),
+        });
+
+        const responseText = await response.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(responseText);
+        } catch (error) {
+          throw new Error('GAS 応答を解析できませんでした。');
+        }
+
+        if (!response.ok || !parsed || parsed.success !== true) {
+          throw new Error(getJsonResponseErrorMessage(parsed, `HTTP ${response.status}`));
+        }
+
+        return parsed;
       }
 
       function formatRecordLine(record, index) {
@@ -675,34 +1320,22 @@
           return;
         }
 
+        const storeName = getSelectedStoreName();
+        const latitude = state.gps.status === 'success' ? state.gps.latitude : '';
+        const longitude = state.gps.status === 'success' ? state.gps.longitude : '';
+
         saveUnsentText(inputText);
         setSendingMode(true);
 
         try {
-          if (!safeString(GAS_SUBMIT_URL).trim()) {
-            throw new Error('送信先URLが設定されていません。');
-          }
-
-          const response = await fetch(GAS_SUBMIT_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'text/plain;charset=UTF-8',
-            },
-            body: buildRequestBody(),
+          const payload = await postGasJson({
+            action: 'submit',
+            token: state.token,
+            inputText,
+            latitude,
+            longitude,
+            storeName,
           });
-
-          const responseText = await response.text();
-          let payload;
-          try {
-            payload = JSON.parse(responseText);
-          } catch (error) {
-            throw new Error('GAS 応答を解析できませんでした。');
-          }
-
-          if (!response.ok || !payload || payload.success !== true) {
-            throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : `HTTP ${response.status}`));
-          }
 
           clearUnsentTextAfterWriteSuccess();
           renderSuccess(payload);
@@ -715,6 +1348,19 @@
         }
       }
 
+      function handleStoreManualInput() {
+        if (state.search.timerId !== null) {
+          window.clearTimeout(state.search.timerId);
+          state.search.timerId = null;
+        }
+
+        state.nearby.selectedId = '';
+        state.search.selectedId = '';
+        renderNearbyStoreList();
+        scheduleStoreSearch();
+        updateStoreSummary();
+      }
+
       function bindEvents() {
         elements.micButton.addEventListener('click', toggleRecognition);
         elements.sendButton.addEventListener('click', () => {
@@ -722,9 +1368,26 @@
         });
         elements.memoInput.addEventListener('input', handleMemoInput);
         elements.memoInput.addEventListener('change', handleMemoInput);
+        elements.storeManualInput.addEventListener('input', handleStoreManualInput);
+        elements.storeManualInput.addEventListener('change', handleStoreManualInput);
         window.addEventListener('pagehide', () => {
           saveUnsentText(elements.memoInput.value);
         });
+      }
+
+      function resetStoreUiForNoToken() {
+        state.nearby.status = 'idle';
+        state.nearby.items = [];
+        state.nearby.selectedId = '';
+        state.search.status = 'idle';
+        state.search.items = [];
+        state.search.selectedId = '';
+        setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
+        setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
+        setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
+        renderNearbyStoreList('GPS取得後に近い順4件を表示します。');
+        renderSearchStoreList('店舗名を入力すると部分一致候補を表示します。');
+        updateStoreSummary();
       }
 
       function initialize() {
@@ -742,8 +1405,13 @@
         }
 
         if (!state.token) {
+          resetStoreUiForNoToken();
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
+        } else {
+          startGpsFlow();
         }
+
+        updateStoreSummary();
       }
 
       document.addEventListener('DOMContentLoaded', initialize);
