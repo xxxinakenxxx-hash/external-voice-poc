@@ -33,18 +33,6 @@ function sendChatMessage(target, text) {
   };
 }
 
-function testSendChat() {
-  const testMessages = [
-    { target: 'sales', text: 'OUT-01 営業用送信テスト' },
-    { target: 'manager', text: 'OUT-01 管理職用送信テスト' },
-  ];
-
-  testMessages.forEach((item) => {
-    const result = sendChatMessage(item.target, item.text);
-    console.log(item.target, result.statusCode);
-  });
-}
-
 function getChatWebhookPropertyName_(target) {
   if (target === 'sales') {
     return 'CHAT_WEBHOOK_SALES';
@@ -55,6 +43,171 @@ function getChatWebhookPropertyName_(target) {
   }
 
   throw new Error('Unsupported Chat webhook target.');
+}
+
+const OUTPUT_CONFIG_SHEET_NAME_ = 'output_config';
+const OUTPUT_CONFIG_DEFAULTS_ = [
+  { key: 'daily_report_enabled', value: true, description: '個人日報通知の有効・無効' },
+  { key: 'manager_summary_enabled', value: true, description: '管理職向け日報まとめ通知の有効・無効' },
+  { key: 'send_hour', value: 18, description: '配信時刻（時）' },
+  { key: 'collect_from_hour', value: 0, description: '日次集計の開始時刻' },
+  { key: 'collect_to_hour', value: 18, description: '日次集計の終了時刻' },
+  { key: 'skip_weekend', value: true, description: '土日の配信を停止するか' },
+];
+
+function setupOutputConfig() {
+  const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
+  let sheet = spreadsheet.getSheetByName(OUTPUT_CONFIG_SHEET_NAME_);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(OUTPUT_CONFIG_SHEET_NAME_);
+  }
+
+  const existingKeys = new Set();
+  const lastRow = sheet.getLastRow();
+  const existingRange = lastRow > 0 ? sheet.getRange(1, 1, lastRow, 3).getValues() : [];
+
+  for (let rowIndex = 0; rowIndex < existingRange.length; rowIndex += 1) {
+    const row = existingRange[rowIndex];
+    const key = String(row[0] || '').trim();
+    if (key && key !== 'key') {
+      existingKeys.add(key);
+    }
+  }
+
+  if (lastRow === 0) {
+    sheet.getRange(1, 1, 1, 3).setValues([['key', 'value', 'description']]);
+  }
+
+  const rowsToAppend = OUTPUT_CONFIG_DEFAULTS_.filter((item) => !existingKeys.has(item.key)).map((item) => [
+    item.key,
+    item.value,
+    item.description,
+  ]);
+
+  if (rowsToAppend.length > 0) {
+    const startRow = sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, rowsToAppend.length, 3).setValues(rowsToAppend);
+  }
+}
+
+function getOutputConfig() {
+  const defaults = {
+    dailyReportEnabled: true,
+    managerSummaryEnabled: true,
+    sendHour: 18,
+    collectFromHour: 0,
+    collectToHour: 18,
+    skipWeekend: true,
+  };
+
+  try {
+    const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
+    const sheet = spreadsheet.getSheetByName(OUTPUT_CONFIG_SHEET_NAME_);
+    if (!sheet) {
+      return { ...defaults };
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 1) {
+      return { ...defaults };
+    }
+
+    const values = sheet.getRange(1, 1, lastRow, 3).getValues();
+    const config = { ...defaults };
+    const startRowIndex = isOutputConfigHeaderRow_(values[0]) ? 1 : 0;
+
+    for (let rowIndex = startRowIndex; rowIndex < values.length; rowIndex += 1) {
+      const row = values[rowIndex];
+      const key = String(row[0] || '').trim();
+      if (!key) {
+        continue;
+      }
+
+      const rawValue = row[1];
+      if (key === 'daily_report_enabled') {
+        const parsedValue = parseOutputConfigBoolean_(rawValue);
+        if (parsedValue !== null) {
+          config.dailyReportEnabled = parsedValue;
+        }
+        continue;
+      }
+
+      if (key === 'manager_summary_enabled') {
+        const parsedValue = parseOutputConfigBoolean_(rawValue);
+        if (parsedValue !== null) {
+          config.managerSummaryEnabled = parsedValue;
+        }
+        continue;
+      }
+
+      if (key === 'send_hour') {
+        const parsedValue = parseOutputConfigNumber_(rawValue);
+        if (parsedValue !== null) {
+          config.sendHour = parsedValue;
+        }
+        continue;
+      }
+
+      if (key === 'collect_from_hour') {
+        const parsedValue = parseOutputConfigNumber_(rawValue);
+        if (parsedValue !== null) {
+          config.collectFromHour = parsedValue;
+        }
+        continue;
+      }
+
+      if (key === 'collect_to_hour') {
+        const parsedValue = parseOutputConfigNumber_(rawValue);
+        if (parsedValue !== null) {
+          config.collectToHour = parsedValue;
+        }
+        continue;
+      }
+
+      if (key === 'skip_weekend') {
+        const parsedValue = parseOutputConfigBoolean_(rawValue);
+        if (parsedValue !== null) {
+          config.skipWeekend = parsedValue;
+        }
+      }
+    }
+
+    return { ...config };
+  } catch (error) {
+    return { ...defaults };
+  }
+}
+
+function runDailyDelivery() {
+  const config = getOutputConfig();
+  const now = new Date();
+  const dayOfWeek = Number(Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'u'));
+  const currentHour = Number(Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'H'));
+
+  if (config.skipWeekend && (dayOfWeek === 6 || dayOfWeek === 7)) {
+    return;
+  }
+
+  if (currentHour !== Number(config.sendHour)) {
+    return;
+  }
+
+  if (config.dailyReportEnabled === true) {
+    try {
+      notifyDailyReport();
+    } catch (error) {
+      logError('OUT04_DAILY_NOTIFY_ERROR', error && error.message ? error.message : String(error), {});
+    }
+  }
+
+  if (config.managerSummaryEnabled === true) {
+    try {
+      notifyManagerSummary();
+    } catch (error) {
+      logError('OUT04_MANAGER_NOTIFY_ERROR', error && error.message ? error.message : String(error), {});
+    }
+  }
 }
 
 function getDailyReportUrl() {
@@ -97,6 +250,7 @@ function getManagerSummaryData() {
     throw new Error('このページを表示する権限がありません');
   }
 
+  const config = getOutputConfig();
   const sheet = getDealRecordsSheet_();
   const values = sheet.getDataRange().getValues();
   if (values.length < 2) {
@@ -105,7 +259,7 @@ function getManagerSummaryData() {
 
   const indexes = getDailyReportColumnIndexes_(values[0]);
   const now = new Date();
-  const startOfToday = getStartOfToday_();
+  const startOfToday = getCollectionWindowStart_(now, config.collectFromHour);
   const summaryRows = [];
 
   for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
@@ -115,8 +269,11 @@ function getManagerSummaryData() {
       continue;
     }
 
-    const createdAtTime = createdAt.getTime();
-    if (createdAtTime < startOfToday.getTime() || createdAtTime > now.getTime()) {
+    if (!isWithinCollectionWindow_(createdAt, now, config)) {
+      continue;
+    }
+
+    if (createdAt.getTime() < startOfToday.getTime()) {
       continue;
     }
 
@@ -181,6 +338,7 @@ function getDailyReportData(userName) {
     throw new Error('userName は必須です。');
   }
 
+  const config = getOutputConfig();
   const sheet = getDealRecordsSheet_();
   const values = sheet.getDataRange().getValues();
   if (values.length < 2) {
@@ -191,8 +349,7 @@ function getDailyReportData(userName) {
   const now = new Date();
   const cutoffDate = new Date(now.getTime());
   cutoffDate.setDate(cutoffDate.getDate() - 29);
-  const todayKey = Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
-  const cutoffKey = Utilities.formatDate(cutoffDate, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
+  const collectionStart = getCollectionWindowStart_(cutoffDate, config.collectFromHour);
 
   const flatRecords = [];
   for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
@@ -203,12 +360,15 @@ function getDailyReportData(userName) {
     }
 
     const createdAt = parseDailyReportCreatedAt_(row[indexes.createdAt]);
-    if (!createdAt || createdAt.getTime() > now.getTime()) {
+    if (!createdAt) {
       continue;
     }
 
-    const createdAtKey = Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
-    if (createdAtKey < cutoffKey || createdAtKey > todayKey) {
+    if (createdAt.getTime() < collectionStart.getTime()) {
+      continue;
+    }
+
+    if (!isWithinCollectionWindow_(createdAt, now, config)) {
       continue;
     }
 
@@ -280,6 +440,88 @@ function parseDailyReportCreatedAt_(value) {
     const fallbackDate = new Date(createdAtText);
     return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
   }
+}
+
+function parseOutputConfigBoolean_(value) {
+  if (value === true) {
+    return true;
+  }
+
+  if (value === false) {
+    return false;
+  }
+
+  const normalizedValue = String(value || '').trim().toLowerCase();
+  if (!normalizedValue) {
+    return null;
+  }
+
+  if (['true', '1', 'yes', 'y', 'on', 't'].includes(normalizedValue)) {
+    return true;
+  }
+
+  if (['false', '0', 'no', 'n', 'off', 'f'].includes(normalizedValue)) {
+    return false;
+  }
+
+  return null;
+}
+
+function parseOutputConfigNumber_(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  return Math.floor(numericValue);
+}
+
+function isOutputConfigHeaderRow_(row) {
+  if (!Array.isArray(row)) {
+    return false;
+  }
+
+  return String(row[0] || '').trim() === 'key'
+    && String(row[1] || '').trim() === 'value'
+    && String(row[2] || '').trim() === 'description';
+}
+
+function getCollectionWindowStart_(dateValue, collectFromHour) {
+  return buildDateAtHour_(dateValue, collectFromHour);
+}
+
+function getCollectionWindowEnd_(dateValue, currentDate, collectToHour) {
+  const endOfWindow = buildDateAtHour_(dateValue, collectToHour);
+  const sameDay = Utilities.formatDate(dateValue, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd')
+    === Utilities.formatDate(currentDate, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
+
+  if (sameDay && currentDate.getTime() < endOfWindow.getTime()) {
+    return currentDate;
+  }
+
+  return endOfWindow;
+}
+
+function isWithinCollectionWindow_(dateValue, currentDate, config) {
+  const start = getCollectionWindowStart_(dateValue, config.collectFromHour);
+  const end = getCollectionWindowEnd_(dateValue, currentDate, config.collectToHour);
+  const targetTime = dateValue.getTime();
+  return targetTime >= start.getTime() && targetTime <= end.getTime();
+}
+
+function buildDateAtHour_(dateValue, hourValue) {
+  const normalizedHour = Number(hourValue);
+  const safeHour = Number.isFinite(normalizedHour) ? Math.min(Math.max(Math.floor(normalizedHour), 0), 23) : 0;
+  const dayText = Utilities.formatDate(dateValue, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
+  return Utilities.parseDate(
+    `${dayText} ${String(safeHour).padStart(2, '0')}:00:00`,
+    WRITE_RECORD_TIMEZONE_,
+    'yyyy/MM/dd HH:mm:ss',
+  );
 }
 
 function buildDailyReportSummary_(dealTheme, dealContent) {
