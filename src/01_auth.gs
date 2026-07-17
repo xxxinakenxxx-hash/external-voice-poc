@@ -8,10 +8,13 @@ function doGet(e) {
   const template = HtmlService.createTemplateFromFile('top');
   template.model = createTopPageModel_();
 
-  return template
+  const output = template
     .evaluate()
     .setTitle('営業AIメモ')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+
+  return output;
 }
 
 function createTopPageModel_() {

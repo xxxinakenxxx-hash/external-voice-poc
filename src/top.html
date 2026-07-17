@@ -146,6 +146,10 @@
         box-shadow: 0 16px 30px rgba(232, 122, 31, 0.24);
       }
 
+      .mobile-shell {
+        display: none;
+      }
+
       @media (min-width: 768px) {
         main {
           padding: 24px 18px 32px;
@@ -173,57 +177,189 @@
       }
 
       @media (max-width: 767px) {
+        body {
+          min-height: 100dvh;
+          background: linear-gradient(180deg, #edf2f7 0%, #e3ebf3 100%);
+        }
+
         main {
-          max-width: none;
-          padding: calc(10px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+          width: min(100%, 430px);
+          max-width: 430px;
+          margin: 0 auto;
+          padding: calc(16px + env(safe-area-inset-top)) 15px calc(16px + env(safe-area-inset-bottom));
         }
 
         .stack {
+          display: none;
+        }
+
+        .mobile-shell {
+          display: grid;
+          gap: 16px;
+        }
+
+        .mobile-hero {
+          position: relative;
+          overflow: hidden;
+          padding: 30px 24px 28px;
+          border-radius: 26px;
+          background: linear-gradient(145deg, #24476d 0%, #1a3a5c 100%);
+          color: #fff;
+          box-shadow: 0 18px 36px rgba(22, 48, 71, 0.14);
+        }
+
+        .mobile-hero::after {
+          content: "";
+          position: absolute;
+          top: -36px;
+          right: -32px;
+          width: 112px;
+          height: 112px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mobile-profile,
+        .mobile-action {
+          background: #ffffff;
+          border: 1px solid #d7e0ea;
+          border-radius: 22px;
+          box-shadow: 0 14px 30px rgba(22, 48, 71, 0.08);
+        }
+
+        .mobile-profile {
+          display: grid;
           gap: 8px;
+          padding: 22px 24px;
         }
 
-        .hero {
-          border-radius: 18px;
-          padding: 18px 14px 16px;
+        .mobile-app-name {
+          margin: 0 0 8px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 16px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
         }
 
-        .card {
-          border-radius: 18px;
-          padding: 14px 13px;
+        .mobile-headline {
+          margin: 0;
+          color: #ffffff;
+          font-size: 33px;
+          line-height: 1.16;
+          letter-spacing: -0.03em;
+          font-weight: 900;
         }
 
-        .eyebrow {
-          font-size: 0.78rem;
+        .mobile-description {
+          margin: 12px 0 0;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 16px;
+          line-height: 1.65;
         }
 
-        h1 {
-          font-size: 1.55rem;
-        }
-
-        .subtext {
-          margin-top: 8px;
-          font-size: 0.98rem;
+        .mobile-notice {
+          margin: 0;
+          padding: 12px 14px;
+          border-radius: 14px;
+          border: 1px solid rgba(180, 35, 24, 0.16);
+          background: rgba(253, 236, 236, 0.9);
+          color: var(--danger);
+          font-size: 14px;
           line-height: 1.6;
+          font-weight: 700;
         }
 
-        .user-name {
-          font-size: 1.2rem;
+        .mobile-label {
+          margin: 0;
+          color: var(--muted);
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: 0.03em;
         }
 
-        .label {
-          font-size: 0.9rem;
+        .mobile-user-name {
+          margin: 0;
+          color: #10263f;
+          font-size: 23px;
+          line-height: 1.28;
+          font-weight: 900;
+          word-break: break-word;
         }
 
-        .link-button {
-          min-height: 60px;
+        .mobile-action {
+          display: grid;
+          gap: 12px;
+          padding: 22px 24px 20px;
+        }
+
+        .mobile-action .link-button {
+          min-height: 62px;
           border-radius: 16px;
-          font-size: 1.02rem;
+          font-size: 18px;
+          box-shadow: 0 16px 26px rgba(232, 122, 31, 0.24);
+        }
+
+        .mobile-action-note {
+          margin: 0;
+          color: var(--muted);
+          font-size: 13px;
+          line-height: 1.6;
+          text-align: center;
+        }
+
+        .mobile-footnote {
+          margin: 0;
+          padding: 10px 2px 0;
+          color: #5f6975;
+          font-size: 13px;
+          line-height: 1.6;
+          text-align: center;
+        }
+
+        .mobile-shell .notice {
+          padding: 12px 14px;
+          border-radius: 14px;
+          font-size: 14px;
+        }
+
+        .mobile-shell .mobile-action .link-button {
+          width: 100%;
+        }
+
+        .mobile-shell .mobile-profile,
+        .mobile-shell .mobile-action,
+        .mobile-shell .mobile-footnote {
+          width: 100%;
         }
       }
     </style>
   </head>
   <body>
     <main>
+      <div class="mobile-shell">
+        <section class="mobile-hero" aria-label="営業AIメモの入口画面">
+          <p class="mobile-app-name">営業AIメモ</p>
+          <h1 class="mobile-headline">商談を、すぐ記録。</h1>
+          <p class="mobile-description">商談内容を話すか入力すると、AIが整理して保存します。</p>
+        </section>
+
+        <? if (model.noticeMessage) { ?>
+          <section class="mobile-notice" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <section class="mobile-profile" aria-live="polite">
+          <p class="mobile-label">ログイン中</p>
+          <p class="mobile-user-name"><?= model.userName ?></p>
+        </section>
+
+        <? if (model.inputPageLinkUrl) { ?>
+          <section class="mobile-action">
+            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+          </section>
+          <p class="mobile-footnote">会社のGoogleアカウントで本人確認済みです</p>
+        <? } ?>
+      </div>
+
       <div class="stack">
         <section class="hero" aria-label="営業AIメモの入口画面">
           <p class="eyebrow">営業AIメモ</p>
