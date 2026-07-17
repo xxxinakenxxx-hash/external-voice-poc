@@ -6,6 +6,10 @@ const AUTH_ERROR_MESSAGES_ = {
 
 function doGet(e) {
   const view = String(e && e.parameter && e.parameter.view ? e.parameter.view : '').trim();
+  if (view === 'summary') {
+    return createPageHtmlOutput_('summary', createManagerSummaryPageModel_());
+  }
+
   if (view === 'daily') {
     return createPageHtmlOutput_('daily', createDailyPageModel_());
   }
@@ -42,6 +46,40 @@ function createTopPageModel_() {
     model.dailyReportLinkUrl = getDailyReportUrl();
   } catch (error) {
     model.dailyReportLinkUrl = '';
+  }
+
+  return model;
+}
+
+function createManagerSummaryPageModel_() {
+  const hasPermission = isManagerUser_();
+  const model = {
+    pageTitle: '営業AIメモ｜日報まとめ',
+    isManager: hasPermission,
+    currentDateLabel: Utilities.formatDate(new Date(), WRITE_RECORD_TIMEZONE_, 'yyyy年M月d日'),
+    summaryRows: [],
+    hasSummaryData: false,
+    emptyMessage: '本日の商談記録はありません',
+    noticeMessage: '',
+    topPageLinkUrl: '',
+  };
+
+  try {
+    model.topPageLinkUrl = String(ScriptApp.getService().getUrl() || '').trim();
+  } catch (error) {
+    model.topPageLinkUrl = '';
+  }
+
+  if (!hasPermission) {
+    model.noticeMessage = 'このページを表示する権限がありません';
+    return model;
+  }
+
+  try {
+    model.summaryRows = getManagerSummaryData();
+    model.hasSummaryData = Array.isArray(model.summaryRows) && model.summaryRows.length > 0;
+  } catch (error) {
+    model.noticeMessage = String(error && error.message ? error.message : '日報まとめを表示できませんでした。');
   }
 
   return model;
@@ -128,6 +166,7 @@ function findUserMasterRow_(sheet, userKey) {
   const nameIndex = headers.indexOf('user_fullname');
   const branchIndex = headers.indexOf('master_branch_name');
   const activeIndex = headers.indexOf('active_flag');
+  const roleIndex = headers.indexOf('role');
 
   if ([keyIndex, nameIndex, branchIndex, activeIndex].some((index) => index < 0)) {
     throw new Error('user_master の見出しが不正です');
@@ -146,10 +185,34 @@ function findUserMasterRow_(sheet, userKey) {
       userName: String(row[nameIndex] || '').trim(),
       branchName: String(row[branchIndex] || '').trim(),
       activeFlag: String(row[activeIndex] || '').trim(),
+      role: roleIndex >= 0 ? String(row[roleIndex] || '').trim() : '',
     };
   }
 
   return null;
+}
+
+function getCurrentUserRole_() {
+  try {
+    const userKey = String(Session.getActiveUser().getEmail() || '').trim();
+    if (!userKey) {
+      return '';
+    }
+
+    const userMasterSheet = getUserMasterSheet_();
+    const validationRow = findUserMasterRow_(userMasterSheet, userKey);
+    if (!validationRow || validationRow.activeFlag !== '有効') {
+      return '';
+    }
+
+    return String(validationRow.role || '').trim();
+  } catch (error) {
+    return '';
+  }
+}
+
+function isManagerUser_() {
+  return getCurrentUserRole_() === 'manager';
 }
 
 function createValidationResult_(valid, userKey, userName, branchName, errorMessage) {

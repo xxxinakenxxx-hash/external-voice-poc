@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= model.pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4efe6;
+        --panel: #ffffff;
+        --panel-soft: #faf7f1;
+        --text: #1f2937;
+        --muted: #5c6877;
+        --accent: #173d5f;
+        --accent-strong: #f0892b;
+        --border: #d9e0e8;
+        --shadow: 0 18px 48px rgba(23, 61, 95, 0.12);
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.14), transparent 34%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 30%),
+          linear-gradient(180deg, #fdf8ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      .layout {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 22px 20px;
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -52px;
+        top: -54px;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.92rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        font-size: 1.03rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .notice--error {
+        border-color: #f5c2c7;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .meta-row {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(240, 137, 43, 0.14);
+        color: #fff;
+        font-size: 0.94rem;
+        font-weight: 800;
+      }
+
+      .meta-date {
+        margin: 0;
+        font-size: 1.16rem;
+        font-weight: 900;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #fff;
+      }
+
+      table {
+        width: 100%;
+        min-width: 860px;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: linear-gradient(180deg, #1e4b73 0%, #173d5f 100%);
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 900;
+        text-align: left;
+        padding: 14px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      tbody td {
+        padding: 14px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+        font-size: 1rem;
+        line-height: 1.7;
+        word-break: break-word;
+      }
+
+      tbody tr:nth-child(even) td {
+        background: #fafcff;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .cell-branch,
+      .cell-user,
+      .cell-date {
+        white-space: nowrap;
+        font-weight: 800;
+      }
+
+      .cell-summary {
+        color: var(--text);
+      }
+
+      .cell-date {
+        color: var(--accent);
+      }
+
+      .empty-state {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .footer-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 56px;
+        border-radius: 18px;
+        border: none;
+        padding: 12px 18px;
+        text-decoration: none;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 800;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+      }
+
+      @media (min-width: 768px) {
+        main {
+          padding: 24px 18px 32px;
+        }
+
+        .hero {
+          padding: 28px 26px;
+        }
+
+        .card {
+          padding: 20px 22px;
+        }
+
+        h1 {
+          font-size: 2.12rem;
+        }
+      }
+
+      @media (max-width: 767px) {
+        main {
+          width: min(100%, 430px);
+          margin: 0 auto;
+          padding: calc(16px + env(safe-area-inset-top)) 15px calc(18px + env(safe-area-inset-bottom));
+        }
+
+        .layout {
+          gap: 10px;
+        }
+
+        .hero {
+          padding: 24px 20px;
+          border-radius: 24px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .table-scroll {
+          margin: 0 -4px;
+        }
+
+        .link-button {
+          min-height: 60px;
+          font-size: 1.02rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="layout">
+        <? if (model.isManager) { ?>
+          <section class="hero" aria-label="日報まとめの概要">
+            <p class="eyebrow">管理職向け</p>
+            <h1>営業AIメモ｜日報まとめ</h1>
+            <p class="subtext">当日0時から現在時刻までの商談記録を、担当者ごとに一覧できます。</p>
+            <div class="meta-row">
+              <p class="meta-chip">管理職向け</p>
+              <p class="meta-date"><?= model.currentDateLabel ?></p>
+            </div>
+          </section>
+
+          <? if (model.noticeMessage) { ?>
+            <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+          <? } ?>
+
+          <? if (!model.noticeMessage) { ?>
+            <section class="card" aria-live="polite">
+              <p class="section-title">当日の商談記録</p>
+
+              <? if (model.hasSummaryData) { ?>
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">担当者</th>
+                        <th scope="col">訪問先</th>
+                        <th scope="col">商談要点</th>
+                        <th scope="col">日付・時刻</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <? for (var rowIndex = 0; rowIndex < model.summaryRows.length; rowIndex++) { ?>
+                        <? var row = model.summaryRows[rowIndex]; ?>
+                        <tr>
+                          <td class="cell-user"><?= row.userName ?></td>
+                          <td class="cell-branch"><?= row.customerName ?></td>
+                          <td class="cell-summary"><?= row.summary ?></td>
+                          <td class="cell-date"><?= row.dateLabel ?> <?= row.timeLabel ?></td>
+                        </tr>
+                      <? } ?>
+                    </tbody>
+                  </table>
+                </div>
+              <? } else { ?>
+                <div class="empty-state"><?= model.emptyMessage ?></div>
+              <? } ?>
+            </section>
+          <? } ?>
+        <? } else { ?>
+          <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <? if (model.topPageLinkUrl) { ?>
+          <section class="footer-actions">
+            <a class="link-button" href="<?= model.topPageLinkUrl ?>" target="_top" rel="noopener">TOPへ戻る</a>
+          </section>
+        <? } ?>
+      </div>
+    </main>
+  </body>
+</html>

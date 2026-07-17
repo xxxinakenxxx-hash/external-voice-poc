@@ -72,6 +72,75 @@ function notifyDailyReport() {
   return sendChatMessage('sales', `日報ができました。ここから確認 → ${dailyReportUrl}`);
 }
 
+function getManagerSummaryUrl() {
+  const dailyReportUrl = getDailyReportUrl();
+  const queryIndex = dailyReportUrl.indexOf('?');
+  const fragmentIndex = dailyReportUrl.indexOf('#');
+  let baseUrl = dailyReportUrl;
+
+  if (queryIndex >= 0 || fragmentIndex >= 0) {
+    const cutPoints = [queryIndex, fragmentIndex].filter((index) => index >= 0);
+    const cutIndex = Math.min.apply(null, cutPoints);
+    baseUrl = dailyReportUrl.slice(0, cutIndex);
+  }
+
+  return `${baseUrl}?view=summary`;
+}
+
+function notifyManagerSummary() {
+  const managerSummaryUrl = getManagerSummaryUrl();
+  return sendChatMessage('manager', `日報まとめができました。ここから確認 → ${managerSummaryUrl}`);
+}
+
+function getManagerSummaryData() {
+  if (!isManagerUser_()) {
+    throw new Error('このページを表示する権限がありません');
+  }
+
+  const sheet = getDealRecordsSheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return [];
+  }
+
+  const indexes = getDailyReportColumnIndexes_(values[0]);
+  const now = new Date();
+  const startOfToday = getStartOfToday_();
+  const summaryRows = [];
+
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const createdAt = parseDailyReportCreatedAt_(row[indexes.createdAt]);
+    if (!createdAt) {
+      continue;
+    }
+
+    const createdAtTime = createdAt.getTime();
+    if (createdAtTime < startOfToday.getTime() || createdAtTime > now.getTime()) {
+      continue;
+    }
+
+    summaryRows.push({
+      createdAt,
+      userName: String(row[indexes.userName] || '').trim(),
+      customerName: String(row[indexes.customerName] || '').trim(),
+      summary: buildDailyReportSummary_(row[indexes.dealTheme], row[indexes.dealContent]),
+      dateLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd'),
+      timeLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'HH:mm'),
+    });
+  }
+
+  summaryRows.sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
+  return summaryRows.map((row) => ({
+    userName: row.userName,
+    customerName: row.customerName,
+    summary: row.summary,
+    dateLabel: row.dateLabel,
+    timeLabel: row.timeLabel,
+  }));
+}
+
 function createDailyPageModel_() {
   const validation = validateUser();
   const model = {
@@ -231,6 +300,12 @@ function normalizeDailyReportText_(value) {
   return String(value || '')
     .replace(/[\s\u3000]+/g, ' ')
     .trim();
+}
+
+function getStartOfToday_() {
+  const now = new Date();
+  const todayText = Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
+  return Utilities.parseDate(`${todayText} 00:00:00`, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd HH:mm:ss');
 }
 
 function groupDailyReportRecords_(records) {
