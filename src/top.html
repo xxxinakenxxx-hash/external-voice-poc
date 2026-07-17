@@ -146,6 +146,19 @@
         box-shadow: 0 16px 30px rgba(232, 122, 31, 0.24);
       }
 
+      .link-button--secondary {
+        margin-top: 0;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        box-shadow: none;
+      }
+
+      .button-stack {
+        display: grid;
+        gap: 12px;
+      }
+
       .mobile-shell {
         display: none;
       }
@@ -299,6 +312,10 @@
           box-shadow: 0 16px 26px rgba(232, 122, 31, 0.24);
         }
 
+        .mobile-action .link-button--secondary {
+          box-shadow: none;
+        }
+
         .mobile-action-note {
           margin: 0;
           color: var(--muted);
@@ -355,6 +372,9 @@
         <? if (model.inputPageLinkUrl) { ?>
           <section class="mobile-action">
             <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+            <? if (model.dailyReportLinkUrl) { ?>
+              <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+            <? } ?>
           </section>
           <p class="mobile-footnote">会社のGoogleアカウントで本人確認済みです</p>
         <? } ?>
@@ -379,7 +399,12 @@
         <? if (model.inputPageLinkUrl) { ?>
           <section class="card">
             <p class="label">入力画面へ進む</p>
-            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+            <div class="button-stack">
+              <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+              <? if (model.dailyReportLinkUrl) { ?>
+                <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+              <? } ?>
+            </div>
           </section>
         <? } ?>
       </div>

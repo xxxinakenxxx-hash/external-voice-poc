@@ -5,16 +5,12 @@ const AUTH_ERROR_MESSAGES_ = {
 };
 
 function doGet(e) {
-  const template = HtmlService.createTemplateFromFile('top');
-  template.model = createTopPageModel_();
+  const view = String(e && e.parameter && e.parameter.view ? e.parameter.view : '').trim();
+  if (view === 'daily') {
+    return createPageHtmlOutput_('daily', createDailyPageModel_());
+  }
 
-  const output = template
-    .evaluate()
-    .setTitle('営業AIメモ')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
-
-  return output;
+  return createPageHtmlOutput_('top', createTopPageModel_());
 }
 
 function createTopPageModel_() {
@@ -25,6 +21,7 @@ function createTopPageModel_() {
     validation,
     userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
     inputPageLinkUrl: '',
+    dailyReportLinkUrl: '',
     noticeMessage: '',
   };
 
@@ -41,7 +38,24 @@ function createTopPageModel_() {
     model.noticeMessage = String(error && error.message ? error.message : '入力画面のリンクを作成できませんでした。');
   }
 
+  try {
+    model.dailyReportLinkUrl = getDailyReportUrl();
+  } catch (error) {
+    model.dailyReportLinkUrl = '';
+  }
+
   return model;
+}
+
+function createPageHtmlOutput_(templateName, model) {
+  const template = HtmlService.createTemplateFromFile(templateName);
+  template.model = model;
+
+  return template
+    .evaluate()
+    .setTitle(String(model && model.pageTitle ? model.pageTitle : '営業AIメモ'))
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
 function validateUser() {

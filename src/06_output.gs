@@ -56,3 +56,210 @@ function getChatWebhookPropertyName_(target) {
 
   throw new Error('Unsupported Chat webhook target.');
 }
+
+function getDailyReportUrl() {
+  const dailyReportUrl = PropertiesService.getScriptProperties().getProperty('DAILY_REPORT_URL');
+
+  if (typeof dailyReportUrl !== 'string' || dailyReportUrl.trim() === '') {
+    throw new Error('Daily report URL is not configured.');
+  }
+
+  return dailyReportUrl.trim();
+}
+
+function notifyDailyReport() {
+  const dailyReportUrl = getDailyReportUrl();
+  return sendChatMessage('sales', `日報ができました。ここから確認 → ${dailyReportUrl}`);
+}
+
+function createDailyPageModel_() {
+  const validation = validateUser();
+  const model = {
+    pageTitle: '営業AIメモ｜個人日報',
+    validation,
+    userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
+    reportGroups: [],
+    hasReportData: false,
+    emptyMessage: '直近30日の商談記録はありません',
+    noticeMessage: '',
+    topPageLinkUrl: '',
+  };
+
+  try {
+    model.topPageLinkUrl = String(ScriptApp.getService().getUrl() || '').trim();
+  } catch (error) {
+    model.topPageLinkUrl = '';
+  }
+
+  if (!validation || validation.valid !== true) {
+    model.noticeMessage = String(validation && validation.errorMessage ? validation.errorMessage : '日報を表示できませんでした。');
+    return model;
+  }
+
+  try {
+    model.reportGroups = getDailyReportData(validation.userName);
+    model.hasReportData = Array.isArray(model.reportGroups) && model.reportGroups.length > 0;
+  } catch (error) {
+    model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
+  }
+
+  return model;
+}
+
+function getDailyReportData(userName) {
+  const normalizedUserName = String(userName || '').trim();
+  if (!normalizedUserName) {
+    throw new Error('userName は必須です。');
+  }
+
+  const sheet = getDealRecordsSheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return [];
+  }
+
+  const indexes = getDailyReportColumnIndexes_(values[0]);
+  const now = new Date();
+  const cutoffDate = new Date(now.getTime());
+  cutoffDate.setDate(cutoffDate.getDate() - 29);
+  const todayKey = Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
+  const cutoffKey = Utilities.formatDate(cutoffDate, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
+
+  const flatRecords = [];
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const rowUserName = String(row[indexes.userName] || '').trim();
+    if (rowUserName !== normalizedUserName) {
+      continue;
+    }
+
+    const createdAt = parseDailyReportCreatedAt_(row[indexes.createdAt]);
+    if (!createdAt || createdAt.getTime() > now.getTime()) {
+      continue;
+    }
+
+    const createdAtKey = Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyyMMdd');
+    if (createdAtKey < cutoffKey || createdAtKey > todayKey) {
+      continue;
+    }
+
+    const customerName = String(row[indexes.customerName] || '').trim();
+    const dealTheme = String(row[indexes.dealTheme] || '').trim();
+    const dealContent = String(row[indexes.dealContent] || '').trim();
+
+    flatRecords.push({
+      createdAt,
+      dateLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd'),
+      timeLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'HH:mm'),
+      customerName,
+      summary: buildDailyReportSummary_(dealTheme, dealContent),
+    });
+  }
+
+  flatRecords.sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+  return groupDailyReportRecords_(flatRecords);
+}
+
+function getDealRecordsSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
+  const sheet = spreadsheet.getSheetByName('deal_records');
+
+  if (!sheet) {
+    throw new Error('deal_records シートが見つかりません');
+  }
+
+  return sheet;
+}
+
+function getDailyReportColumnIndexes_(headers) {
+  const normalizedHeaders = Array.isArray(headers)
+    ? headers.map((header) => String(header || '').trim())
+    : [];
+
+  const createdAtIndex = normalizedHeaders.indexOf('created_at');
+  const userNameIndex = normalizedHeaders.indexOf('user_name');
+  const customerNameIndex = normalizedHeaders.indexOf('customer_name');
+  const dealThemeIndex = normalizedHeaders.indexOf('deal_theme');
+  const dealContentIndex = normalizedHeaders.indexOf('deal_content');
+
+  if ([createdAtIndex, userNameIndex, customerNameIndex, dealThemeIndex, dealContentIndex].some((index) => index < 0)) {
+    throw new Error('deal_records の見出しが不正です。');
+  }
+
+  return {
+    createdAt: createdAtIndex,
+    userName: userNameIndex,
+    customerName: customerNameIndex,
+    dealTheme: dealThemeIndex,
+    dealContent: dealContentIndex,
+  };
+}
+
+function parseDailyReportCreatedAt_(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return new Date(value.getTime());
+  }
+
+  const createdAtText = String(value || '').trim();
+  if (!createdAtText) {
+    return null;
+  }
+
+  try {
+    return Utilities.parseDate(createdAtText, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd HH:mm:ss');
+  } catch (error) {
+    const fallbackDate = new Date(createdAtText);
+    return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
+  }
+}
+
+function buildDailyReportSummary_(dealTheme, dealContent) {
+  const normalizedParts = [
+    normalizeDailyReportText_(dealTheme),
+    normalizeDailyReportText_(dealContent),
+  ].filter((part) => part !== '');
+
+  const summaryText = normalizeDailyReportText_(normalizedParts.join('｜'));
+  if (!summaryText) {
+    return '';
+  }
+
+  return summaryText.length > 120 ? `${summaryText.slice(0, 119)}…` : summaryText;
+}
+
+function normalizeDailyReportText_(value) {
+  return String(value || '')
+    .replace(/[\s\u3000]+/g, ' ')
+    .trim();
+}
+
+function groupDailyReportRecords_(records) {
+  const groups = [];
+  const groupMap = new Map();
+
+  records.forEach((record) => {
+    const dateLabel = String(record.dateLabel || '').trim();
+    if (!dateLabel) {
+      return;
+    }
+
+    let group = groupMap.get(dateLabel);
+    if (!group) {
+      group = {
+        dateLabel,
+        records: [],
+      };
+      groupMap.set(dateLabel, group);
+      groups.push(group);
+    }
+
+    group.records.push({
+      dateLabel,
+      timeLabel: String(record.timeLabel || '').trim(),
+      customerName: String(record.customerName || '').trim(),
+      summary: String(record.summary || '').trim(),
+    });
+  });
+
+  return groups;
+}

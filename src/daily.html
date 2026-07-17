@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= model.pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3efe7;
+        --panel: #ffffff;
+        --panel-soft: #faf6ef;
+        --text: #1f2937;
+        --muted: #5c6877;
+        --accent: #173d5f;
+        --accent-strong: #f0892b;
+        --border: #d8e0ea;
+        --shadow: 0 16px 38px rgba(23, 61, 95, 0.12);
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.12), transparent 36%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 30%),
+          linear-gradient(180deg, #fdf8ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      .layout {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 22px 20px;
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -50px;
+        top: -54px;
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.92rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        font-size: 1.02rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .notice--error {
+        border-color: #f5c2c7;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .day-group {
+        display: grid;
+        gap: 10px;
+      }
+
+      .day-label {
+        margin: 0;
+        font-size: 1.08rem;
+        font-weight: 900;
+        color: var(--accent);
+      }
+
+      .report-card {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%);
+      }
+
+      .report-row {
+        display: grid;
+        gap: 6px;
+      }
+
+      .report-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 800;
+      }
+
+      .report-value {
+        margin: 0;
+        color: var(--text);
+        font-size: 1.03rem;
+        line-height: 1.7;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .report-time {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 5.8em;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(240, 137, 43, 0.12);
+        color: #9f4f08;
+        font-size: 0.92rem;
+        font-weight: 900;
+      }
+
+      .empty-state {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .footer-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 56px;
+        border-radius: 18px;
+        border: none;
+        padding: 12px 18px;
+        text-decoration: none;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 800;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+      }
+
+      @media (min-width: 768px) {
+        main {
+          padding: 24px 18px 32px;
+        }
+
+        .hero {
+          padding: 28px 26px;
+        }
+
+        .card {
+          padding: 20px 22px;
+        }
+
+        h1 {
+          font-size: 2.12rem;
+        }
+      }
+
+      @media (max-width: 767px) {
+        main {
+          width: min(100%, 430px);
+          margin: 0 auto;
+          padding: calc(16px + env(safe-area-inset-top)) 15px calc(18px + env(safe-area-inset-bottom));
+        }
+
+        .layout {
+          gap: 10px;
+        }
+
+        .hero {
+          padding: 24px 20px;
+          border-radius: 24px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .report-card {
+          padding: 14px;
+        }
+
+        .report-value {
+          font-size: 1rem;
+        }
+
+        .link-button {
+          min-height: 60px;
+          font-size: 1.02rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="layout">
+        <section class="hero" aria-label="個人日報の概要">
+          <p class="eyebrow">個人日報</p>
+          <h1>営業AIメモ｜個人日報</h1>
+          <p class="subtext"><?= model.userName ?> さんの直近30日分を表示します。</p>
+        </section>
+
+        <? if (model.noticeMessage) { ?>
+          <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <? if (!model.noticeMessage) { ?>
+          <section class="card" aria-live="polite">
+            <p class="section-title"><?= model.userName ?> さんの記録</p>
+
+            <? if (model.hasReportData) { ?>
+              <div class="day-group">
+                <? for (var groupIndex = 0; groupIndex < model.reportGroups.length; groupIndex++) { ?>
+                  <? var group = model.reportGroups[groupIndex]; ?>
+                  <section class="day-group" aria-label="<?= group.dateLabel ?>">
+                    <p class="day-label"><?= group.dateLabel ?></p>
+                    <? for (var recordIndex = 0; recordIndex < group.records.length; recordIndex++) { ?>
+                      <? var record = group.records[recordIndex]; ?>
+                      <article class="report-card">
+                        <div class="report-row">
+                          <p class="report-label">訪問先</p>
+                          <p class="report-value"><?= record.customerName ?></p>
+                        </div>
+                        <div class="report-row">
+                          <p class="report-label">商談要点</p>
+                          <p class="report-value"><?= record.summary ?></p>
+                        </div>
+                        <div class="report-row">
+                          <p class="report-label">時刻</p>
+                          <p class="report-time"><?= record.timeLabel ?></p>
+                        </div>
+                      </article>
+                    <? } ?>
+                  </section>
+                <? } ?>
+              </div>
+            <? } else { ?>
+              <div class="empty-state"><?= model.emptyMessage ?></div>
+            <? } ?>
+          </section>
+        <? } ?>
+
+        <? if (model.topPageLinkUrl) { ?>
+          <section class="footer-actions">
+            <a class="link-button" href="<?= model.topPageLinkUrl ?>" target="_top" rel="noopener">TOPへ戻る</a>
+          </section>
+        <? } ?>
+      </div>
+    </main>
+  </body>
+</html>
