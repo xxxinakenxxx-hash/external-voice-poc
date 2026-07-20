@@ -144,6 +144,12 @@
         align-items: center;
       }
 
+      .summary-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
       .meta-pill {
         display: inline-flex;
         align-items: center;
@@ -195,6 +201,22 @@
 
       .detail-value--summary {
         font-size: 1.02rem;
+      }
+
+      .action-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 8.8rem;
+        min-height: 46px;
+        padding: 10px 16px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.96rem;
+        font-weight: 800;
+        box-shadow: 0 12px 24px rgba(232, 122, 31, 0.20);
       }
 
       .addition-box {
@@ -348,6 +370,11 @@
                         <span class="meta-pill meta-pill--dark"><?= row.userName ?></span>
                         <span class="meta-pill meta-pill--dark"><?= row.branchName ?></span>
                       </div>
+                      <? if (row.canAdd) { ?>
+                        <div class="summary-actions">
+                          <a class="action-link" href="<?= model.topPageLinkUrl ?>?view=daily&record_id=<?= row.recordId ?>" target="_top" rel="noopener">追記する</a>
+                        </div>
+                      <? } ?>
                     </div>
 
                     <div class="summary-grid-inner">

@@ -31,7 +31,7 @@ function doGet(e) {
 
   if (view === 'daily') {
     if (recordId) {
-      if (isDailyRecordEditorRole_(role)) {
+      if (isDealInputRole_(role)) {
         return createPageHtmlOutput_('addition', createAdditionPageModel_(recordId, validation));
       }
 
@@ -73,7 +73,7 @@ function createTopPageModel_(validationOverride) {
   }
 
   const role = String(validation.role || '').trim();
-  const canOpenInputPage = isDailyRecordEditorRole_(role);
+  const canOpenInputPage = isDealInputRole_(role);
 
   if (canOpenInputPage) {
     try {
@@ -231,7 +231,7 @@ function createAdditionPageModel_(recordId, validationOverride, noticeMessageOve
     return model;
   }
 
-  if (!isDailyRecordEditorRole_(role)) {
+  if (!isDealInputRole_(role)) {
     model.noticeMessage = 'このページを表示する権限がありません';
     return model;
   }
@@ -242,28 +242,29 @@ function createAdditionPageModel_(recordId, validationOverride, noticeMessageOve
   }
 
   try {
-    const result = getMyDealRecords('daily', validation);
-    if (!result || result.success !== true) {
-      model.noticeMessage = String(result && result.errorMessage ? result.errorMessage : '追記画面を表示できませんでした。');
-      return model;
-    }
-
-    const targetRecord = Array.isArray(result.records)
-      ? result.records.find((record) => String(record && record.recordId ? record.recordId : '').trim() === model.recordId)
-      : null;
-
-    if (!targetRecord) {
+    const foundRecord = findDealRecordById_(model.recordId);
+    if (!foundRecord) {
       model.noticeMessage = '対象の商談記録が見つかりません';
       return model;
     }
 
-    if (!targetRecord.canAdd) {
+    const targetRecordUserKey = String(foundRecord.row[foundRecord.indexes.userKey] || '').trim();
+    if (!canAddDealAddition_(role, validation.userKey, targetRecordUserKey)) {
       model.noticeMessage = 'この商談記録には追記できません';
       return model;
     }
 
-    model.record = targetRecord;
-    model.additions = Array.isArray(targetRecord.additions) ? targetRecord.additions : [];
+    const createdAt = parseDailyReportCreatedAt_(foundRecord.row[foundRecord.indexes.createdAt]);
+    if (!createdAt) {
+      model.noticeMessage = '対象の商談記録が見つかりません';
+      return model;
+    }
+
+    const additionsByRecordId = getDealAdditionsByRecordIds_([model.recordId]);
+    model.record = buildDealRecordDisplay_(foundRecord.row, foundRecord.indexes, createdAt);
+    model.additions = Array.isArray(additionsByRecordId[model.recordId])
+      ? additionsByRecordId[model.recordId]
+      : [];
     model.hasRecordData = true;
   } catch (error) {
     model.noticeMessage = String(error && error.message ? error.message : '追記画面を表示できませんでした。');
@@ -412,6 +413,10 @@ function isSummaryViewer_(role) {
 
 function isAllowedRole_(role) {
   return AUTH_ALLOWED_ROLES_.includes(String(role || '').trim());
+}
+
+function isDealInputRole_(role) {
+  return ['sales', 'manager', 'sysadmin'].includes(String(role || '').trim());
 }
 
 function isDailyViewerRole_(role) {

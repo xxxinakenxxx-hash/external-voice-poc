@@ -350,7 +350,9 @@ function getMyDealRecords(viewName, validationOverride) {
       continue;
     }
 
-    records.push(buildDealRecordDisplay_(row, indexes, createdAt));
+    const recordDisplay = buildDealRecordDisplay_(row, indexes, createdAt);
+    recordDisplay.canAdd = canAddDealAddition_(role, ownUserKey, rowUserKey);
+    records.push(recordDisplay);
   }
 
   records.sort((left, right) => {
@@ -364,7 +366,6 @@ function getMyDealRecords(viewName, validationOverride) {
   });
 
   const additionsByRecordId = getDealAdditionsByRecordIds_(records.map((record) => record.recordId));
-  const canAdd = normalizedViewName === 'daily' ? isDailyRecordEditorRole_(role) : role === 'sysadmin';
 
   const enrichedRecords = records.map((record) => {
     const additions = Array.isArray(additionsByRecordId[record.recordId]) ? additionsByRecordId[record.recordId] : [];
@@ -380,7 +381,7 @@ function getMyDealRecords(viewName, validationOverride) {
       dealTheme: record.dealTheme,
       dealContent: record.dealContent,
       dealSummary: record.dealSummary,
-      canAdd,
+      canAdd: record.canAdd === true,
       additions,
     };
   });
@@ -420,13 +421,6 @@ function addDealAddition(recordId, additionalRecord) {
   }
 
   const role = String(validation.role || '').trim();
-  if (role !== 'sysadmin' && role !== 'sales') {
-    return {
-      success: false,
-      errorMessage: 'この商談記録には追記できません',
-    };
-  }
-
   const foundRecord = findDealRecordById_(normalizedRecordId);
   if (!foundRecord) {
     return {
@@ -436,7 +430,7 @@ function addDealAddition(recordId, additionalRecord) {
   }
 
   const targetUserKey = String(foundRecord.row[foundRecord.indexes.userKey] || '').trim();
-  if (role === 'sales' && targetUserKey !== String(validation.userKey || '').trim()) {
+  if (!canAddDealAddition_(role, String(validation.userKey || '').trim(), targetUserKey)) {
     return {
       success: false,
       errorMessage: 'この商談記録には追記できません',
@@ -683,6 +677,26 @@ function getDealAdditionsByRecordIds_(recordIds) {
   });
 
   return additionsByRecordId;
+}
+
+function canAddDealAddition_(role, currentUserKey, recordUserKey) {
+  const normalizedRole = String(role || '').trim();
+  const normalizedCurrentUserKey = String(currentUserKey || '').trim();
+  const normalizedRecordUserKey = String(recordUserKey || '').trim();
+
+  if (!normalizedCurrentUserKey || !normalizedRecordUserKey) {
+    return false;
+  }
+
+  if (normalizedRole === 'sysadmin') {
+    return true;
+  }
+
+  if ((normalizedRole === 'sales' || normalizedRole === 'manager') && normalizedCurrentUserKey === normalizedRecordUserKey) {
+    return true;
+  }
+
+  return false;
 }
 
 function getUserKeysInSameBranch_(branchName) {
