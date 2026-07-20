@@ -1,0 +1,26 @@
+# Local GAS settings
+.clasp.json
+**/.clasp.json
+
+# Temporary copies
+_chat_file_copies_*/
+
+# Temporary extracted images
+_screenflow_extract*/
+
+# Generated CSV files
+store_master_geocode/*.csv
+
+# Duplicate documents stored outside the canonical folder
+docs/【営業AIメモ】EX-04_Codex向け実装指示プロンプト.md
+docs/【営業AIメモ】IS-EX05R_トークン検証の確認手段の整備.md
+docs/【営業AIメモ】IS-EX05_署名付きトークンの発行・検証.md
+docs/【営業AIメモ】IS-EX06_外部ページとGASの本接続.md
+docs/【営業AIメモ】IS-EX07_会社ケータイ実機通し確認.md
+docs/【営業AIメモ】IS-EX08_doPostのアクション振り分けと店舗検索の接続 (2).md
+docs/【営業AIメモ】IS-EX09_本番ページへのGPS・店舗選択UI実装と実機確認.md
+docs/【営業AIメモ】出力IS-OUT01_配信土台_ChatWebhook送信.md
+docs/【営業AIメモ】出力IS-OUT02_個人日報ページ.md
+docs/【営業AIメモ】出力IS-OUT03_日報まとめページ.md
+docs/【営業AIメモ】出力IS-OUT04_設定シートと時刻トリガー.md
+docs/【営業AIメモ】IS-06R_位置情報・店舗選び_設計と工程分解 (1).md

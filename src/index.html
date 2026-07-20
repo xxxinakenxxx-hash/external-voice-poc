@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg-top: #fdf8ef;
+        --bg-bottom: #f3efe8;
+        --panel: #ffffff;
+        --panel-soft: #fbfaf8;
+        --text: #1f2937;
+        --muted: #5f6b7a;
+        --accent: #173d5f;
+        --accent-soft: #e7eef6;
+        --accent-strong: #f0892b;
+        --accent-strong-soft: #fff0e0;
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+        --success: #1d7f46;
+        --success-soft: #e7f7ee;
+        --border: #d9e0e8;
+        --shadow: 0 18px 50px rgba(23, 61, 95, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.14), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 28%),
+          linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: min(100%, 760px);
+        margin: 0 auto;
+        padding: 14px 12px 36px;
+      }
+
+      .shell {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        border-radius: 24px;
+        padding: 20px 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -48px;
+        top: -48px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.7rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+        width: 100%;
+      }
+
+      .section-title {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.94rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .auth-line {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+
+      .auth-error {
+        color: var(--danger);
+        font-weight: 700;
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+
+      .notice--warn {
+        background: var(--accent-strong-soft);
+        border-color: #f5d2a6;
+        color: #8d4a07;
+        font-weight: 700;
+      }
+
+      .notice--error {
+        background: var(--danger-soft);
+        border-color: #f5c2c7;
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .notice--success {
+        background: var(--success-soft);
+        border-color: #b8e3ca;
+        color: var(--success);
+        font-weight: 800;
+      }
+
+      .compose {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mic-row {
+        display: grid;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .mic-button {
+        appearance: none;
+        border: none;
+        border-radius: 24px;
+        min-height: 120px;
+        width: 100%;
+        padding: 18px 20px;
+        background: linear-gradient(180deg, #f6a646 0%, #e87a1f 100%);
+        color: #fff;
+        font-size: 1.18rem;
+        font-weight: 900;
+        box-shadow: 0 16px 32px rgba(232, 122, 31, 0.28);
+        cursor: pointer;
+        transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      }
+
+      .mic-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 40px rgba(232, 122, 31, 0.34);
+      }
+
+      .mic-button:active {
+        transform: translateY(1px);
+      }
+
+      .mic-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-shadow: none;
+      }
+
+      .mic-button.is-listening {
+        background: linear-gradient(180deg, #d74a3d 0%, #b42318 100%);
+        box-shadow: 0 16px 32px rgba(180, 35, 24, 0.28);
+      }
+
+      .mic-caption {
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 240px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 16px 16px 18px;
+        resize: vertical;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text);
+        background: #fff;
+        outline: none;
+      }
+
+      .textarea:focus {
+        border-color: #92b0cd;
+        box-shadow: 0 0 0 4px rgba(23, 61, 95, 0.12);
+      }
+
+      .textarea:disabled {
+        background: #f3f5f7;
+        color: #7a8794;
+      }
+
+      .submit-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .submit-button {
+        appearance: none;
+        border: none;
+        border-radius: 18px;
+        min-height: 56px;
+        width: 100%;
+        background: linear-gradient(180deg, var(--accent) 0%, #102b43 100%);
+        color: #fff;
+        font-size: 1.04rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: transform 0.16s ease, opacity 0.16s ease;
+      }
+
+      .submit-button:hover {
+        transform: translateY(-1px);
+      }
+
+      .submit-button:active {
+        transform: translateY(1px);
+      }
+
+      .submit-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.62;
+      }
+
+      .support-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+        line-height: 1.6;
+      }
+
+      .status-line {
+        min-height: 1.5em;
+        font-weight: 700;
+        line-height: 1.6;
+        font-size: 0.98rem;
+      }
+
+      .status-line.is-muted {
+        color: var(--muted);
+      }
+
+      .status-line.is-error {
+        color: var(--danger);
+      }
+
+      .status-line.is-success {
+        color: var(--success);
+      }
+
+      .status-line.is-recording {
+        color: #b55a00;
+      }
+
+      .locked {
+        opacity: 0.72;
+      }
+
+      @media (min-width: 640px) {
+        main {
+          padding: 26px 16px 40px;
+        }
+
+        .hero {
+          padding: 26px 24px;
+        }
+
+        h1 {
+          font-size: 1.85rem;
+        }
+
+        .compose {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 639px) {
+        .hero {
+          border-radius: 20px;
+        }
+
+        .card {
+          padding: 14px;
+          border-radius: 18px;
+        }
+
+        .mic-button,
+        .submit-button {
+          min-height: 48px;
+        }
+
+        .textarea {
+          min-height: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="shell">
+        <section class="hero" aria-label="商談入力画面">
+          <p class="eyebrow">営業AI音声メモ</p>
+          <h1>商談入力</h1>
+          <p class="subtext">音声でもテキストでも、そのまま送信できます。送信後の保存結果は件数だけを表示します。</p>
+        </section>
+
+        <section class="card" aria-live="polite">
+          <p class="section-title">担当者名</p>
+          <div id="authOk" <? if (!(validation && validation.valid)) { ?>hidden<? } ?>>
+            <div class="auth-line" id="userName"><?= validation && validation.valid ? validation.userName : '' ?></div>
+          </div>
+          <div id="authNg" <? if (validation && validation.valid) { ?>hidden<? } ?>>
+            <div class="auth-error" id="authError"><?= validation && validation.errorMessage ? validation.errorMessage : '' ?></div>
+          </div>
+        </section>
+
+        <section id="restoreNotice" class="notice notice--warn" hidden></section>
+
+        <section id="appPanel" class="card compose">
+          <div class="mic-row">
+            <button id="micButton" class="mic-button" type="button">🎤 マイク</button>
+            <p id="micCaption" class="mic-caption">マイクを押すと日本語で音声入力を開始します。もう一度押すと停止します。</p>
+          </div>
+
+          <div class="compose">
+            <div>
+              <p class="section-title">音声認識状態</p>
+              <div id="recordingStatus" class="status-line is-muted">待機中</div>
+            </div>
+
+            <div>
+              <p class="section-title">自由文テキスト</p>
+              <textarea id="memoInput" class="textarea" placeholder="商談内容を入力してください" <?= validation && validation.valid ? '' : 'disabled' ?>></textarea>
+            </div>
+
+            <div class="submit-row">
+              <button id="submitButton" class="submit-button" type="button" <?= validation && validation.valid ? '' : 'disabled' ?>>送信</button>
+              <div id="errorMessage" class="notice notice--error" hidden></div>
+              <div id="successMessage" class="notice notice--success" hidden></div>
+              <p id="supportNote" class="support-note">Web Speech API に未対応でもテキスト入力だけで送信できます。</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <script>
+      const UNSET_TEXT_STORAGE_KEY = 'unsent_text';
+      const SUPPORT_MESSAGE = 'Web Speech API に未対応のため、テキスト入力でご利用ください。';
+      const GENERIC_UNAVAILABLE_MESSAGE = '現在利用できません。しばらく経ってから再度お試しください';
+      const SAVE_FAILURE_MESSAGE = '保存に失敗しました。しばらく経ってから再度お試しください';
+      const INPUT_EMPTY_MESSAGE = '入力テキストがありません';
+
+      const state = {
+        validationReady: false,
+        valid: <?= validation && validation.valid ? 'true' : 'false' ?>,
+        sending: false,
+        listening: false,
+        speechStarting: false,
+        speechSupported: false,
+        recognition: null,
+        restoredText: false,
+      };
+
+      const els = {
+        authOk: document.getElementById('authOk'),
+        authNg: document.getElementById('authNg'),
+        authError: document.getElementById('authError'),
+        userName: document.getElementById('userName'),
+        restoreNotice: document.getElementById('restoreNotice'),
+        appPanel: document.getElementById('appPanel'),
+        micButton: document.getElementById('micButton'),
+        micCaption: document.getElementById('micCaption'),
+        recordingStatus: document.getElementById('recordingStatus'),
+        memoInput: document.getElementById('memoInput'),
+        submitButton: document.getElementById('submitButton'),
+        errorMessage: document.getElementById('errorMessage'),
+        successMessage: document.getElementById('successMessage'),
+        supportNote: document.getElementById('supportNote'),
+      };
+
+      function runGoogleScript(functionName, payload) {
+        return new Promise((resolve, reject) => {
+          const runner = google.script.run
+            .withSuccessHandler((result) => resolve(result))
+            .withFailureHandler((error) => reject(error));
+
+          if (payload === undefined) {
+            runner[functionName]();
+            return;
+          }
+
+          runner[functionName](payload);
+        });
+      }
+
+      function setDisabled(disabled) {
+        els.memoInput.disabled = disabled || !state.valid;
+        els.submitButton.disabled = disabled || !state.valid;
+
+        if (state.speechSupported) {
+          els.micButton.disabled = disabled || !state.valid;
+        } else {
+          els.micButton.disabled = true;
+        }
+
+        els.appPanel.classList.toggle('locked', disabled || !state.valid);
+      }
+
+      function setStatus(text, kind) {
+        if (!text) {
+          els.recordingStatus.textContent = state.listening ? '認識中' : '待機中';
+          els.recordingStatus.className = state.listening ? 'status-line is-recording' : 'status-line is-muted';
+          return;
+        }
+
+        els.recordingStatus.textContent = text;
+        els.recordingStatus.className = 'status-line';
+        if (kind) {
+          els.recordingStatus.classList.add(`is-${kind}`);
+        } else {
+          els.recordingStatus.classList.add('is-muted');
+        }
+      }
+
+      function clearTransientMessages() {
+        els.errorMessage.hidden = true;
+        els.errorMessage.textContent = '';
+        els.successMessage.hidden = true;
+        els.successMessage.textContent = '';
+      }
+
+      function showError(message) {
+        els.errorMessage.textContent = message || GENERIC_UNAVAILABLE_MESSAGE;
+        els.errorMessage.hidden = false;
+        els.successMessage.hidden = true;
+        els.successMessage.textContent = '';
+      }
+
+      function showSuccess(recordCount) {
+        const count = Number.isFinite(recordCount) && recordCount > 0 ? recordCount : 0;
+        els.successMessage.textContent = `記録しました（${count}件）`;
+        els.successMessage.hidden = false;
+        els.errorMessage.hidden = true;
+        els.errorMessage.textContent = '';
+      }
+
+      function setRecordingState(listening) {
+        state.listening = listening;
+        state.speechStarting = false;
+        els.micButton.classList.toggle('is-listening', listening);
+        if (listening) {
+          els.recordingStatus.textContent = '認識中';
+          els.recordingStatus.className = 'status-line is-recording';
+          els.micButton.textContent = '■ 停止';
+        } else {
+          els.recordingStatus.textContent = '待機中';
+          els.recordingStatus.className = 'status-line is-muted';
+          els.micButton.textContent = '🎤 マイク';
+        }
+      }
+
+      function setSpeechError(message) {
+        state.speechStarting = false;
+        els.recordingStatus.textContent = message;
+        els.recordingStatus.className = 'status-line is-error';
+      }
+
+      function appendTranscript(text) {
+        const transcript = String(text || '').trim();
+        if (!transcript) {
+          return;
+        }
+
+        const current = els.memoInput.value.trimEnd();
+        els.memoInput.value = current ? `${current}\n${transcript}` : transcript;
+        persistUnsentText_();
+        els.memoInput.focus();
+        if (typeof els.memoInput.setSelectionRange === 'function') {
+          const length = els.memoInput.value.length;
+          els.memoInput.setSelectionRange(length, length);
+        }
+      }
+
+      function persistUnsentText_() {
+        const currentText = String(els.memoInput.value || '');
+        if (currentText === '') {
+          localStorage.removeItem(UNSET_TEXT_STORAGE_KEY);
+          els.restoreNotice.hidden = true;
+          els.restoreNotice.textContent = '';
+          return;
+        }
+
+        localStorage.setItem(UNSET_TEXT_STORAGE_KEY, currentText);
+      }
+
+      function createSpeechRecognition() {
+        const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognitionCtor) {
+          state.speechSupported = false;
+          els.micCaption.textContent = SUPPORT_MESSAGE;
+          els.micButton.disabled = true;
+          return null;
+        }
+
+        state.speechSupported = true;
+        els.micCaption.textContent = 'マイクを押すと日本語で音声入力を開始します。もう一度押すと停止します。';
+        const recognition = new SpeechRecognitionCtor();
+        recognition.lang = 'ja-JP';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+          clearTransientMessages();
+          setRecordingState(true);
+        };
+
+        recognition.onresult = (event) => {
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const result = event.results[index];
+            if (result.isFinal && result[0] && result[0].transcript) {
+              appendTranscript(result[0].transcript);
+            }
+          }
+        };
+
+        recognition.onerror = (event) => {
+          const message = getSpeechErrorMessage_(event && event.error ? String(event.error) : '');
+          setSpeechError(message);
+        };
+
+        recognition.onend = () => {
+          setRecordingState(false);
+        };
+
+        return recognition;
+      }
+
+      function startRecognition() {
+        if (!state.recognition || state.listening || state.speechStarting) {
+          return;
+        }
+
+        try {
+          state.speechStarting = true;
+          clearTransientMessages();
+          els.recordingStatus.textContent = '認識を開始しています…';
+          els.recordingStatus.className = 'status-line is-muted';
+          state.recognition.start();
+        } catch (error) {
+          state.speechStarting = false;
+          setSpeechError(getSpeechStartErrorMessage_(error));
+        }
+      }
+
+      function stopRecognition() {
+        if (!state.recognition || !state.listening) {
+          return;
+        }
+
+        try {
+          state.recognition.stop();
+        } catch (error) {
+          setRecordingState(false);
+        }
+      }
+
+      function toggleRecognition() {
+        if (!state.speechSupported || !state.valid || state.sending) {
+          return;
+        }
+
+        if (state.listening || state.speechStarting) {
+          clearTransientMessages();
+        }
+        if (state.listening) {
+          stopRecognition();
+          return;
+        }
+
+        startRecognition();
+      }
+
+      function readUnsentText() {
+        return String(localStorage.getItem(UNSET_TEXT_STORAGE_KEY) || '');
+      }
+
+      function restoreUnsentText() {
+        const savedText = readUnsentText();
+        if (!savedText.trim()) {
+          state.restoredText = false;
+          els.restoreNotice.hidden = true;
+          els.restoreNotice.textContent = '';
+          return;
+        }
+
+        state.restoredText = true;
+        els.memoInput.value = savedText;
+        els.restoreNotice.textContent = '前回の入力が未送信です。送信してください';
+        els.restoreNotice.hidden = false;
+      }
+
+      function storeUnsentText(text) {
+        localStorage.setItem(UNSET_TEXT_STORAGE_KEY, text);
+      }
+
+      function removeUnsentText() {
+        localStorage.removeItem(UNSET_TEXT_STORAGE_KEY);
+      }
+
+      function setSendingState(isSending) {
+        state.sending = isSending;
+        els.submitButton.disabled = isSending || !state.valid;
+        els.memoInput.disabled = isSending || !state.valid;
+        if (state.speechSupported) {
+          els.micButton.disabled = isSending || !state.valid;
+        }
+
+        if (isSending) {
+          els.recordingStatus.textContent = '記録しています…';
+          els.recordingStatus.className = 'status-line is-recording';
+          els.submitButton.textContent = '送信中';
+        } else {
+          setStatus('', '');
+          els.submitButton.textContent = '送信';
+        }
+      }
+
+      async function submitMemoFromClient() {
+        if (!state.valid || state.sending) {
+          return;
+        }
+
+        clearTransientMessages();
+        const inputText = String(els.memoInput.value || '');
+        if (!inputText.trim()) {
+          showError(INPUT_EMPTY_MESSAGE);
+          return;
+        }
+
+        if (state.listening) {
+          stopRecognition();
+        }
+
+        storeUnsentText(inputText);
+        setSendingState(true);
+
+        try {
+          const response = await runGoogleScript('submitMemo', {
+            inputText,
+            latitude: '',
+            longitude: '',
+            storeName: '',
+          });
+
+          if (response && response.success) {
+            removeUnsentText();
+            els.memoInput.value = '';
+            els.restoreNotice.hidden = true;
+            els.restoreNotice.textContent = '';
+            state.restoredText = false;
+            showSuccess(Number(response.recordCount || (response.records && response.records.length) || 0));
+          } else {
+            const errorMessage = response && response.errorMessage ? response.errorMessage : GENERIC_UNAVAILABLE_MESSAGE;
+            showError(errorMessage);
+          }
+        } catch (error) {
+          showError(GENERIC_UNAVAILABLE_MESSAGE);
+        } finally {
+          setSendingState(false);
+          if (state.listening) {
+            setRecordingState(true);
+          } else if (!state.speechStarting) {
+            setStatus('', '');
+          }
+        }
+      }
+
+      function applyValidationResult(result) {
+        const validation = result && typeof result === 'object' ? result : {};
+        state.valid = validation.valid === true;
+        state.validationReady = true;
+
+        if (state.valid) {
+          els.authOk.hidden = false;
+          els.authNg.hidden = true;
+          els.userName.textContent = validation.userName || '';
+          setDisabled(false);
+          clearTransientMessages();
+          restoreUnsentText();
+          setStatus('', '');
+        } else {
+          els.authOk.hidden = true;
+          els.authNg.hidden = false;
+          els.authError.textContent = validation.errorMessage || '登録されていない担当者です。管理者に連絡してください。';
+          els.restoreNotice.hidden = true;
+          els.restoreNotice.textContent = '';
+          setDisabled(true);
+          showError(validation.errorMessage || '登録されていない担当者です。管理者に連絡してください。');
+        }
+      }
+
+      function bindEvents() {
+        els.micButton.addEventListener('click', toggleRecognition);
+        els.submitButton.addEventListener('click', submitMemoFromClient);
+
+        els.memoInput.addEventListener('input', () => {
+          persistUnsentText_();
+          if (state.restoredText) {
+            els.restoreNotice.hidden = false;
+          }
+          if (!state.sending) {
+            clearTransientMessages();
+            if (!state.listening && !state.speechStarting) {
+              setStatus('', '');
+            }
+          }
+        });
+
+        els.memoInput.addEventListener('blur', persistUnsentText_);
+        window.addEventListener('pagehide', persistUnsentText_);
+      }
+
+      async function initializePage() {
+        bindEvents();
+        state.recognition = createSpeechRecognition();
+        if (!state.speechSupported) {
+          els.micButton.disabled = true;
+          els.micCaption.textContent = SUPPORT_MESSAGE;
+        }
+        setDisabled(!state.valid);
+
+        try {
+          const validation = await runGoogleScript('validateUser');
+          applyValidationResult(validation);
+        } catch (error) {
+          applyValidationResult({
+            valid: false,
+            errorMessage: GENERIC_UNAVAILABLE_MESSAGE,
+          });
+        }
+
+        if (state.speechSupported && state.valid && !state.sending) {
+          els.micButton.disabled = false;
+        }
+      }
+
+      function getSpeechErrorMessage_(errorCode) {
+        if (errorCode === 'not-allowed' || errorCode === 'service-not-allowed') {
+          return 'マイクの使用が許可されていません。ブラウザのマイク権限を確認してください。';
+        }
+
+        if (errorCode === 'no-speech') {
+          return '音声を認識できませんでした。もう一度マイクを押してください。';
+        }
+
+        if (errorCode === 'audio-capture') {
+          return 'マイクを利用できません。端末のマイク設定を確認してください。';
+        }
+
+        return '音声入力を開始できませんでした。もう一度お試しください。';
+      }
+
+      function getSpeechStartErrorMessage_(error) {
+        const errorName = error && typeof error === 'object' ? String(error.name || '') : '';
+        if (errorName === 'NotAllowedError') {
+          return 'マイクの使用が許可されていません。ブラウザのマイク権限を確認してください。';
+        }
+
+        if (errorName === 'NotReadableError') {
+          return 'マイクを利用できません。端末のマイク設定を確認してください。';
+        }
+
+        return '音声入力を開始できませんでした。もう一度お試しください。';
+      }
+
+      document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+  </body>
+</html>

@@ -4,13 +4,14 @@
 このファイルは、別チャットに引き継いでも単体で現在地が復元できることを目的とする。
 claudeはプロジェクト内でチャット連携を持たないため、本ファイルが唯一の引き継ぎ手段である。
 
-最終更新：2026-07-17（OUT-04を実装し、`src/06_output.gs` に設定シート読取と自動配信親関数を追加した。`clasp push --force` 成功済み。Git 反映も完了した。`setupOutputConfig` は未実行、`runDailyDelivery` は未実行。既存の営業AIメモ｜利用開始・本人確認デプロイを新バージョンへ更新する必要あり。）
+最終更新：2026-07-19（R-01着手前の現在地へ更新。Git基準状態整備完了。OUT-04の履歴は保持。）
 
 ---
 
 ## 1. 現在地
 
-- 現在の状態：**OUT-04実装・静的チェック・`clasp push --force`・Git反映完了。`src/06_output.gs` に `setupOutputConfig`、`getOutputConfig`、`runDailyDelivery` を追加し、`output_config` の6項目（daily_report_enabled / manager_summary_enabled / send_hour / collect_from_hour / collect_to_hour / skip_weekend）を読む構成にした。個人日報と日報まとめの集計時間を `collect_from_hour` から `collect_to_hour` に対応させた。`testSendChat()` は削除した。`setupOutputConfig` は未実行、`runDailyDelivery` は未実行、通知ON/OFFは未確認、土日スキップは静的確認のみ、時刻トリガーは未登録、18時台自動配信は未確認。既存の営業AIメモ｜利用開始・本人確認デプロイを新バージョンへ更新する必要あり。`sysadmin` は全権限とする方針は維持するが、本工程では未対応。OUT-04完了確定前、OUT-04以後は未着手。** `src/06_output.gs`、`tasks/TASK_CURRENT.md` を経由した実装内容であり、正式なTOP画面URLは変更していない。
+- 現在の状態：**R-01は未着手。R-02・R-03も未着手。R-01開始前のGit基準状態整備完了。** 2026-07-19時点の工程整理を反映し、R-01着手前の現在地へ戻した。OUT-04の履歴は残すが、現在地としては扱わない。
+- 追記：前回の停止状態から、R-01本体の実装やファイル編集には進めていない。Git基準状態の確認と `TASK_CURRENT.md` の現在地補正のみを行う。
 - 追記：EX-03R 実機確認の結果、TOP用デプロイAを「アクセスユーザーとして実行」「自分として実行」の両方で確認したが、いずれも `Session.getActiveUser().getEmail()` は「取得できず」だった。`Session.getEffectiveUser().getEmail()` は `inamori240@marubishi-group.co.jp` を取得し、`EX03_API_URL` は送信API用デプロイBのURLを正常表示した。GitHub Pages の外部ページからデプロイBへのPOSTは成功し、HTTP 200、JSON応答取得、`receivedToken=EX02_DUMMY_TOKEN`、`receivedText=EX-02 communication test` を確認した。デプロイ分離でも「TOPのGoogleログイン中メール取得」と「外部POST」の同時成立は確認できなかったため、EX-03R は停止条件に該当する。EX-04以降、IS-06以降には進まない。
 - 追記：EX-03R2 では `external/gas-poc/appsscript.json` の `oauthScopes` に `https://www.googleapis.com/auth/userinfo.email` を追加し、既存設定は維持した。JSON構文確認を行い、`external/gas-poc/` で `clasp push --force` を実行して `appsscript.json` と `Code.gs` の 2 ファイルを反映済み。次の状態はユーザーによる EX-03R2 実機確認待ち。
 - 追記：EX-03R2 で `external/gas-poc/appsscript.json` の `oauthScopes` に `https://www.googleapis.com/auth/userinfo.email` を追加済み。JSON構文確認済み。`external/gas-poc/` で `clasp push --force` 成功済み。スコープ追加後、新規作成したTOP用デプロイAで確認し、実行するユーザー＝自分、アクセスできるユーザー＝marubishi-group.co.jp の全員、承認画面は表示されなかった。`Session.getActiveUser().getEmail()` で `inamori240@marubishi-group.co.jp` の取得に成功し、`Session.getEffectiveUser().getEmail()` でも `inamori240@marubishi-group.co.jp` の取得に成功した。`EX03_API_URL` はデプロイBのURLを正常表示し、GitHub Pages の外部ページからデプロイBへのPOSTを再確認して HTTP 200、JSON応答取得成功、`receivedToken=EX02_DUMMY_TOKEN`、`receivedText=EX-02 communication test` を確認した。TOP認証と外部POSTが同時に成立し、EX-03R2 の完了条件を満たしたため、EX-03 は成立。次の状態は「案B改成立判定待ち」。EX-04以降、IS-06以降には未着手。
