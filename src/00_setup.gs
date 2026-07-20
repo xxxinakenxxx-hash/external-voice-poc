@@ -22,6 +22,11 @@ const SETUP_SHEET_DEFINITIONS_ = [
       'quote_request_id',
       'latitude',
       'longitude',
+      'customer_store_id',
+      'customer_name_raw',
+      'visit_store_id',
+      'input_method',
+      'user_key',
       'store_name_gps',
     ],
   },
@@ -32,6 +37,7 @@ const SETUP_SHEET_DEFINITIONS_ = [
       'user_fullname',
       'master_branch_name',
       'active_flag',
+      'role',
     ],
   },
   {
@@ -62,6 +68,17 @@ const SETUP_SHEET_DEFINITIONS_ = [
       'latitude',
       'longitude',
       'active_flag',
+      'address',
+    ],
+  },
+  {
+    name: 'deal_additions',
+    headers: [
+      'addition_id',
+      'record_id',
+      'additional_record',
+      'added_at',
+      'added_by',
     ],
   },
 ];

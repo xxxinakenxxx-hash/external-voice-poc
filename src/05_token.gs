@@ -133,9 +133,11 @@ function doPost(e) {
       return createJsonResponse_(submitMemo({
         userKey: verification.userKey,
         inputText: String(requestPayload.inputText || ''),
+        inputMethod: requestPayload.inputMethod,
+        customerStoreId: requestPayload.customerStoreId,
+        customerNameRaw: requestPayload.customerNameRaw,
         latitude: requestPayload.latitude,
         longitude: requestPayload.longitude,
-        storeName: requestPayload.storeName,
       }));
     }
 
@@ -436,6 +438,7 @@ function getStoreMasterRows_() {
   const latitudeIndex = headers.indexOf('latitude');
   const longitudeIndex = headers.indexOf('longitude');
   const activeIndex = headers.indexOf('active_flag');
+  const addressIndex = headers.indexOf('address');
 
   if ([storeIdIndex, storeNameIndex, latitudeIndex, longitudeIndex, activeIndex].some((index) => index < 0)) {
     throw new Error('store_master の見出しが不正です');
@@ -456,6 +459,7 @@ function getStoreMasterRows_() {
       latitude: row[latitudeIndex],
       longitude: row[longitudeIndex],
       activeFlag: String(row[activeIndex] || '').trim(),
+      address: addressIndex >= 0 ? String(row[addressIndex] || '').trim() : '',
     });
   }
 

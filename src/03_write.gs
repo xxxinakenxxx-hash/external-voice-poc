@@ -116,16 +116,24 @@ function writeRecordsToSheet(records) {
       const rowNumber = sheet.getLastRow();
       const latitude = sourceRecord.latitude ?? '';
       const longitude = sourceRecord.longitude ?? '';
-      const storeNameGps = sourceRecord.storeNameGps ??
-        sourceRecord.store_name_gps ??
-        sourceRecord.storeName ??
-        sourceRecord.store_name ??
-        '';
+      const customerStoreId = String(sourceRecord.customerStoreId ?? sourceRecord.customer_store_id ?? '').trim();
+      const customerNameRaw = String(sourceRecord.customerNameRaw ?? sourceRecord.customer_name_raw ?? '').trim();
+      const visitStoreId = String(sourceRecord.visitStoreId ?? sourceRecord.visit_store_id ?? '').trim();
+      const inputMethod = String(sourceRecord.inputMethod ?? sourceRecord.input_method ?? '').trim();
+      const userKey = String(sourceRecord.userKey ?? sourceRecord.user_key ?? '').trim();
 
-      const hasGpsValue = [latitude, longitude, storeNameGps].some((value) => value !== '' && value !== null && value !== undefined);
+      const hasGpsValue = [latitude, longitude].some((value) => value !== '' && value !== null && value !== undefined);
       if (hasGpsValue) {
-        sheet.getRange(rowNumber, 19, 1, 3).setValues([[latitude, longitude, storeNameGps]]);
+        sheet.getRange(rowNumber, 19, 1, 2).setValues([[latitude, longitude]]);
       }
+
+      sheet.getRange(rowNumber, 22, 1, 5).setValues([[
+        customerStoreId,
+        customerNameRaw,
+        visitStoreId,
+        inputMethod,
+        userKey,
+      ]]);
 
       markExtractionFailure(sheet, rowNumber, {
         ...sourceRecord,
@@ -177,7 +185,6 @@ function markExtractionFailure(sheet, rowNumber, record) {
     }
 
     const fieldSpecs = [
-      { column: 5, value: record && typeof record === 'object' ? record.customerName ?? record.customer_name ?? '' : '' },
       { column: 7, value: record && typeof record === 'object' ? record.dealTheme ?? record.deal_theme ?? '' : '' },
       { column: 8, value: record && typeof record === 'object' ? record.dealContent ?? record.deal_content ?? '' : '' },
     ];

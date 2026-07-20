@@ -23,15 +23,8 @@
         --shadow: 0 18px 40px rgba(22, 48, 71, 0.12);
       }
 
-      * {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        min-height: 100%;
-        margin: 0;
-      }
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; margin: 0; }
 
       body {
         min-height: 100vh;
@@ -51,17 +44,8 @@
         padding: 16px 12px 28px;
       }
 
-      .page {
-        display: grid;
-        gap: 12px;
-      }
-
-      .hero,
-      .panel {
-        border: 1px solid var(--line);
-        border-radius: 22px;
-        box-shadow: var(--shadow);
-      }
+      .page { display: grid; gap: 12px; }
+      .hero, .panel { border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
 
       .hero {
         position: relative;
@@ -70,7 +54,6 @@
         color: #fff;
         background: linear-gradient(145deg, #24476d 0%, #1a3a5c 100%);
       }
-
       .hero::after {
         content: "";
         position: absolute;
@@ -81,7 +64,6 @@
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.08);
       }
-
       .eyebrow {
         margin: 0 0 8px;
         font-size: 0.82rem;
@@ -89,23 +71,10 @@
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.74);
       }
+      h1 { margin: 0; font-size: 1.8rem; line-height: 1.18; }
+      .hero p { margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); }
 
-      h1 {
-        margin: 0;
-        font-size: 1.8rem;
-        line-height: 1.18;
-      }
-
-      .hero p {
-        margin: 10px 0 0;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .panel {
-        background: var(--surface);
-        padding: 12px 14px;
-      }
-
+      .panel { background: var(--surface); padding: 12px 14px; }
       .section-title {
         margin: 0 0 8px;
         font-size: 0.94rem;
@@ -113,15 +82,10 @@
         letter-spacing: 0.02em;
         color: var(--muted);
       }
-
-      .notice,
-      .status,
-      .result,
-      .summary {
+      .notice, .status, .summary, .store-reset-notice, .result {
         border-radius: 16px;
         border: 1px solid var(--line);
       }
-
       .notice {
         margin: 0;
         padding: 10px 12px;
@@ -129,39 +93,11 @@
         color: #8a4d0b;
         font-weight: 700;
       }
-
-      .notice--subtle {
-        background: #f3f6fa;
-        color: var(--text);
-      }
-
-      .status {
-        margin: 0;
-        padding: 0;
-        min-height: 0;
-        background: transparent;
-        color: var(--muted);
-        font-size: 0.92rem;
-        font-weight: 600;
-      }
-
-      .status-group {
-        display: grid;
-        gap: 6px;
-      }
-
-      .status.is-listening {
-        color: #a55409;
-      }
-
-      .status.is-error {
-        color: var(--danger);
-      }
-
-      .status.is-success {
-        color: var(--success);
-      }
-
+      .notice--subtle { background: #f3f6fa; color: var(--text); }
+      .status { margin: 0; min-height: 0; background: transparent; color: var(--muted); font-size: 0.92rem; font-weight: 600; }
+      .status.is-listening { color: #a55409; }
+      .status.is-error { color: var(--danger); }
+      .status.is-success { color: var(--success); }
       .summary {
         margin: 0;
         padding: 10px 12px;
@@ -170,27 +106,9 @@
         border-radius: 14px;
         font-weight: 700;
       }
-
-      .summary strong {
-        display: block;
-        margin-bottom: 4px;
-        color: var(--primary);
-      }
-
-      .summary.is-empty {
-        color: #7f8d9b;
-      }
-
-      .completion-panel {
-        border-color: rgba(26, 58, 92, 0.18);
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-      }
-
-      .completion-card {
-        display: grid;
-        gap: 12px;
-      }
-
+      .summary.is-empty { color: #7f8d9b; }
+      .completion-panel { border-color: rgba(26, 58, 92, 0.18); background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
+      .completion-card { display: grid; gap: 12px; }
       .completion-stat {
         display: grid;
         gap: 6px;
@@ -199,72 +117,28 @@
         background: #f7fafc;
         border: 1px solid var(--line);
       }
-
-      .completion-label {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.92rem;
-        font-weight: 800;
-      }
-
-      .completion-count {
-        margin: 0;
-        font-size: 1.12rem;
-        font-weight: 900;
-        color: var(--primary);
-      }
-
-      .completion-summary {
-        margin: 0;
-        color: var(--text);
-        font-size: 1rem;
-        font-weight: 700;
-        line-height: 1.7;
-        white-space: pre-line;
-        overflow-wrap: anywhere;
-      }
-
-      .completion-actions {
-        display: grid;
-        gap: 10px;
-      }
-
-      .completion-actions .secondary-button {
-        width: 100%;
-        min-height: 52px;
-      }
-
+      .completion-label { margin: 0; color: var(--muted); font-size: 0.92rem; font-weight: 800; }
+      .completion-count { margin: 0; font-size: 1.12rem; font-weight: 900; color: var(--primary); }
+      .completion-summary { margin: 0; color: var(--text); font-size: 1rem; font-weight: 700; line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; }
+      .completion-actions { display: grid; gap: 10px; }
+      .completion-actions .secondary-button { width: 100%; min-height: 52px; }
       .completion-actions .secondary-button:first-child {
         color: #fff;
         background: linear-gradient(180deg, #24527f 0%, var(--primary) 100%);
         border: none;
         box-shadow: 0 16px 26px rgba(26, 58, 92, 0.22);
       }
-
       .completion-actions .secondary-button:last-child {
         color: var(--primary);
         background: #eef3f8;
         border: 1px solid var(--line);
         box-shadow: none;
       }
+      .completion-actions .secondary-button:active { transform: translateY(1px); }
+      .completion-actions .secondary-button:disabled { opacity: 0.56; box-shadow: none; }
+      .completion-summary.is-empty { color: #7f8d9b; }
 
-      .completion-actions .secondary-button:active {
-        transform: translateY(1px);
-      }
-
-      .completion-actions .secondary-button:disabled {
-        opacity: 0.56;
-        box-shadow: none;
-      }
-
-      .completion-summary.is-empty {
-        color: #7f8d9b;
-      }
-
-      .mic-button,
-      .send-button,
-      .secondary-button,
-      .store-button {
+      .mic-button, .send-button, .secondary-button, .store-button, .input-method-button {
         appearance: none;
         border: none;
         min-height: 50px;
@@ -276,30 +150,25 @@
         cursor: pointer;
         transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
       }
-
       .mic-button {
         color: #fff;
         background: linear-gradient(180deg, #f0a54a 0%, var(--accent) 100%);
         box-shadow: 0 16px 26px rgba(232, 145, 58, 0.26);
       }
-
       .mic-button.is-listening {
         background: linear-gradient(180deg, #e05244 0%, #b42318 100%);
         box-shadow: 0 16px 26px rgba(180, 35, 24, 0.26);
       }
-
       .send-button {
         color: #fff;
         background: linear-gradient(180deg, #24527f 0%, var(--primary) 100%);
         box-shadow: 0 16px 26px rgba(26, 58, 92, 0.22);
       }
-
       .secondary-button {
         color: var(--primary);
         background: #eef3f8;
         border: 1px solid var(--line);
       }
-
       .store-button {
         text-align: left;
         background: #fff;
@@ -307,46 +176,37 @@
         display: grid;
         gap: 4px;
       }
-
       .store-button.is-selected {
         border-color: var(--primary);
         background: #edf4fb;
         box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1);
       }
-
-      .store-button:active,
-      .mic-button:active,
-      .send-button:active,
-      .secondary-button:active {
-        transform: translateY(1px);
+      .input-method-button {
+        min-height: 48px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--primary);
       }
-
-      .mic-button:disabled,
-      .send-button:disabled,
-      .secondary-button:disabled,
-      .store-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.56;
-        box-shadow: none;
+      .input-method-button[aria-pressed="true"] {
+        background: #edf4fb;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.08);
       }
-
-      .button-row,
-      .field,
-      .actions,
-      .store-grid {
-        display: grid;
-        gap: 8px;
-      }
-
-      .field-label {
+      .store-actions { display: grid; gap: 10px; }
+      .store-reset-notice {
         margin: 0;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #eef4fa;
+        color: var(--text);
+        border: 1px solid var(--line);
         font-size: 0.94rem;
-        font-weight: 800;
-        color: var(--muted);
+        font-weight: 700;
       }
 
-      .textarea,
-      .text-input {
+      .button-row, .field, .actions, .store-grid, .status-group, .input-method-row { display: grid; gap: 8px; }
+      .field-label { margin: 0; font-size: 0.94rem; font-weight: 800; color: var(--muted); }
+      .textarea, .text-input {
         width: 100%;
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -358,28 +218,10 @@
         background: #fff;
         outline: none;
       }
-
-      .textarea {
-        min-height: 180px;
-        max-height: 260px;
-        overflow: auto;
-      }
-
-      .text-input {
-        min-height: 48px;
-      }
-
-      .textarea:focus,
-      .text-input:focus {
-        border-color: #98b3cb;
-        box-shadow: 0 0 0 4px rgba(26, 58, 92, 0.12);
-      }
-
-      .textarea::placeholder,
-      .text-input::placeholder {
-        color: #8795a6;
-      }
-
+      .textarea { min-height: 180px; max-height: 260px; overflow: auto; }
+      .text-input { min-height: 48px; }
+      .textarea:focus, .text-input:focus { border-color: #98b3cb; box-shadow: 0 0 0 4px rgba(26, 58, 92, 0.12); }
+      .textarea::placeholder, .text-input::placeholder { color: #8795a6; }
       .result {
         min-height: 120px;
         margin: 0;
@@ -389,48 +231,14 @@
         word-break: break-word;
         overflow-wrap: anywhere;
       }
-
-      .result.is-empty {
-        color: #7f8d9b;
-      }
-
-      .helper-text {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      .store-shell {
-        display: grid;
-        gap: 10px;
-      }
-
-      .store-toggle {
-        width: 100%;
-      }
-
-      .store-panel {
-        display: grid;
-        gap: 12px;
-        padding-top: 4px;
-      }
-
-      .store-list {
-        display: grid;
-        gap: 10px;
-      }
-
-      .store-name {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--text);
-      }
-
-      .store-meta {
-        font-size: 0.9rem;
-        color: var(--muted);
-      }
-
+      .result.is-empty { color: #7f8d9b; }
+      .helper-text { margin: 0; color: var(--muted); font-size: 0.95rem; }
+      .store-shell { display: grid; gap: 10px; }
+      .store-toggle { width: 100%; }
+      .store-panel { display: grid; gap: 12px; padding-top: 4px; }
+      .store-list { display: grid; gap: 10px; }
+      .store-name { font-size: 1rem; font-weight: 800; color: var(--text); }
+      .store-meta { font-size: 0.9rem; color: var(--muted); }
       .store-empty {
         margin: 0;
         padding: 12px 14px;
@@ -439,76 +247,28 @@
         color: var(--muted);
         background: #fbfcfe;
       }
-
-      .hidden {
-        display: none !important;
-      }
+      .hidden { display: none !important; }
 
       @media (min-width: 640px) {
-        main {
-          padding: 18px 16px 28px;
-        }
-
-        .hero {
-          padding: 22px 22px 20px;
-        }
-
-        h1 {
-          font-size: 2rem;
-        }
-
-        .button-row {
-          grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
-        }
-
-        .two-col {
-          display: grid;
-          gap: 12px;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        }
-
-        .completion-actions {
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        }
+        main { padding: 18px 16px 28px; }
+        .hero { padding: 22px 22px 20px; }
+        h1 { font-size: 2rem; }
+        .button-row { grid-template-columns: minmax(0, 1fr) minmax(160px, 220px); }
+        .two-col { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .completion-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .input-method-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .store-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
       }
 
       @media (max-width: 480px) {
-        main {
-          padding: 10px 8px 18px;
-        }
-
-        .hero,
-        .panel {
-          border-radius: 18px;
-        }
-
-        .hero {
-          padding: 16px 14px 14px;
-        }
-
-        h1 {
-          font-size: 1.58rem;
-        }
-
-        .section-title {
-          font-size: 0.9rem;
-        }
-
-        .mic-button,
-        .send-button,
-        .secondary-button,
-        .store-button {
-          min-height: 52px;
-          border-radius: 14px;
-        }
-
-        .textarea {
-          min-height: 160px;
-        }
-
-        .completion-actions {
-          gap: 8px;
-        }
+        main { padding: 10px 8px 18px; }
+        .hero, .panel { border-radius: 18px; }
+        .hero { padding: 16px 14px 14px; }
+        h1 { font-size: 1.58rem; }
+        .section-title { font-size: 0.9rem; }
+        .mic-button, .send-button, .secondary-button, .store-button, .input-method-button { min-height: 52px; border-radius: 14px; }
+        .textarea { min-height: 160px; }
+        .completion-actions { gap: 8px; }
       }
     </style>
   </head>
@@ -524,17 +284,17 @@
         <section class="panel view-section" aria-labelledby="input-title">
           <p class="section-title" id="input-title">1　商談内容を入力</p>
           <p class="helper-text">話した内容はここに入ります。必要ならここで修正できます。</p>
+          <div class="input-method-row" role="group" aria-label="商談区分">
+            <button id="inputMethodVisit" class="input-method-button" type="button" aria-pressed="true">訪問</button>
+            <button id="inputMethodPhone" class="input-method-button" type="button" aria-pressed="false">電話</button>
+          </div>
           <div class="button-row">
             <button id="micButton" class="mic-button" type="button" aria-pressed="false">話し始める</button>
             <p id="voiceStatus" class="status">待機中</p>
           </div>
           <div class="field">
             <label class="field-label" for="memoInput">確認・修正する文章</label>
-            <textarea
-              id="memoInput"
-              class="textarea"
-              placeholder="認識した内容が末尾へ追記されます。"
-            ></textarea>
+            <textarea id="memoInput" class="textarea" placeholder="認識した内容が末尾へ追記されます。"></textarea>
           </div>
           <p id="unsentNotice" class="notice notice--subtle hidden">前回入力した文章が残っています。内容を確認して送信してください。</p>
         </section>
@@ -544,27 +304,23 @@
           <div class="store-shell">
             <p id="selectedStoreSummary" class="summary is-empty">訪問先がまだ選ばれていません</p>
             <p class="helper-text">訪問先が分からない場合は、選ばずに送信できます。</p>
-            <button id="storeToggleButton" class="secondary-button store-toggle" type="button">訪問先を選ぶ</button>
+            <div class="store-actions">
+              <button id="findByGpsButton" class="secondary-button store-toggle" type="button">現在地から店舗を探す</button>
+              <button id="storeToggleButton" class="secondary-button store-toggle" type="button">訪問先を選ぶ</button>
+            </div>
+            <p id="storeResetNotice" class="store-reset-notice hidden"></p>
             <div id="storeSelectionPanel" class="store-panel hidden">
-              <div class="status-group">
+              <div class="status-group" id="nearbyStatusGroup">
                 <p id="gpsStatus" class="status">現在地を確認中です</p>
                 <p id="candidateStatus" class="status">近い店舗候補はまだありません</p>
               </div>
-              <div class="store-grid">
+              <div class="store-grid" id="nearbyStoreGrid">
                 <p class="field-label">近い店舗候補</p>
                 <div id="nearbyStoreList" class="store-list"></div>
               </div>
               <div class="field">
                 <label class="field-label" for="storeManualInput">候補にない場合の店舗名</label>
-                <input
-                  id="storeManualInput"
-                  class="text-input"
-                  type="text"
-                  placeholder="店舗名を入力してください"
-                  autocomplete="off"
-                  autocapitalize="off"
-                  spellcheck="false"
-                >
+                <input id="storeManualInput" class="text-input" type="text" placeholder="店舗名を入力してください" autocomplete="off" autocapitalize="off" spellcheck="false">
               </div>
               <p id="searchStatus" class="status">店舗名を入力すると候補を表示します</p>
               <div class="store-grid">
@@ -617,13 +373,15 @@
       const GPS_UNSUPPORTED_MESSAGE = 'このブラウザは現在地の取得に対応していません';
       const GPS_PERMISSION_MESSAGE = '現在地の取得が許可されていません。手入力で続行できます。';
       const GPS_TIMEOUT_MESSAGE = '現在地の取得がタイムアウトしました。手入力で続行できます。';
-      const GPS_UNAVAILABLE_MESSAGE = '現在地を取得できませんでした。手入力で続行できます。';
+      const GPS_UNAVAILABLE_MESSAGE = '現在地を取得できませんでした。店舗名で検索してください';
       const CANDIDATE_IDLE_MESSAGE = '近い店舗候補はまだありません';
       const CANDIDATE_LOADING_MESSAGE = '近い店舗候補を取得しています…';
       const SEARCH_IDLE_MESSAGE = '店舗名を入力すると候補を表示します';
       const SEARCH_LOADING_MESSAGE = '候補を探しています…';
 
       const elements = {
+        inputMethodVisit: document.getElementById('inputMethodVisit'),
+        inputMethodPhone: document.getElementById('inputMethodPhone'),
         micButton: document.getElementById('micButton'),
         memoInput: document.getElementById('memoInput'),
         voiceStatus: document.getElementById('voiceStatus'),
@@ -635,8 +393,12 @@
         candidateStatus: document.getElementById('candidateStatus'),
         searchStatus: document.getElementById('searchStatus'),
         selectedStoreSummary: document.getElementById('selectedStoreSummary'),
+        storeResetNotice: document.getElementById('storeResetNotice'),
+        findByGpsButton: document.getElementById('findByGpsButton'),
         storeToggleButton: document.getElementById('storeToggleButton'),
         storeSelectionPanel: document.getElementById('storeSelectionPanel'),
+        nearbyStatusGroup: document.getElementById('nearbyStatusGroup'),
+        nearbyStoreGrid: document.getElementById('nearbyStoreGrid'),
         nearbyStoreList: document.getElementById('nearbyStoreList'),
         searchStoreList: document.getElementById('searchStoreList'),
         storeManualInput: document.getElementById('storeManualInput'),
@@ -655,88 +417,65 @@
         sending: false,
         completed: false,
         storeSelectionOpen: false,
+        inputMethod: '訪問',
+        selectedStoreId: '',
         token: '',
-        gps: {
-          status: 'idle',
-          latitude: '',
-          longitude: '',
-          errorMessage: '',
-          requestSeq: 0,
-        },
-        nearby: {
-          status: 'idle',
-          items: [],
-          selectedId: '',
-          requestSeq: 0,
-        },
-        search: {
-          status: 'idle',
-          items: [],
-          selectedId: '',
-          timerId: null,
-          requestSeq: 0,
-        },
+        gps: { status: 'idle', latitude: '', longitude: '', errorMessage: '', requestSeq: 0 },
+        nearby: { status: 'idle', items: [], selectedId: '', requestSeq: 0 },
+        search: { status: 'idle', items: [], selectedId: '', timerId: null, requestSeq: 0 },
       };
 
-      function safeString(value) {
-        return value === undefined || value === null ? '' : String(value);
-      }
-
+      function safeString(value) { return value === undefined || value === null ? '' : String(value); }
       function setStatus(element, text, kind) {
         element.textContent = text;
         element.className = 'status';
-        if (kind) {
-          element.classList.add(`is-${kind}`);
-        }
+        if (kind) element.classList.add(`is-${kind}`);
       }
-
       function setSummary(text, empty) {
         elements.selectedStoreSummary.textContent = text;
         elements.selectedStoreSummary.classList.toggle('is-empty', Boolean(empty));
       }
-
-      function updateStoreSelectionToggle() {
-        elements.storeToggleButton.textContent = state.storeSelectionOpen ? '訪問先を閉じる' : '訪問先を選ぶ';
+      function setStoreResetNotice(message) {
+        const text = safeString(message).trim();
+        elements.storeResetNotice.textContent = text;
+        elements.storeResetNotice.classList.toggle('hidden', !text);
       }
-
+      function updateInputMethodButtons() {
+        const isVisit = state.inputMethod === '訪問';
+        elements.inputMethodVisit.setAttribute('aria-pressed', isVisit ? 'true' : 'false');
+        elements.inputMethodPhone.setAttribute('aria-pressed', isVisit ? 'false' : 'true');
+        elements.findByGpsButton.classList.toggle('hidden', !isVisit);
+        elements.nearbyStatusGroup.classList.toggle('hidden', !isVisit);
+        elements.nearbyStoreGrid.classList.toggle('hidden', !isVisit);
+      }
       function setStoreSelectionExpanded(isExpanded) {
         state.storeSelectionOpen = Boolean(isExpanded);
         elements.storeSelectionPanel.classList.toggle('hidden', !state.storeSelectionOpen);
-        updateStoreSelectionToggle();
+        elements.storeToggleButton.textContent = state.storeSelectionOpen ? '訪問先を閉じる' : '訪問先を選ぶ';
       }
-
-      function toggleStoreSelectionPanel() {
-        setStoreSelectionExpanded(!state.storeSelectionOpen);
-      }
-
+      function toggleStoreSelectionPanel() { setStoreSelectionExpanded(!state.storeSelectionOpen); }
       function updateSendStatusLabel() {
         if (!state.token) {
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
           return;
         }
-
         if (state.sending) {
           setStatus(elements.sendStatus, SENDING_MESSAGE, 'success');
           return;
         }
-
         const hasInput = safeString(elements.memoInput.value).trim().length > 0;
         if (!hasInput) {
           setStatus(elements.sendStatus, '入力がありません', '');
           return;
         }
-
-        if (state.nearby.selectedId || state.search.selectedId) {
-          setStatus(elements.sendStatus, '入力あり・訪問先確定済み', 'success');
+        const selection = getSelectedStoreSelection();
+        if (selection.storeId || selection.manualLabel) {
+          setStatus(elements.sendStatus, `入力あり・${state.inputMethod}・訪問先確定済み`, 'success');
         } else {
-          setStatus(elements.sendStatus, '入力あり・訪問先未選択', '');
+          setStatus(elements.sendStatus, `入力あり・${state.inputMethod}・訪問先未指定`, '');
         }
       }
-
-      function showUnsentNotice(show) {
-        elements.unsentNotice.classList.toggle('hidden', !show);
-      }
-
+      function showUnsentNotice(show) { elements.unsentNotice.classList.toggle('hidden', !show); }
       function showSendFeedback(message) {
         const text = safeString(message).trim();
         if (!text) {
@@ -744,16 +483,13 @@
           elements.sendFeedback.classList.add('hidden');
           return;
         }
-
         elements.sendFeedback.textContent = text;
         elements.sendFeedback.classList.remove('hidden');
       }
-
       function clearSendFeedback() {
         elements.sendFeedback.textContent = '';
         elements.sendFeedback.classList.add('hidden');
       }
-
       function setViewMode(mode) {
         const isCompleted = mode === 'complete';
         document.querySelectorAll('.view-section').forEach((section) => {
@@ -761,235 +497,139 @@
         });
         elements.completionPanel.classList.toggle('hidden', !isCompleted);
       }
-
-      function readSavedText() {
-        return localStorage.getItem(STORAGE_KEY);
-      }
-
+      function readSavedText() { return localStorage.getItem(STORAGE_KEY); }
       function saveUnsentText(text) {
         const normalizedText = safeString(text);
         if (normalizedText.trim()) {
           localStorage.setItem(STORAGE_KEY, normalizedText);
           showUnsentNotice(true);
-          return;
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+          showUnsentNotice(false);
         }
-
-        localStorage.removeItem(STORAGE_KEY);
-        showUnsentNotice(false);
       }
-
       function clearUnsentTextAfterWriteSuccess() {
         localStorage.removeItem(STORAGE_KEY);
         showUnsentNotice(false);
       }
-
       function restoreUnsentText() {
         const saved = readSavedText();
         if (saved === null) {
           showUnsentNotice(false);
           return false;
         }
-
         elements.memoInput.value = saved;
         showUnsentNotice(true);
         return true;
       }
-
-      function getRecognitionConstructor() {
-        return window.SpeechRecognition || window.webkitSpeechRecognition || null;
-      }
-
+      function getRecognitionConstructor() { return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
       function appendTranscript(transcript) {
         const text = safeString(transcript).trim();
-        if (!text) {
-          return;
-        }
-
+        if (!text) return;
         const current = elements.memoInput.value.trim();
         elements.memoInput.value = current ? `${current}\n${text}` : text;
         saveUnsentText(elements.memoInput.value);
       }
-
       function stopRecognition() {
-        if (!state.recognition) {
-          return;
-        }
-
-        try {
-          state.recognition.stop();
-        } catch (error) {
-          state.listening = false;
-          state.starting = false;
-          setStatus(elements.voiceStatus, '待機中', '');
-          updateMicButton();
-        }
+        if (!state.recognition) return;
+        try { state.recognition.stop(); } catch (error) {}
       }
-
       function startRecognition() {
-        if (!state.supported || !state.recognition || state.listening || state.starting || state.sending || state.completed) {
-          return;
-        }
-
+        if (!state.supported || !state.recognition || state.listening || state.starting || state.sending || state.completed) return;
         state.starting = true;
         setStatus(elements.voiceStatus, '認識を開始しています…', '');
-
-        try {
-          state.recognition.start();
-        } catch (error) {
+        try { state.recognition.start(); } catch (error) {
           state.starting = false;
           state.listening = false;
           setStatus(elements.voiceStatus, '音声入力を開始できませんでした', 'error');
         }
       }
-
       function toggleRecognition() {
-        if (!state.supported || state.sending || state.completed) {
-          return;
-        }
-
-        if (state.listening) {
-          stopRecognition();
-          return;
-        }
-
+        if (!state.supported || state.sending || state.completed) return;
+        if (state.listening) { stopRecognition(); return; }
         startRecognition();
       }
-
       function createRecognition() {
         const Recognition = getRecognitionConstructor();
         if (!Recognition) {
           state.supported = false;
           setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
-          updateMicButton();
           return null;
         }
-
         state.supported = true;
         const recognition = new Recognition();
         recognition.lang = 'ja-JP';
         recognition.continuous = true;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
-
-        recognition.onstart = () => {
-          state.listening = true;
-          state.starting = false;
-          setStatus(elements.voiceStatus, '録音中…', 'listening');
-          updateMicButton();
-        };
-
+        recognition.onstart = () => { state.listening = true; state.starting = false; setStatus(elements.voiceStatus, '録音中…', 'listening'); updateMicButton(); };
         recognition.onresult = (event) => {
           for (let index = event.resultIndex; index < event.results.length; index += 1) {
             const result = event.results[index];
-            if (result && result.isFinal && result[0] && result[0].transcript) {
-              appendTranscript(result[0].transcript);
-            }
+            if (result && result.isFinal && result[0] && result[0].transcript) appendTranscript(result[0].transcript);
           }
         };
-
         recognition.onerror = (event) => {
           const code = event && event.error ? String(event.error) : '';
           state.starting = false;
           state.listening = false;
-
           let message = '音声入力を開始できませんでした。';
-          if (code === 'not-allowed' || code === 'service-not-allowed') {
-            message = 'マイクの使用が許可されていません。';
-          } else if (code === 'no-speech') {
-            message = '音声を認識できませんでした。もう一度マイクを押してください。';
-          } else if (code === 'audio-capture') {
-            message = 'マイクを利用できません。端末の設定を確認してください。';
-          } else if (code === 'network') {
-            message = '音声認識サービスへ接続できませんでした。';
-          }
-
+          if (code === 'not-allowed' || code === 'service-not-allowed') message = 'マイクの使用が許可されていません。';
+          else if (code === 'no-speech') message = '音声を認識できませんでした。もう一度マイクを押してください。';
+          else if (code === 'audio-capture') message = 'マイクを利用できません。端末の設定を確認してください。';
+          else if (code === 'network') message = '音声認識サービスへ接続できませんでした。';
           setStatus(elements.voiceStatus, code ? `${message} (${code})` : message, 'error');
           updateMicButton();
         };
-
-        recognition.onend = () => {
-          state.starting = false;
-          state.listening = false;
-          setStatus(elements.voiceStatus, '待機中', '');
-          updateMicButton();
-        };
-
+        recognition.onend = () => { state.starting = false; state.listening = false; setStatus(elements.voiceStatus, '待機中', ''); updateMicButton(); };
         return recognition;
       }
-
       function handleMemoInput() {
         saveUnsentText(elements.memoInput.value);
-        if (!state.completed) {
-          updateSendStatusLabel();
-        }
+        if (!state.completed) updateSendStatusLabel();
       }
-
       function updateMicButton() {
         elements.micButton.disabled = !state.supported || state.sending || state.completed;
         elements.micButton.classList.toggle('is-listening', state.listening);
         elements.micButton.setAttribute('aria-pressed', state.listening ? 'true' : 'false');
         elements.micButton.textContent = state.listening ? '音声入力を停止' : '話し始める';
       }
-
       function updateSendButton() {
         elements.sendButton.disabled = state.sending || state.completed || !state.token;
-        elements.sendButton.textContent = '送信';
       }
-
       function setSendingMode(isSending) {
         state.sending = isSending;
         updateSendStatusLabel();
         updateSendButton();
         updateMicButton();
       }
-
-      function getStoredToken() {
-        return safeString(sessionStorage.getItem(TOKEN_STORAGE_KEY)).trim();
-      }
-
+      function getStoredToken() { return safeString(sessionStorage.getItem(TOKEN_STORAGE_KEY)).trim(); }
       function storeToken(token) {
         const normalizedToken = safeString(token).trim();
         if (normalizedToken) {
           sessionStorage.setItem(TOKEN_STORAGE_KEY, normalizedToken);
           state.token = normalizedToken;
-          return;
+        } else {
+          sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+          state.token = '';
         }
-
-        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-        state.token = '';
       }
-
       function clearTokenFragment() {
-        if (!window.location.hash) {
-          return;
-        }
-
-        const nextUrl = `${window.location.pathname}${window.location.search}`;
-        history.replaceState(null, document.title, nextUrl);
+        if (!window.location.hash) return;
+        history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
       }
-
       function restoreTokenFromHash() {
         const hash = safeString(window.location.hash).replace(/^#/, '');
-        if (!hash) {
-          return '';
-        }
-
+        if (!hash) return '';
         const params = new URLSearchParams(hash);
         const token = safeString(params.get('token')).trim();
-        if (token) {
-          storeToken(token);
-        }
-
+        if (token) storeToken(token);
         clearTokenFragment();
         return token;
       }
-
       function syncTokenState() {
         const tokenFromHash = restoreTokenFromHash();
-        if (!tokenFromHash) {
-          state.token = getStoredToken();
-        }
-
+        if (!tokenFromHash) state.token = getStoredToken();
         if (!state.token) {
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
           setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
@@ -998,61 +638,35 @@
         } else {
           updateSendStatusLabel();
         }
-
         updateSendButton();
       }
-
-      function formatCoordinate(value) {
-        const number = Number(value);
-        return Number.isFinite(number) ? number.toFixed(6) : '';
-      }
-
       function formatDistance(distanceKm) {
         const value = Number(distanceKm);
-        if (!Number.isFinite(value)) {
-          return '';
-        }
-
+        if (!Number.isFinite(value)) return '';
         return value < 1 ? `${value.toFixed(2)} km` : `${value.toFixed(1)} km`;
       }
-
-      function escapeHtml(text) {
-        return safeString(text)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
       function createStoreButton(item, selected, detailText, onClick) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'store-button';
-        if (selected) {
-          button.classList.add('is-selected');
-        }
-
+        if (selected) button.classList.add('is-selected');
         const name = document.createElement('span');
         name.className = 'store-name';
-        name.textContent = safeString(item.storeName).trim() || '（店舗名なし）';
-
-        const meta = document.createElement('span');
-        meta.className = 'store-meta';
-        meta.textContent = detailText;
-
+        name.textContent = safeString(item.label).trim() || '（店舗名なし）';
         button.append(name);
         if (detailText) {
+          const meta = document.createElement('span');
+          meta.className = 'store-meta';
+          meta.textContent = detailText;
           button.append(meta);
         }
         button.addEventListener('click', onClick);
         return button;
       }
-
       function renderNearbyStoreList(messageKind) {
         const container = elements.nearbyStoreList;
         container.innerHTML = '';
-
+        if (state.inputMethod !== '訪問') return;
         if (state.nearby.status === 'loading') {
           const loading = document.createElement('p');
           loading.className = 'store-empty';
@@ -1060,7 +674,6 @@
           container.appendChild(loading);
           return;
         }
-
         if (!state.nearby.items.length) {
           const empty = document.createElement('p');
           empty.className = 'store-empty';
@@ -1068,45 +681,16 @@
           container.appendChild(empty);
           return;
         }
-
         state.nearby.items.forEach((item) => {
           const selected = state.nearby.selectedId && state.nearby.selectedId === item.storeId;
           const detail = formatDistance(item.distanceKm);
           const button = createStoreButton(item, selected, detail, () => {
             state.nearby.selectedId = safeString(item.storeId).trim();
+            state.search.selectedId = '';
+            state.selectedStoreId = state.nearby.selectedId;
+            elements.storeManualInput.value = '';
+            setStoreResetNotice('');
             renderNearbyStoreList();
-            updateStoreSummary();
-            updateSendStatusLabel();
-            setStoreSelectionExpanded(false);
-          });
-          container.appendChild(button);
-        });
-      }
-
-      function renderSearchStoreList(messageText) {
-        const container = elements.searchStoreList;
-        container.innerHTML = '';
-
-        if (state.search.status === 'loading') {
-          const loading = document.createElement('p');
-          loading.className = 'store-empty';
-          loading.textContent = '候補を探しています…';
-          container.appendChild(loading);
-          return;
-        }
-
-        if (!state.search.items.length) {
-          const empty = document.createElement('p');
-          empty.className = 'store-empty';
-          empty.textContent = messageText || '該当する候補がありません。入力した店舗名をそのまま使えます。';
-          container.appendChild(empty);
-          return;
-        }
-
-        state.search.items.forEach((item) => {
-          const selected = state.search.selectedId && state.search.selectedId === item.storeId;
-          const button = createStoreButton(item, selected, '', () => {
-            state.search.selectedId = safeString(item.storeId).trim();
             renderSearchStoreList();
             updateStoreSummary();
             updateSendStatusLabel();
@@ -1115,53 +699,61 @@
           container.appendChild(button);
         });
       }
-
-      function resolveStoreSelection() {
-        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
-        if (nearby) {
-          return {
-            source: 'nearby',
-            storeName: safeString(nearby.storeName).trim(),
-            item: nearby,
-          };
+      function renderSearchStoreList(messageText) {
+        const container = elements.searchStoreList;
+        container.innerHTML = '';
+        if (state.search.status === 'loading') {
+          const loading = document.createElement('p');
+          loading.className = 'store-empty';
+          loading.textContent = '候補を探しています…';
+          container.appendChild(loading);
+          return;
         }
-
-        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
-        if (search) {
-          return {
-            source: 'search',
-            storeName: safeString(search.storeName).trim(),
-            item: search,
-          };
+        if (!state.search.items.length) {
+          const empty = document.createElement('p');
+          empty.className = 'store-empty';
+          empty.textContent = messageText || '該当する候補がありません。入力した店舗名をそのまま使えます。';
+          container.appendChild(empty);
+          return;
         }
-
-        const manual = safeString(elements.storeManualInput.value).trim();
-        if (manual) {
-          return {
-            source: 'manual',
-            storeName: manual,
-            item: null,
-          };
-        }
-
-        return {
-          source: '',
-          storeName: '',
-          item: null,
-        };
+        state.search.items.forEach((item) => {
+          const selected = state.search.selectedId && state.search.selectedId === item.storeId;
+          const button = createStoreButton(item, selected, '', () => {
+            state.search.selectedId = safeString(item.storeId).trim();
+            state.nearby.selectedId = '';
+            state.selectedStoreId = state.search.selectedId;
+            elements.storeManualInput.value = '';
+            setStoreResetNotice('');
+            renderSearchStoreList();
+            renderNearbyStoreList();
+            updateStoreSummary();
+            updateSendStatusLabel();
+            setStoreSelectionExpanded(false);
+          });
+          container.appendChild(button);
+        });
       }
-
+      function getSelectedStoreSelection() {
+        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
+        if (nearby) return { source: 'nearby', storeId: safeString(nearby.storeId).trim(), label: safeString(nearby.label).trim(), manualLabel: '' };
+        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
+        if (search) return { source: 'search', storeId: safeString(search.storeId).trim(), label: safeString(search.label).trim(), manualLabel: '' };
+        const manual = safeString(elements.storeManualInput.value).trim();
+        if (manual) return { source: 'manual', storeId: '', label: manual, manualLabel: manual };
+        return { source: '', storeId: '', label: '', manualLabel: '' };
+      }
       function updateStoreSummary() {
-        const resolved = resolveStoreSelection();
-
-        if (!resolved.storeName) {
+        const resolved = getSelectedStoreSelection();
+        if (!resolved.label) {
           setSummary('店舗名はまだ確定していません', true);
           return;
         }
-
-        setSummary(`選択中の店舗: ${resolved.storeName}`, false);
+        if (resolved.source === 'manual') {
+          setSummary(`入力店舗名: ${resolved.label}`, false);
+          return;
+        }
+        setSummary(`選択中の店舗: ${resolved.label}`, false);
       }
-
       function setGpsIdle() {
         state.gps.status = 'idle';
         state.gps.latitude = '';
@@ -1170,46 +762,37 @@
         renderNearbyStoreList('現在地を取得すると、近い店舗候補を表示します。');
         updateStoreSummary();
       }
-
       function startGpsFlow() {
-        if (!state.token) {
+        if (!state.token || state.inputMethod !== '訪問') {
           setGpsIdle();
           setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
           setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
-          setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
           return;
         }
-
         if (!navigator.geolocation) {
           state.gps.status = 'error';
           state.gps.errorMessage = GPS_UNSUPPORTED_MESSAGE;
           setStatus(elements.gpsStatus, GPS_UNSUPPORTED_MESSAGE, 'error');
-          setStatus(elements.candidateStatus, '現在地を取得できなかったため、近い店舗候補は表示できません', 'error');
-          renderNearbyStoreList('現在地を取得できなかったため、近い店舗候補はありません。手入力で続行できます。');
+          setStatus(elements.candidateStatus, GPS_UNAVAILABLE_MESSAGE, 'error');
+          renderNearbyStoreList(GPS_UNAVAILABLE_MESSAGE);
           updateStoreSummary();
           return;
         }
-
         const requestSeq = state.gps.requestSeq + 1;
         state.gps.requestSeq = requestSeq;
         state.gps.status = 'loading';
         state.gps.errorMessage = '';
         setStatus(elements.gpsStatus, GPS_LOADING_MESSAGE, 'listening');
         setStatus(elements.candidateStatus, CANDIDATE_LOADING_MESSAGE, 'listening');
-
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            if (state.gps.requestSeq !== requestSeq) {
-              return;
-            }
-
+            if (state.gps.requestSeq !== requestSeq) return;
             const latitude = Number(position && position.coords ? position.coords.latitude : NaN);
             const longitude = Number(position && position.coords ? position.coords.longitude : NaN);
             if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
               handleGpsError(requestSeq, GPS_UNAVAILABLE_MESSAGE);
               return;
             }
-
             state.gps.status = 'success';
             state.gps.latitude = Number(latitude.toFixed(6));
             state.gps.longitude = Number(longitude.toFixed(6));
@@ -1220,70 +803,43 @@
           (error) => {
             const code = error && error.code !== undefined ? Number(error.code) : 0;
             let message = GPS_UNAVAILABLE_MESSAGE;
-            if (code === error.PERMISSION_DENIED) {
-              message = GPS_PERMISSION_MESSAGE;
-            } else if (code === error.TIMEOUT) {
-              message = GPS_TIMEOUT_MESSAGE;
-            } else if (code === error.POSITION_UNAVAILABLE) {
-              message = GPS_UNAVAILABLE_MESSAGE;
-            }
-
+            if (code === error.PERMISSION_DENIED) message = GPS_PERMISSION_MESSAGE;
+            else if (code === error.TIMEOUT) message = GPS_TIMEOUT_MESSAGE;
             handleGpsError(requestSeq, message);
           },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
         );
       }
-
       function handleGpsError(requestSeq, message) {
-        if (state.gps.requestSeq !== requestSeq) {
-          return;
-        }
-
+        if (state.gps.requestSeq !== requestSeq) return;
         state.gps.status = 'error';
         state.gps.latitude = '';
         state.gps.longitude = '';
         state.gps.errorMessage = message;
         setStatus(elements.gpsStatus, message, 'error');
-        setStatus(elements.candidateStatus, '現在地を取得できなかったため、近い店舗候補は表示できません', 'error');
-        renderNearbyStoreList('現在地を取得できなかったため、近い店舗候補はありません。手入力で続行できます。');
+        setStatus(elements.candidateStatus, GPS_UNAVAILABLE_MESSAGE, 'error');
+        renderNearbyStoreList(GPS_UNAVAILABLE_MESSAGE);
         updateStoreSummary();
       }
-
       async function fetchNearbyStoreCandidates(requestSeq) {
-        if (!state.token || state.gps.requestSeq !== requestSeq) {
-          return;
-        }
-
+        if (!state.token || state.gps.requestSeq !== requestSeq || state.inputMethod !== '訪問') return;
         state.nearby.status = 'loading';
         renderNearbyStoreList();
-
         try {
-          const payload = await postGasJson({
-            action: 'storeCandidates',
-            token: state.token,
-            latitude: state.gps.latitude,
-            longitude: state.gps.longitude,
-          });
-
-          if (state.gps.requestSeq !== requestSeq) {
-            return;
-          }
-
+          const payload = await postGasJson({ action: 'storeCandidates', token: state.token, latitude: state.gps.latitude, longitude: state.gps.longitude });
+          if (state.gps.requestSeq !== requestSeq) return;
           if (!payload || payload.success !== true) {
             throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : '候補の取得に失敗しました。'));
           }
-
-          const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+          const candidates = Array.isArray(payload.candidates)
+            ? payload.candidates.map((item) => ({
+                ...item,
+                label: safeString(item['store' + 'Name']).trim(),
+              }))
+            : [];
           state.nearby.status = 'success';
           state.nearby.items = candidates;
-          if (!state.nearby.items.some((item) => safeString(item.storeId).trim() === state.nearby.selectedId)) {
-            state.nearby.selectedId = '';
-          }
-
+          if (!state.nearby.items.some((item) => safeString(item.storeId).trim() === state.nearby.selectedId)) state.nearby.selectedId = '';
           if (candidates.length > 0) {
             setStatus(elements.candidateStatus, `近い店舗候補を ${candidates.length} 件取得しました`, 'success');
             renderNearbyStoreList();
@@ -1293,10 +849,7 @@
           }
           updateStoreSummary();
         } catch (error) {
-          if (state.gps.requestSeq !== requestSeq) {
-            return;
-          }
-
+          if (state.gps.requestSeq !== requestSeq) return;
           state.nearby.status = 'error';
           state.nearby.items = [];
           state.nearby.selectedId = '';
@@ -1305,7 +858,6 @@
           updateStoreSummary();
         }
       }
-
       function scheduleStoreSearch() {
         if (!state.token) {
           state.search.status = 'idle';
@@ -1320,15 +872,11 @@
           updateStoreSummary();
           return;
         }
-
         const query = safeString(elements.storeManualInput.value).trim();
-        state.search.query = query;
-
         if (state.search.timerId !== null) {
           window.clearTimeout(state.search.timerId);
           state.search.timerId = null;
         }
-
         if (!query) {
           state.search.status = 'idle';
           state.search.items = [];
@@ -1338,53 +886,39 @@
           updateStoreSummary();
           return;
         }
-
         state.search.status = 'typing';
         state.search.items = [];
         state.search.selectedId = '';
         setStatus(elements.searchStatus, '入力を受け付けました。候補検索を待っています…', '');
         renderSearchStoreList('入力待ちのため候補はまだ表示していません。');
-
         state.search.timerId = window.setTimeout(() => {
           state.search.timerId = null;
           void fetchStoreSearchCandidates(query);
         }, 500);
       }
-
       async function fetchStoreSearchCandidates(query) {
         const trimmedQuery = safeString(query).trim();
-        if (!trimmedQuery || !state.token) {
-          return;
-        }
-
+        if (!trimmedQuery || !state.token) return;
         const requestSeq = state.search.requestSeq + 1;
         state.search.requestSeq = requestSeq;
         state.search.status = 'loading';
         setStatus(elements.searchStatus, SEARCH_LOADING_MESSAGE, 'listening');
         renderSearchStoreList();
-
         try {
-          const payload = await postGasJson({
-            action: 'storeSearch',
-            token: state.token,
-            keyword: trimmedQuery,
-          });
-
-          if (state.search.requestSeq !== requestSeq || safeString(elements.storeManualInput.value).trim() !== trimmedQuery) {
-            return;
-          }
-
+          const payload = await postGasJson({ action: 'storeSearch', token: state.token, keyword: trimmedQuery });
+          if (state.search.requestSeq !== requestSeq || safeString(elements.storeManualInput.value).trim() !== trimmedQuery) return;
           if (!payload || payload.success !== true) {
             throw new Error(String(payload && payload.errorMessage ? payload.errorMessage : '候補一覧の取得に失敗しました。'));
           }
-
-          const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+          const candidates = Array.isArray(payload.candidates)
+            ? payload.candidates.map((item) => ({
+                ...item,
+                label: safeString(item['store' + 'Name']).trim(),
+              }))
+            : [];
           state.search.status = 'success';
           state.search.items = candidates;
-          if (!state.search.items.some((item) => safeString(item.storeId).trim() === state.search.selectedId)) {
-            state.search.selectedId = '';
-          }
-
+          if (!state.search.items.some((item) => safeString(item.storeId).trim() === state.search.selectedId)) state.search.selectedId = '';
           if (candidates.length > 0) {
             setStatus(elements.searchStatus, `候補一覧を ${candidates.length} 件取得しました`, 'success');
             renderSearchStoreList();
@@ -1394,10 +928,7 @@
           }
           updateStoreSummary();
         } catch (error) {
-          if (state.search.requestSeq !== requestSeq) {
-            return;
-          }
-
+          if (state.search.requestSeq !== requestSeq) return;
           state.search.status = 'error';
           state.search.items = [];
           state.search.selectedId = '';
@@ -1406,126 +937,70 @@
           updateStoreSummary();
         }
       }
-
-      function getSelectedStoreName() {
-        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
-        if (nearby) {
-          return safeString(nearby.storeName).trim();
-        }
-
-        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
-        if (search) {
-          return safeString(search.storeName).trim();
-        }
-
-        return safeString(elements.storeManualInput.value).trim();
-      }
-
-      function getSelectedStoreSource() {
-        const nearby = state.nearby.items.find((item) => safeString(item.storeId).trim() === state.nearby.selectedId);
-        if (nearby) {
-          return 'nearby';
-        }
-
-        const search = state.search.items.find((item) => safeString(item.storeId).trim() === state.search.selectedId);
-        if (search) {
-          return 'search';
-        }
-
-        if (safeString(elements.storeManualInput.value).trim()) {
-          return 'manual';
-        }
-
-        return '';
-      }
-
-      function buildRequestBody(payload) {
-        return JSON.stringify(payload);
-      }
-
+      function buildRequestBody(payload) { return JSON.stringify(payload); }
       function getJsonResponseErrorMessage(payload, fallbackMessage) {
-        if (payload && payload.errorMessage) {
-          return String(payload.errorMessage);
-        }
-        if (payload && payload.message) {
-          return String(payload.message);
-        }
+        if (payload && payload.errorMessage) return String(payload.errorMessage);
+        if (payload && payload.message) return String(payload.message);
         return fallbackMessage;
       }
-
       async function postGasJson(payload) {
-        if (!safeString(GAS_SUBMIT_URL).trim()) {
-          throw new Error('送信先URLが設定されていません。');
-        }
-
+        if (!safeString(GAS_SUBMIT_URL).trim()) throw new Error('送信先URLが設定されていません。');
         const response = await fetch(GAS_SUBMIT_URL, {
           method: 'POST',
           mode: 'cors',
-          headers: {
-            'Content-Type': 'text/plain;charset=UTF-8',
-          },
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: buildRequestBody(payload),
         });
-
         const responseText = await response.text();
         let parsed;
-        try {
-          parsed = JSON.parse(responseText);
-        } catch (error) {
-          throw new Error('応答を読み取れませんでした。');
-        }
-
+        try { parsed = JSON.parse(responseText); } catch (error) { throw new Error('応答を読み取れませんでした。'); }
         if (!response.ok || !parsed || parsed.success !== true) {
           throw new Error(getJsonResponseErrorMessage(parsed, `HTTP ${response.status}`));
         }
-
         return parsed;
       }
-
       function formatRecordLine(record, index) {
-        const customerName = safeString(record && (record.customerName ?? record.customer_name)).trim() || '（顧客名なし）';
         const dealTheme = safeString(record && (record.dealTheme ?? record.deal_theme)).trim() || '（案件テーマなし）';
         const todoItem = safeString(record && (record.todoItem ?? record.todo_item)).trim();
         const todoLabel = todoItem ? 'あり' : 'なし';
-        return `${index}. 顧客名: ${customerName} / 案件テーマ: ${dealTheme} / 宿題: ${todoLabel}`;
+        return `${index}. 案件テーマ: ${dealTheme} / 宿題: ${todoLabel}`;
       }
-
       function renderSuccess(payload) {
         const recordCount = Number(payload && payload.recordCount);
         const records = Array.isArray(payload && payload.records) ? payload.records : [];
-        const firstRecord = records.length > 0 ? records[0] : null;
         const countText = `${Number.isFinite(recordCount) && recordCount > 0 ? recordCount : records.length}件`;
-        const customerName = safeString(firstRecord && (firstRecord.customerName ?? firstRecord.customer_name)).trim() || '（未入力）';
-        const dealTheme = safeString(firstRecord && (firstRecord.dealTheme ?? firstRecord.deal_theme)).trim() || '（未入力）';
-        const todoItem = safeString(firstRecord && (firstRecord.todoItem ?? firstRecord.todo_item)).trim();
-
+        const customerName = safeString(payload && payload.customerName).trim() || '（未入力）';
+        const isUnregisteredStore = Boolean(payload && payload.isUnregisteredStore);
+        const inputMethod = safeString(payload && payload.inputMethod).trim() || state.inputMethod;
+        const recordLines = records.map((record, index) => formatRecordLine(record, index + 1));
         elements.memoInput.value = '';
         elements.storeManualInput.value = '';
         state.nearby.selectedId = '';
         state.search.selectedId = '';
+        state.nearby.items = [];
         state.search.items = [];
         state.search.status = 'idle';
-        if (state.search.timerId !== null) {
-          window.clearTimeout(state.search.timerId);
-          state.search.timerId = null;
-        }
+        if (state.search.timerId !== null) { window.clearTimeout(state.search.timerId); state.search.timerId = null; }
         showUnsentNotice(false);
         setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
-        renderNearbyStoreList();
+        renderNearbyStoreList('現在地を取得すると、近い店舗候補を表示します。');
         renderSearchStoreList('店舗名を入力すると候補を表示します。');
-        updateStoreSummary();
         setStoreSelectionExpanded(false);
-
+        setGpsIdle();
+        setStoreResetNotice('');
         setStatus(elements.sendStatus, '記録しました', 'success');
         clearSendFeedback();
         elements.completionCount.textContent = countText;
-        elements.completionSummary.textContent = `顧客名：${customerName}\n案件テーマ：${dealTheme}\n宿題・ToDo：${todoItem || '（なし）'}`;
+        elements.completionSummary.textContent = [
+          `顧客名：${customerName}${isUnregisteredStore ? '（マスタ未登録）' : ''}`,
+          `商談区分：${inputMethod}`,
+          ...recordLines,
+        ].join('\n');
         state.completed = true;
         setViewMode('complete');
         updateMicButton();
         updateSendButton();
       }
-
       function renderFailure(message) {
         const text = safeString(message).trim() || '保存に失敗しました。';
         setStatus(elements.sendStatus, text, 'error');
@@ -1534,105 +1009,107 @@
         updateMicButton();
         updateSendButton();
       }
-
-      async function handleSend() {
-        if (state.sending || state.completed) {
-          return;
+      function handleStoreManualInput() {
+        if (state.completed) return;
+        state.nearby.selectedId = '';
+        state.search.selectedId = '';
+        if (state.search.timerId !== null) { window.clearTimeout(state.search.timerId); state.search.timerId = null; }
+        setStoreResetNotice('');
+        renderNearbyStoreList();
+        scheduleStoreSearch();
+        updateStoreSummary();
+        updateSendStatusLabel();
+      }
+      function setInputMethod(nextMethod, options) {
+        const normalizedMethod = nextMethod === '電話' ? '電話' : '訪問';
+        const forceReset = Boolean(options && options.forceReset);
+        const changed = state.inputMethod !== normalizedMethod;
+        state.inputMethod = normalizedMethod;
+        updateInputMethodButtons();
+        if (changed || forceReset) {
+          state.nearby.items = [];
+          state.nearby.selectedId = '';
+          state.search.items = [];
+          state.search.selectedId = '';
+          elements.storeManualInput.value = '';
+          if (state.search.timerId !== null) { window.clearTimeout(state.search.timerId); state.search.timerId = null; }
+          setGpsIdle();
+          setStoreResetNotice('商談区分を変更したため、店舗を選び直してください');
+          renderNearbyStoreList();
+          renderSearchStoreList();
         }
-
+        updateStoreSummary();
+        updateSendStatusLabel();
+      }
+      function handleSend() {
+        if (state.sending || state.completed) return;
         if (!state.token) {
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
           showSendFeedback(TOP_ACCESS_MESSAGE);
           updateSendButton();
           return;
         }
-
         const inputText = safeString(elements.memoInput.value);
         if (!inputText.trim()) {
           renderFailure('入力がありません。');
           return;
         }
-
-        if (state.listening || state.starting) {
-          stopRecognition();
+        if (state.listening || state.starting) stopRecognition();
+        if (state.inputMethod !== '訪問' && state.inputMethod !== '電話') {
+          renderFailure('訪問か電話かを選んでください。');
+          return;
         }
-
-        const storeName = getSelectedStoreName();
-        const latitude = state.gps.status === 'success' ? state.gps.latitude : '';
-        const longitude = state.gps.status === 'success' ? state.gps.longitude : '';
-
+        const resolvedStore = getSelectedStoreSelection();
+        if (!safeString(resolvedStore.storeId).trim() && !safeString(resolvedStore.manualLabel).trim()) {
+          renderFailure('商談先の店舗を指定してください。「現在地から店舗を探す」を押すか、店舗名で検索してください。');
+          return;
+        }
+        const latitude = state.inputMethod === '訪問' && state.gps.status === 'success' ? state.gps.latitude : '';
+        const longitude = state.inputMethod === '訪問' && state.gps.status === 'success' ? state.gps.longitude : '';
         saveUnsentText(inputText);
         setSendingMode(true);
         clearSendFeedback();
-
-        try {
-          const payload = await postGasJson({
-            action: 'submit',
-            token: state.token,
-            inputText,
-            latitude,
-            longitude,
-            storeName,
-          });
-
+        postGasJson({
+          action: 'submit',
+          token: state.token,
+          inputText,
+          inputMethod: state.inputMethod,
+          customerStoreId: resolvedStore.storeId,
+          customerNameRaw: resolvedStore.manualLabel,
+          latitude,
+          longitude,
+        }).then((payload) => {
           clearUnsentTextAfterWriteSuccess();
           renderSuccess(payload);
-        } catch (error) {
-          const message = error && error.message ? error.message : String(error);
-          renderFailure(message);
-        } finally {
+        }).catch((error) => {
+          renderFailure(error && error.message ? error.message : String(error));
+        }).finally(() => {
           state.sending = false;
           updateSendButton();
           updateMicButton();
-        }
+        });
       }
-
-      function handleStoreManualInput() {
-        if (state.completed) {
-          return;
-        }
-
-        if (state.search.timerId !== null) {
-          window.clearTimeout(state.search.timerId);
-          state.search.timerId = null;
-        }
-
-        state.nearby.selectedId = '';
-        state.search.selectedId = '';
-        renderNearbyStoreList();
-        scheduleStoreSearch();
-        updateStoreSummary();
-        updateSendStatusLabel();
-      }
-
       function bindEvents() {
         elements.micButton.addEventListener('click', toggleRecognition);
-        elements.storeToggleButton.addEventListener('click', () => {
-          if (state.completed) {
-            return;
-          }
-
-          toggleStoreSelectionPanel();
-        });
-        elements.sendButton.addEventListener('click', () => {
-          void handleSend();
-        });
+        elements.inputMethodVisit.addEventListener('click', () => { if (!state.completed) setInputMethod('訪問'); });
+        elements.inputMethodPhone.addEventListener('click', () => { if (!state.completed) setInputMethod('電話'); });
+        elements.findByGpsButton.addEventListener('click', () => { if (!state.completed) startGpsFlow(); });
+        elements.storeToggleButton.addEventListener('click', () => { if (!state.completed) toggleStoreSelectionPanel(); });
+        elements.sendButton.addEventListener('click', handleSend);
         elements.continueButton.addEventListener('click', () => {
           state.completed = false;
           elements.memoInput.value = '';
           elements.storeManualInput.value = '';
           state.nearby.selectedId = '';
           state.search.selectedId = '';
+          state.nearby.items = [];
           state.search.items = [];
-          state.search.status = 'idle';
-          setStoreSelectionExpanded(false);
-          if (state.search.timerId !== null) {
-            window.clearTimeout(state.search.timerId);
-            state.search.timerId = null;
-          }
+          if (state.search.timerId !== null) { window.clearTimeout(state.search.timerId); state.search.timerId = null; }
           clearSendFeedback();
           showUnsentNotice(false);
           setViewMode('input');
+          setInputMethod('訪問', { forceReset: true });
+          setStoreSelectionExpanded(false);
           renderNearbyStoreList();
           renderSearchStoreList(SEARCH_IDLE_MESSAGE);
           updateStoreSummary();
@@ -1641,18 +1118,13 @@
           updateMicButton();
           updateSendButton();
         });
-        elements.topButton.addEventListener('click', () => {
-          window.location.href = TOP_PAGE_URL;
-        });
+        elements.topButton.addEventListener('click', () => { window.location.href = TOP_PAGE_URL; });
         elements.memoInput.addEventListener('input', handleMemoInput);
         elements.memoInput.addEventListener('change', handleMemoInput);
         elements.storeManualInput.addEventListener('input', handleStoreManualInput);
         elements.storeManualInput.addEventListener('change', handleStoreManualInput);
-        window.addEventListener('pagehide', () => {
-          saveUnsentText(elements.memoInput.value);
-        });
+        window.addEventListener('pagehide', () => { saveUnsentText(elements.memoInput.value); });
       }
-
       function resetStoreUiForNoToken() {
         state.nearby.status = 'idle';
         state.nearby.items = [];
@@ -1661,6 +1133,7 @@
         state.search.items = [];
         state.search.selectedId = '';
         setStoreSelectionExpanded(false);
+        setGpsIdle();
         setStatus(elements.gpsStatus, GPS_WAITING_MESSAGE, '');
         setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
         setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
@@ -1668,37 +1141,35 @@
         renderSearchStoreList('店舗名を入力すると候補を表示します。');
         updateStoreSummary();
       }
-
       function initialize() {
         bindEvents();
         const hasSaved = restoreUnsentText();
         state.recognition = createRecognition();
         syncTokenState();
         state.completed = false;
+        state.inputMethod = '訪問';
+        updateInputMethodButtons();
         setStoreSelectionExpanded(false);
         setViewMode('input');
         clearSendFeedback();
+        setGpsIdle();
+        setStoreResetNotice('');
         updateMicButton();
-
         if (!state.supported) {
           setStatus(elements.voiceStatus, 'このブラウザは音声入力に対応していません', 'error');
         } else {
           setStatus(elements.voiceStatus, '待機中', '');
         }
-
         if (!state.token) {
           resetStoreUiForNoToken();
           setStatus(elements.sendStatus, TOP_ACCESS_MESSAGE, 'error');
         } else {
-          startGpsFlow();
+          updateSendStatusLabel();
         }
-
-        if (hasSaved) {
-          showUnsentNotice(true);
-        }
+        if (hasSaved) showUnsentNotice(true);
         updateStoreSummary();
+        updateSendButton();
       }
-
       document.addEventListener('DOMContentLoaded', initialize);
     </script>
   </body>
