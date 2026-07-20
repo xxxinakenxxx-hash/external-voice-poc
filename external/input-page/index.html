@@ -203,6 +203,50 @@
         font-size: 0.94rem;
         font-weight: 700;
       }
+      .gps-guide {
+        display: grid;
+        gap: 10px;
+        margin: 10px 0 0;
+        padding: 12px 12px 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #f3f6fa;
+      }
+      .gps-guide--permission {
+        border-color: rgba(180, 35, 24, 0.28);
+        background: #fdecec;
+      }
+      .gps-guide__title {
+        margin: 0;
+        color: var(--danger);
+        font-size: 1rem;
+        font-weight: 900;
+      }
+      .gps-guide__description {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.96rem;
+        font-weight: 700;
+        line-height: 1.7;
+      }
+      .gps-guide__steps {
+        margin: 0;
+        padding: 0 0 0 1.4em;
+        color: var(--text);
+        font-size: 0.94rem;
+        line-height: 1.7;
+      }
+      .gps-guide__steps li + li { margin-top: 4px; }
+      .gps-guide__supplement {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.7;
+      }
+      .gps-guide__button {
+        width: 100%;
+        min-height: 48px;
+      }
 
       .button-row, .field, .actions, .store-grid, .status-group, .input-method-row { display: grid; gap: 8px; }
       .field-label { margin: 0; font-size: 0.94rem; font-weight: 800; color: var(--muted); }
@@ -311,8 +355,15 @@
             <p id="storeResetNotice" class="store-reset-notice hidden"></p>
             <div id="storeSelectionPanel" class="store-panel hidden">
               <div class="status-group" id="nearbyStatusGroup">
-                <p id="gpsStatus" class="status">現在地を確認中です</p>
-                <p id="candidateStatus" class="status">近い店舗候補はまだありません</p>
+                <p id="gpsStatus" class="status" aria-live="polite">現在地を確認中です</p>
+                <p id="candidateStatus" class="status" aria-live="polite">近い店舗候補はまだありません</p>
+              </div>
+              <div id="gpsGuidePanel" class="gps-guide hidden" aria-live="polite">
+                <p id="gpsGuideTitle" class="gps-guide__title"></p>
+                <p id="gpsGuideDescription" class="gps-guide__description"></p>
+                <ol id="gpsGuideSteps" class="gps-guide__steps"></ol>
+                <p id="gpsGuideSupplement" class="gps-guide__supplement"></p>
+                <button id="gpsRetryButton" class="secondary-button gps-guide__button" type="button">設定後にもう一度試す</button>
               </div>
               <div class="store-grid" id="nearbyStoreGrid">
                 <p class="field-label">近い店舗候補</p>
@@ -371,9 +422,20 @@
       const GPS_LOADING_MESSAGE = '現在地を取得しています…';
       const GPS_SUCCESS_MESSAGE = '現在地を取得しました';
       const GPS_UNSUPPORTED_MESSAGE = 'このブラウザは現在地の取得に対応していません';
-      const GPS_PERMISSION_MESSAGE = '現在地の取得が許可されていません。手入力で続行できます。';
-      const GPS_TIMEOUT_MESSAGE = '現在地の取得がタイムアウトしました。手入力で続行できます。';
-      const GPS_UNAVAILABLE_MESSAGE = '現在地を取得できませんでした。店舗名で検索してください';
+      const GPS_PERMISSION_TITLE = '位置情報が許可されていません';
+      const GPS_PERMISSION_DESCRIPTION = 'iPhoneの設定を直したあと、下のボタンを押してください。';
+      const GPS_PERMISSION_STEPS = [
+        'iPhoneの「設定」を開く',
+        '「プライバシーとセキュリティ」を押す',
+        '「位置情報サービス」をオンにする',
+        '「設定」に戻る',
+        '「アプリ」→「Safari」→「位置情報」を開く',
+        '「確認」または「許可」を選ぶ',
+        'Safariへ戻る',
+      ];
+      const GPS_PERMISSION_SUPPLEMENT = 'Safariのページメニューから変更できる場合は、ページメニュー → … → Webサイトの設定 → 位置情報 を「確認」または「許可」にしてください。';
+      const GPS_TIMEOUT_MESSAGE = '現在地の確認に時間がかかりました。もう一度試してください。';
+      const GPS_UNAVAILABLE_MESSAGE = '現在地を取得できませんでした。電波のよい場所で、もう一度試してください。';
       const CANDIDATE_IDLE_MESSAGE = '近い店舗候補はまだありません';
       const CANDIDATE_LOADING_MESSAGE = '近い店舗候補を取得しています…';
       const SEARCH_IDLE_MESSAGE = '店舗名を入力すると候補を表示します';
@@ -402,6 +464,12 @@
         nearbyStoreList: document.getElementById('nearbyStoreList'),
         searchStoreList: document.getElementById('searchStoreList'),
         storeManualInput: document.getElementById('storeManualInput'),
+        gpsGuidePanel: document.getElementById('gpsGuidePanel'),
+        gpsGuideTitle: document.getElementById('gpsGuideTitle'),
+        gpsGuideDescription: document.getElementById('gpsGuideDescription'),
+        gpsGuideSteps: document.getElementById('gpsGuideSteps'),
+        gpsGuideSupplement: document.getElementById('gpsGuideSupplement'),
+        gpsRetryButton: document.getElementById('gpsRetryButton'),
         completionPanel: document.getElementById('completionPanel'),
         completionCount: document.getElementById('completionCount'),
         completionSummary: document.getElementById('completionSummary'),
@@ -420,7 +488,7 @@
         inputMethod: '訪問',
         selectedStoreId: '',
         token: '',
-        gps: { status: 'idle', latitude: '', longitude: '', errorMessage: '', requestSeq: 0 },
+        gps: { status: 'idle', latitude: '', longitude: '', errorMessage: '', requestSeq: 0, guideMode: '' },
         nearby: { status: 'idle', items: [], selectedId: '', requestSeq: 0 },
         search: { status: 'idle', items: [], selectedId: '', timerId: null, requestSeq: 0 },
       };
@@ -440,6 +508,42 @@
         elements.storeResetNotice.textContent = text;
         elements.storeResetNotice.classList.toggle('hidden', !text);
       }
+      function clearGpsGuide() {
+        elements.gpsGuidePanel.classList.add('hidden');
+        elements.gpsGuidePanel.classList.remove('gps-guide--permission');
+        elements.gpsGuideTitle.textContent = '';
+        elements.gpsGuideDescription.textContent = '';
+        elements.gpsGuideSteps.innerHTML = '';
+        elements.gpsGuideSupplement.textContent = '';
+      }
+      function syncGpsGuideButtons() {
+        const isVisit = state.inputMethod === '訪問';
+        const showGuide = isVisit && Boolean(state.gps.guideMode);
+        const loading = state.gps.status === 'loading';
+        elements.gpsGuidePanel.classList.toggle('hidden', !showGuide);
+        elements.gpsRetryButton.disabled = !showGuide || loading || state.sending || state.completed || !state.token;
+        elements.findByGpsButton.disabled = !isVisit || loading || state.sending || state.completed || !state.token;
+      }
+      function setGpsGuide(mode, message) {
+        const nextMode = safeString(mode).trim();
+        state.gps.guideMode = nextMode;
+        if (!nextMode || state.inputMethod !== '訪問') {
+          clearGpsGuide();
+          syncGpsGuideButtons();
+          return;
+        }
+        clearGpsGuide();
+        if (nextMode === 'permission') {
+          elements.gpsGuidePanel.classList.add('gps-guide--permission');
+          elements.gpsGuideTitle.textContent = GPS_PERMISSION_TITLE;
+          elements.gpsGuideDescription.textContent = GPS_PERMISSION_DESCRIPTION;
+          elements.gpsGuideSteps.innerHTML = GPS_PERMISSION_STEPS.map((step) => `<li>${step}</li>`).join('');
+          elements.gpsGuideSupplement.textContent = GPS_PERMISSION_SUPPLEMENT;
+        } else {
+          elements.gpsGuideDescription.textContent = safeString(message).trim();
+        }
+        syncGpsGuideButtons();
+      }
       function updateInputMethodButtons() {
         const isVisit = state.inputMethod === '訪問';
         elements.inputMethodVisit.setAttribute('aria-pressed', isVisit ? 'true' : 'false');
@@ -447,6 +551,7 @@
         elements.findByGpsButton.classList.toggle('hidden', !isVisit);
         elements.nearbyStatusGroup.classList.toggle('hidden', !isVisit);
         elements.nearbyStoreGrid.classList.toggle('hidden', !isVisit);
+        syncGpsGuideButtons();
       }
       function setStoreSelectionExpanded(isExpanded) {
         state.storeSelectionOpen = Boolean(isExpanded);
@@ -602,6 +707,7 @@
         updateSendStatusLabel();
         updateSendButton();
         updateMicButton();
+        syncGpsGuideButtons();
       }
       function getStoredToken() { return safeString(sessionStorage.getItem(TOKEN_STORAGE_KEY)).trim(); }
       function storeToken(token) {
@@ -759,6 +865,9 @@
         state.gps.latitude = '';
         state.gps.longitude = '';
         state.gps.errorMessage = '';
+        state.gps.guideMode = '';
+        clearGpsGuide();
+        syncGpsGuideButtons();
         renderNearbyStoreList('現在地を取得すると、近い店舗候補を表示します。');
         updateStoreSummary();
       }
@@ -772,8 +881,9 @@
         if (!navigator.geolocation) {
           state.gps.status = 'error';
           state.gps.errorMessage = GPS_UNSUPPORTED_MESSAGE;
-          setStatus(elements.gpsStatus, GPS_UNSUPPORTED_MESSAGE, 'error');
+          setStatus(elements.gpsStatus, GPS_UNAVAILABLE_MESSAGE, 'error');
           setStatus(elements.candidateStatus, GPS_UNAVAILABLE_MESSAGE, 'error');
+          setGpsGuide('unavailable', GPS_UNAVAILABLE_MESSAGE);
           renderNearbyStoreList(GPS_UNAVAILABLE_MESSAGE);
           updateStoreSummary();
           return;
@@ -782,44 +892,51 @@
         state.gps.requestSeq = requestSeq;
         state.gps.status = 'loading';
         state.gps.errorMessage = '';
-        setStatus(elements.gpsStatus, GPS_LOADING_MESSAGE, 'listening');
+        clearGpsGuide();
+        setStatus(elements.gpsStatus, '現在地を確認しています…', 'listening');
         setStatus(elements.candidateStatus, CANDIDATE_LOADING_MESSAGE, 'listening');
+        syncGpsGuideButtons();
         navigator.geolocation.getCurrentPosition(
           (position) => {
             if (state.gps.requestSeq !== requestSeq) return;
             const latitude = Number(position && position.coords ? position.coords.latitude : NaN);
             const longitude = Number(position && position.coords ? position.coords.longitude : NaN);
             if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-              handleGpsError(requestSeq, GPS_UNAVAILABLE_MESSAGE);
+              handleGpsError(requestSeq, 'unavailable', GPS_UNAVAILABLE_MESSAGE, GPS_UNAVAILABLE_MESSAGE);
               return;
             }
             state.gps.status = 'success';
             state.gps.latitude = Number(latitude.toFixed(6));
             state.gps.longitude = Number(longitude.toFixed(6));
             state.gps.errorMessage = '';
+            state.gps.guideMode = '';
+            clearGpsGuide();
             setStatus(elements.gpsStatus, GPS_SUCCESS_MESSAGE, 'success');
             fetchNearbyStoreCandidates(requestSeq);
           },
           (error) => {
             const code = error && error.code !== undefined ? Number(error.code) : 0;
-            let message = GPS_UNAVAILABLE_MESSAGE;
-            if (code === error.PERMISSION_DENIED) message = GPS_PERMISSION_MESSAGE;
-            else if (code === error.TIMEOUT) message = GPS_TIMEOUT_MESSAGE;
-            handleGpsError(requestSeq, message);
+            if (code === error.PERMISSION_DENIED) handleGpsError(requestSeq, 'permission', GPS_PERMISSION_TITLE, GPS_PERMISSION_DESCRIPTION);
+            else if (code === error.TIMEOUT) handleGpsError(requestSeq, 'timeout', GPS_TIMEOUT_MESSAGE, GPS_TIMEOUT_MESSAGE);
+            else handleGpsError(requestSeq, 'unavailable', GPS_UNAVAILABLE_MESSAGE, GPS_UNAVAILABLE_MESSAGE);
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
         );
       }
-      function handleGpsError(requestSeq, message) {
+      function handleGpsError(requestSeq, kind, statusMessage, guideMessage) {
         if (state.gps.requestSeq !== requestSeq) return;
         state.gps.status = 'error';
         state.gps.latitude = '';
         state.gps.longitude = '';
-        state.gps.errorMessage = message;
-        setStatus(elements.gpsStatus, message, 'error');
-        setStatus(elements.candidateStatus, GPS_UNAVAILABLE_MESSAGE, 'error');
-        renderNearbyStoreList(GPS_UNAVAILABLE_MESSAGE);
+        const normalizedStatus = safeString(statusMessage).trim();
+        const normalizedGuide = safeString(guideMessage).trim() || normalizedStatus;
+        state.gps.errorMessage = normalizedStatus;
+        setStatus(elements.gpsStatus, normalizedStatus, 'error');
+        setStatus(elements.candidateStatus, normalizedGuide, 'error');
+        renderNearbyStoreList(normalizedGuide);
+        setGpsGuide(kind, normalizedGuide);
         updateStoreSummary();
+        syncGpsGuideButtons();
       }
       async function fetchNearbyStoreCandidates(requestSeq) {
         if (!state.token || state.gps.requestSeq !== requestSeq || state.inputMethod !== '訪問') return;
@@ -1094,6 +1211,7 @@
         elements.inputMethodVisit.addEventListener('click', () => { if (!state.completed) setInputMethod('訪問'); });
         elements.inputMethodPhone.addEventListener('click', () => { if (!state.completed) setInputMethod('電話'); });
         elements.findByGpsButton.addEventListener('click', () => { if (!state.completed) startGpsFlow(); });
+        elements.gpsRetryButton.addEventListener('click', () => { if (!state.completed) startGpsFlow(); });
         elements.storeToggleButton.addEventListener('click', () => { if (!state.completed) toggleStoreSelectionPanel(); });
         elements.sendButton.addEventListener('click', handleSend);
         elements.continueButton.addEventListener('click', () => {
@@ -1114,6 +1232,7 @@
           renderSearchStoreList(SEARCH_IDLE_MESSAGE);
           updateStoreSummary();
           updateSendStatusLabel();
+          setGpsIdle();
           setStatus(elements.searchStatus, SEARCH_IDLE_MESSAGE, '');
           updateMicButton();
           updateSendButton();
@@ -1169,6 +1288,7 @@
         if (hasSaved) showUnsentNotice(true);
         updateStoreSummary();
         updateSendButton();
+        syncGpsGuideButtons();
       }
       document.addEventListener('DOMContentLoaded', initialize);
     </script>
