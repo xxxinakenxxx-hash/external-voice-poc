@@ -131,26 +131,26 @@
 
       .report-card {
         display: grid;
-        gap: 14px;
-        padding: 16px;
-        border-radius: 18px;
+        gap: 10px;
+        padding: 13px 14px;
+        border-radius: 16px;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%);
       }
 
       .report-head {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 10px;
-        align-items: center;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 10px;
+        align-items: start;
       }
 
       .report-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         align-items: center;
+        min-width: 0;
       }
 
       .meta-pill {
@@ -158,11 +158,11 @@
         align-items: center;
         gap: 8px;
         width: fit-content;
-        padding: 8px 12px;
+        padding: 6px 10px;
         border-radius: 999px;
         background: rgba(240, 137, 43, 0.14);
         color: #9f4f08;
-        font-size: 0.9rem;
+        font-size: 0.84rem;
         font-weight: 900;
       }
 
@@ -175,58 +175,61 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 8.8rem;
-        min-height: 46px;
-        padding: 10px 16px;
-        border-radius: 14px;
+        justify-self: end;
+        min-width: 4.2rem;
+        min-height: 32px;
+        padding: 6px 10px;
+        border-radius: 999px;
         background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
         color: #fff;
         text-decoration: none;
-        font-size: 0.96rem;
+        font-size: 0.84rem;
+        line-height: 1;
         font-weight: 800;
         box-shadow: 0 12px 24px rgba(232, 122, 31, 0.20);
+        white-space: nowrap;
       }
 
       .report-grid {
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
       .detail-grid {
         display: grid;
-        gap: 10px;
+        gap: 8px;
       }
 
       .detail-row {
         display: grid;
-        gap: 6px;
+        gap: 4px;
       }
 
       .detail-label {
         margin: 0;
         color: var(--muted);
-        font-size: 0.92rem;
+        font-size: 0.84rem;
         font-weight: 800;
       }
 
       .detail-value {
         margin: 0;
         color: var(--text);
-        font-size: 1rem;
-        line-height: 1.7;
+        font-size: 0.98rem;
+        line-height: 1.6;
         font-weight: 700;
         word-break: break-word;
       }
 
       .detail-value--summary {
-        font-size: 1.02rem;
+        font-size: 0.99rem;
       }
 
       .addition-box {
         display: grid;
-        gap: 10px;
-        padding: 14px;
-        border-radius: 16px;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 14px;
         border: 1px solid rgba(23, 61, 95, 0.12);
         background: linear-gradient(180deg, #fbfdff 0%, #f5f9fd 100%);
       }
@@ -234,7 +237,7 @@
       .addition-head {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         align-items: center;
         justify-content: space-between;
       }
@@ -242,22 +245,22 @@
       .addition-label {
         margin: 0;
         color: var(--accent);
-        font-size: 0.95rem;
+        font-size: 0.88rem;
         font-weight: 900;
       }
 
       .addition-meta {
         margin: 0;
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 0.84rem;
         font-weight: 700;
       }
 
       .addition-text {
         margin: 0;
         color: var(--text);
-        font-size: 1rem;
-        line-height: 1.7;
+        font-size: 0.98rem;
+        line-height: 1.6;
         white-space: pre-wrap;
       }
 
@@ -333,13 +336,14 @@
         }
 
         .report-card {
-          padding: 14px;
+          padding: 12px;
         }
 
         .action-link {
-          min-width: 7.6rem;
-          min-height: 42px;
-          font-size: 0.92rem;
+          min-width: 4rem;
+          min-height: 30px;
+          padding: 5px 9px;
+          font-size: 0.8rem;
         }
 
         .link-button {
@@ -382,7 +386,7 @@
                             <span class="meta-pill meta-pill--dark"><?= record.userName ?></span>
                           </div>
                           <? if (record.canAdd) { ?>
-                            <a class="action-link" href="<?= model.topPageLinkUrl ?>?view=daily&record_id=<?= record.recordId ?>" target="_top" rel="noopener">追記する</a>
+                            <a class="action-link" href="<?= model.topPageLinkUrl ?>?view=daily&record_id=<?= record.recordId ?>" target="_top" rel="noopener">追記</a>
                           <? } ?>
                         </div>
 
@@ -391,10 +395,6 @@
                             <div class="detail-row">
                               <p class="detail-label">訪問先</p>
                               <p class="detail-value"><?= record.customerName ?></p>
-                            </div>
-                            <div class="detail-row">
-                              <p class="detail-label">営業所</p>
-                              <p class="detail-value"><?= record.branchName ?></p>
                             </div>
                             <div class="detail-row">
                               <p class="detail-label">商談要点</p>

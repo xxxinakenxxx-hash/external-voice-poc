@@ -406,6 +406,8 @@
           <p class="subtext">選択した商談記録に補足や訂正を追記します。元の商談記録は更新しません。</p>
         </section>
 
+        <div id="recordContext" data-record-id="<?= model.recordId ?>" hidden></div>
+
         <? if (model.noticeMessage) { ?>
           <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
         <? } ?>
@@ -490,7 +492,8 @@
 
       <? if (model.hasRecordData) { ?>
         <script>
-          const recordId = <?= JSON.stringify(model.recordId || '') ?>;
+          const recordContext = document.getElementById('recordContext');
+          const recordId = recordContext ? String(recordContext.dataset.recordId || '') : '';
           const saveButton = document.getElementById('saveButton');
           const additionalRecordTextarea = document.getElementById('additionalRecord');
           const statusMessage = document.getElementById('statusMessage');

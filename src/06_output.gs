@@ -1024,6 +1024,7 @@ function groupDailyReportRecords_(records) {
       timeLabel: String(record.timeLabel || '').trim(),
       branchName: String(record.branchName || '').trim(),
       userName: String(record.userName || '').trim(),
+      canAdd: record.canAdd === true,
       customerName: String(record.customerName || '').trim(),
       inputMethod: String(record.inputMethod || '').trim(),
       dealTheme: String(record.dealTheme || '').trim(),
