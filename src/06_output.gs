@@ -55,6 +55,9 @@ const OUTPUT_CONFIG_DEFAULTS_ = [
   { key: 'skip_weekend', value: true, description: '土日の配信を停止するか' },
 ];
 
+var ADDITION_ID_TIMESTAMP_ = '';
+var ADDITION_ID_SEQUENCE_ = 0;
+
 function setupOutputConfig() {
   const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
   let sheet = spreadsheet.getSheetByName(OUTPUT_CONFIG_SHEET_NAME_);
@@ -246,21 +249,85 @@ function notifyManagerSummary() {
 }
 
 function getManagerSummaryData() {
-  if (!isManagerUser_()) {
-    throw new Error('このページを表示する権限がありません');
+  try {
+    const result = getMyDealRecords('summary');
+    if (!result || result.success !== true || !Array.isArray(result.records)) {
+      return [];
+    }
+
+    return result.records;
+  } catch (error) {
+    return [];
+  }
+}
+
+function getMyDealRecords(viewName, validationOverride) {
+  const normalizedViewName = normalizeMyDealRecordsViewName_(viewName);
+  if (!normalizedViewName) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: '表示対象が不正です。',
+    };
   }
 
-  const config = getOutputConfig();
-  const sheet = getDealRecordsSheet_();
+  const validation = validationOverride && typeof validationOverride === 'object'
+    ? validationOverride
+    : validateUser();
+
+  if (!validation || validation.valid !== true) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: String(validation && validation.errorMessage ? validation.errorMessage : '日報を表示できませんでした。'),
+    };
+  }
+
+  const role = String(validation.role || '').trim();
+  if (normalizedViewName === 'daily' && !isDailyRecordEditorRole_(role)) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: 'このページを表示する権限がありません',
+    };
+  }
+
+  if (normalizedViewName === 'summary' && !isSummaryViewer_(role)) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: 'このページを表示する権限がありません',
+    };
+  }
+
+  let sheet;
+  try {
+    sheet = getDealRecordsSheet_();
+  } catch (error) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: String(error && error.message ? error.message : '日報を表示できませんでした。'),
+    };
+  }
+
   const values = sheet.getDataRange().getValues();
   if (values.length < 2) {
-    return [];
+    return {
+      success: true,
+      records: [],
+      errorMessage: '',
+    };
   }
 
   const indexes = getDailyReportColumnIndexes_(values[0]);
   const now = new Date();
-  const startOfToday = getCollectionWindowStart_(now, config.collectFromHour);
-  const summaryRows = [];
+  const config = getOutputConfig();
+  const records = [];
+  const ownUserKey = String(validation.userKey || '').trim();
+  const sameBranchUserKeys = normalizedViewName === 'summary' && ['manager'].includes(role)
+    ? new Set(getUserKeysInSameBranch_(String(validation.branchName || '').trim()))
+    : null;
 
   for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
     const row = values[rowIndex];
@@ -269,73 +336,162 @@ function getManagerSummaryData() {
       continue;
     }
 
-    if (!isWithinCollectionWindow_(createdAt, now, config)) {
+    if (!isWithinMyDealRecordWindow_(normalizedViewName, createdAt, now, config)) {
       continue;
     }
 
-    if (createdAt.getTime() < startOfToday.getTime()) {
+    const rowUserKey = String(row[indexes.userKey] || '').trim();
+
+    if (normalizedViewName === 'daily') {
+      if (role === 'sales' && rowUserKey !== ownUserKey) {
+        continue;
+      }
+    } else if (['manager'].includes(role) && (!sameBranchUserKeys || !sameBranchUserKeys.has(rowUserKey))) {
       continue;
     }
 
-    summaryRows.push({
-      createdAt,
-      userName: String(row[indexes.userName] || '').trim(),
-      customerName: String(row[indexes.customerName] || '').trim(),
-      summary: buildDailyReportSummary_(row[indexes.dealTheme], row[indexes.dealContent]),
-      dateLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd'),
-      timeLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'HH:mm'),
-    });
+    records.push(buildDealRecordDisplay_(row, indexes, createdAt));
   }
 
-  summaryRows.sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+  records.sort((left, right) => {
+    const leftTime = left.createdAtSortKey ? left.createdAtSortKey.getTime() : 0;
+    const rightTime = right.createdAtSortKey ? right.createdAtSortKey.getTime() : 0;
+    if (leftTime !== rightTime) {
+      return rightTime - leftTime;
+    }
 
-  return summaryRows.map((row) => ({
-    userName: row.userName,
-    customerName: row.customerName,
-    summary: row.summary,
-    dateLabel: row.dateLabel,
-    timeLabel: row.timeLabel,
-  }));
+    return String(right.recordId || '').localeCompare(String(left.recordId || ''), 'ja');
+  });
+
+  const additionsByRecordId = getDealAdditionsByRecordIds_(records.map((record) => record.recordId));
+  const canAdd = normalizedViewName === 'daily' ? isDailyRecordEditorRole_(role) : role === 'sysadmin';
+
+  const enrichedRecords = records.map((record) => {
+    const additions = Array.isArray(additionsByRecordId[record.recordId]) ? additionsByRecordId[record.recordId] : [];
+    return {
+      recordId: record.recordId,
+      createdAtLabel: record.createdAtLabel,
+      dateLabel: record.dateLabel,
+      timeLabel: record.timeLabel,
+      branchName: record.branchName,
+      userName: record.userName,
+      customerName: record.customerName,
+      inputMethod: record.inputMethod,
+      dealTheme: record.dealTheme,
+      dealContent: record.dealContent,
+      dealSummary: record.dealSummary,
+      canAdd,
+      additions,
+    };
+  });
+
+  return {
+    success: true,
+    records: enrichedRecords,
+    errorMessage: '',
+  };
 }
 
-function createDailyPageModel_() {
+function addDealAddition(recordId, additionalRecord) {
+  const activeUserEmail = String(Session.getActiveUser().getEmail() || '').trim();
   const validation = validateUser();
-  const model = {
-    pageTitle: '営業AIメモ｜個人日報',
-    validation,
-    userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
-    reportGroups: [],
-    hasReportData: false,
-    emptyMessage: '直近30日の商談記録はありません',
-    noticeMessage: '',
-    topPageLinkUrl: '',
-  };
-
-  try {
-    model.topPageLinkUrl = String(ScriptApp.getService().getUrl() || '').trim();
-  } catch (error) {
-    model.topPageLinkUrl = '';
-  }
+  const normalizedRecordId = String(recordId || '').trim();
+  const normalizedAdditionalRecord = String(additionalRecord || '').trim();
 
   if (!validation || validation.valid !== true) {
-    model.noticeMessage = String(validation && validation.errorMessage ? validation.errorMessage : '日報を表示できませんでした。');
-    return model;
+    return {
+      success: false,
+      errorMessage: String(validation && validation.errorMessage ? validation.errorMessage : '追記画面を表示できませんでした。'),
+    };
   }
+
+  if (!normalizedAdditionalRecord) {
+    return {
+      success: false,
+      errorMessage: '追記内容を入力してください',
+    };
+  }
+
+  if (!normalizedRecordId) {
+    return {
+      success: false,
+      errorMessage: '対象の商談記録が見つかりません',
+    };
+  }
+
+  const role = String(validation.role || '').trim();
+  if (role !== 'sysadmin' && role !== 'sales') {
+    return {
+      success: false,
+      errorMessage: 'この商談記録には追記できません',
+    };
+  }
+
+  const foundRecord = findDealRecordById_(normalizedRecordId);
+  if (!foundRecord) {
+    return {
+      success: false,
+      errorMessage: '対象の商談記録が見つかりません',
+    };
+  }
+
+  const targetUserKey = String(foundRecord.row[foundRecord.indexes.userKey] || '').trim();
+  if (role === 'sales' && targetUserKey !== String(validation.userKey || '').trim()) {
+    return {
+      success: false,
+      errorMessage: 'この商談記録には追記できません',
+    };
+  }
+
+  let sheet;
+  try {
+    sheet = getDealAdditionsSheet_();
+  } catch (error) {
+    logError('SHEET_WRITE_ERROR', error && error.message ? error.message : String(error), {
+      userKey: String(validation.userKey || '').trim(),
+      inputText: normalizedAdditionalRecord,
+    });
+    return {
+      success: false,
+      errorMessage: '保存に失敗しました。しばらく経ってから、もう一度お試しください。',
+    };
+  }
+
+  const additionId = generateAdditionId_();
+  const addedAt = Utilities.formatDate(new Date(), WRITE_RECORD_TIMEZONE_, WRITE_RECORD_CREATED_AT_FORMAT_);
+  const addedBy = activeUserEmail || String(validation.userKey || '').trim();
 
   try {
-    model.reportGroups = getDailyReportData(validation.userName);
-    model.hasReportData = Array.isArray(model.reportGroups) && model.reportGroups.length > 0;
+    sheet.appendRow([
+      additionId,
+      normalizedRecordId,
+      normalizedAdditionalRecord,
+      addedAt,
+      addedBy,
+    ]);
   } catch (error) {
-    model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
+    logError('SHEET_WRITE_ERROR', error && error.message ? error.message : String(error), {
+      userKey: String(validation.userKey || '').trim(),
+      inputText: normalizedAdditionalRecord,
+    });
+    return {
+      success: false,
+      errorMessage: '保存に失敗しました。しばらく経ってから、もう一度お試しください。',
+    };
   }
 
-  return model;
+  return {
+    success: true,
+    additionId,
+    addedAt,
+    addedByName: String(validation.userName || '').trim(),
+  };
 }
 
-function getDailyReportData(userName) {
-  const normalizedUserName = String(userName || '').trim();
-  if (!normalizedUserName) {
-    throw new Error('userName は必須です。');
+function getDailyReportData(userKey) {
+  const normalizedUserKey = String(userKey || '').trim();
+  if (!normalizedUserKey) {
+    throw new Error('userKey は必須です。');
   }
 
   const config = getOutputConfig();
@@ -350,12 +506,12 @@ function getDailyReportData(userName) {
   const cutoffDate = new Date(now.getTime());
   cutoffDate.setDate(cutoffDate.getDate() - 29);
   const collectionStart = getCollectionWindowStart_(cutoffDate, config.collectFromHour);
+  const collectedRecords = [];
 
-  const flatRecords = [];
   for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
     const row = values[rowIndex];
-    const rowUserName = String(row[indexes.userName] || '').trim();
-    if (rowUserName !== normalizedUserName) {
+    const rowUserKey = String(row[indexes.userKey] || '').trim();
+    if (rowUserKey !== normalizedUserKey) {
       continue;
     }
 
@@ -372,21 +528,36 @@ function getDailyReportData(userName) {
       continue;
     }
 
-    const customerName = String(row[indexes.customerName] || '').trim();
-    const dealTheme = String(row[indexes.dealTheme] || '').trim();
-    const dealContent = String(row[indexes.dealContent] || '').trim();
-
-    flatRecords.push({
-      createdAt,
-      dateLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd'),
-      timeLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'HH:mm'),
-      customerName,
-      summary: buildDailyReportSummary_(dealTheme, dealContent),
-    });
+    collectedRecords.push(buildDealRecordDisplay_(row, indexes, createdAt));
   }
 
-  flatRecords.sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
-  return groupDailyReportRecords_(flatRecords);
+  collectedRecords.sort((left, right) => {
+    const leftTime = left.createdAtSortKey ? left.createdAtSortKey.getTime() : 0;
+    const rightTime = right.createdAtSortKey ? right.createdAtSortKey.getTime() : 0;
+    if (leftTime !== rightTime) {
+      return rightTime - leftTime;
+    }
+
+    return String(right.recordId || '').localeCompare(String(left.recordId || ''), 'ja');
+  });
+
+  const additionsByRecordId = getDealAdditionsByRecordIds_(collectedRecords.map((record) => record.recordId));
+  const displayRecords = collectedRecords.map((record) => ({
+    recordId: record.recordId,
+    createdAtLabel: record.createdAtLabel,
+    dateLabel: record.dateLabel,
+    timeLabel: record.timeLabel,
+    branchName: record.branchName,
+    userName: record.userName,
+    customerName: record.customerName,
+    inputMethod: record.inputMethod,
+    dealTheme: record.dealTheme,
+    dealContent: record.dealContent,
+    dealSummary: record.dealSummary,
+    additions: Array.isArray(additionsByRecordId[record.recordId]) ? additionsByRecordId[record.recordId] : [],
+  }));
+
+  return groupDailyReportRecords_(displayRecords);
 }
 
 function getDealRecordsSheet_() {
@@ -400,27 +571,295 @@ function getDealRecordsSheet_() {
   return sheet;
 }
 
+function getDealAdditionsSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(getSpreadsheetId_());
+  const sheet = spreadsheet.getSheetByName('deal_additions');
+
+  if (!sheet) {
+    throw new Error('deal_additions シートが見つかりません');
+  }
+
+  return sheet;
+}
+
+function findDealRecordById_(recordId) {
+  const normalizedRecordId = String(recordId || '').trim();
+  if (!normalizedRecordId) {
+    return null;
+  }
+
+  const sheet = getDealRecordsSheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return null;
+  }
+
+  const indexes = getDailyReportColumnIndexes_(values[0]);
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const currentRecordId = String(row[indexes.recordId] || '').trim();
+    if (currentRecordId !== normalizedRecordId) {
+      continue;
+    }
+
+    return {
+      row,
+      rowNumber: rowIndex + 1,
+      indexes,
+    };
+  }
+
+  return null;
+}
+
+function getDealAdditionsByRecordIds_(recordIds) {
+  const normalizedRecordIds = Array.isArray(recordIds)
+    ? [...new Set(recordIds.map((recordId) => String(recordId || '').trim()).filter((recordId) => recordId))]
+    : [];
+
+  if (normalizedRecordIds.length === 0) {
+    return {};
+  }
+
+  let sheet;
+  try {
+    sheet = getDealAdditionsSheet_();
+  } catch (error) {
+    return {};
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return {};
+  }
+
+  const indexes = getDealAdditionsColumnIndexes_(values[0]);
+  const userNameMap = buildUserNameMap_();
+  const recordIdSet = new Set(normalizedRecordIds);
+  const additionsByRecordId = {};
+
+  for (const recordId of normalizedRecordIds) {
+    additionsByRecordId[recordId] = [];
+  }
+
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const recordId = String(row[indexes.recordId] || '').trim();
+    if (!recordId || !recordIdSet.has(recordId)) {
+      continue;
+    }
+
+    const addedAt = parseDailyReportCreatedAt_(row[indexes.addedAt]);
+    if (!addedAt) {
+      continue;
+    }
+
+    additionsByRecordId[recordId].push({
+      additionId: String(row[indexes.additionId] || '').trim(),
+      additionalRecord: String(row[indexes.additionalRecord] || '').trim(),
+      addedAtSortKey: addedAt,
+      addedAtLabel: Utilities.formatDate(addedAt, WRITE_RECORD_TIMEZONE_, WRITE_RECORD_CREATED_AT_FORMAT_),
+      addedByName: userNameMap.get(String(row[indexes.addedBy] || '').trim()) || '不明',
+    });
+  }
+
+  Object.keys(additionsByRecordId).forEach((recordId) => {
+    additionsByRecordId[recordId].sort((left, right) => {
+      const leftTime = left.addedAtSortKey ? left.addedAtSortKey.getTime() : 0;
+      const rightTime = right.addedAtSortKey ? right.addedAtSortKey.getTime() : 0;
+      if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+      }
+
+      return String(left.additionId || '').localeCompare(String(right.additionId || ''), 'ja');
+    });
+
+    additionsByRecordId[recordId] = additionsByRecordId[recordId].map((addition) => ({
+      additionId: addition.additionId,
+      additionalRecord: addition.additionalRecord,
+      addedAtLabel: addition.addedAtLabel,
+      addedByName: addition.addedByName,
+    }));
+  });
+
+  return additionsByRecordId;
+}
+
+function getUserKeysInSameBranch_(branchName) {
+  const normalizedBranchName = String(branchName || '').trim();
+  if (!normalizedBranchName) {
+    return [];
+  }
+
+  try {
+    const userRows = getUserMasterRows_();
+    const userKeys = [];
+    const seen = new Set();
+
+    for (const row of userRows) {
+      const rowBranchName = String(row.branchName || '').trim();
+      const rowUserKey = String(row.userKey || '').trim();
+      if (!rowUserKey || rowBranchName !== normalizedBranchName || seen.has(rowUserKey)) {
+        continue;
+      }
+
+      seen.add(rowUserKey);
+      userKeys.push(rowUserKey);
+    }
+
+    userKeys.sort((left, right) => String(left || '').localeCompare(String(right || ''), 'ja'));
+    return userKeys;
+  } catch (error) {
+    return [];
+  }
+}
+
+function generateAdditionId_() {
+  const normalizedTimestamp = Utilities.formatDate(new Date(), WRITE_RECORD_TIMEZONE_, WRITE_RECORD_ID_FORMAT_);
+  if (ADDITION_ID_TIMESTAMP_ !== normalizedTimestamp) {
+    ADDITION_ID_TIMESTAMP_ = normalizedTimestamp;
+    ADDITION_ID_SEQUENCE_ = 0;
+  }
+
+  ADDITION_ID_SEQUENCE_ += 1;
+  return `ADD-${ADDITION_ID_TIMESTAMP_}-${String(ADDITION_ID_SEQUENCE_).padStart(3, '0')}`;
+}
+
+function buildUserNameMap_() {
+  const map = new Map();
+
+  try {
+    const userRows = getUserMasterRows_();
+    for (const row of userRows) {
+      const userKey = String(row.userKey || '').trim();
+      if (!userKey) {
+        continue;
+      }
+
+      map.set(userKey, String(row.userName || '').trim());
+    }
+  } catch (error) {
+    return map;
+  }
+
+  return map;
+}
+
+function buildDealRecordDisplay_(row, indexes, createdAt) {
+  const recordId = String(row[indexes.recordId] || '').trim();
+  const branchName = String(row[indexes.branchName] || '').trim();
+  const userName = String(row[indexes.userName] || '').trim();
+  const customerName = String(row[indexes.customerName] || '').trim();
+  const inputMethod = String(row[indexes.inputMethod] || '').trim();
+  const dealTheme = String(row[indexes.dealTheme] || '').trim();
+  const dealContent = String(row[indexes.dealContent] || '').trim();
+  const dealSummary = buildDailyReportSummary_(dealTheme, dealContent);
+
+  return {
+    recordId,
+    createdAtSortKey: createdAt,
+    createdAtLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, WRITE_RECORD_CREATED_AT_FORMAT_),
+    dateLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd'),
+    timeLabel: Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'HH:mm'),
+    branchName,
+    userName,
+    customerName,
+    inputMethod,
+    dealTheme,
+    dealContent,
+    dealSummary,
+  };
+}
+
+function normalizeMyDealRecordsViewName_(viewName) {
+  const normalizedViewName = String(viewName || '').trim();
+  if (normalizedViewName === 'daily' || normalizedViewName === 'summary') {
+    return normalizedViewName;
+  }
+
+  return '';
+}
+
+function isWithinMyDealRecordWindow_(viewName, createdAt, currentDate, config) {
+  const normalizedViewName = normalizeMyDealRecordsViewName_(viewName);
+  if (!normalizedViewName) {
+    return false;
+  }
+
+  const windowStart = normalizedViewName === 'daily'
+    ? getCollectionWindowStart_(new Date(currentDate.getTime() - 29 * 24 * 60 * 60 * 1000), config.collectFromHour)
+    : getCollectionWindowStart_(currentDate, config.collectFromHour);
+
+  if (createdAt.getTime() < windowStart.getTime()) {
+    return false;
+  }
+
+  return isWithinCollectionWindow_(createdAt, currentDate, config);
+}
+
 function getDailyReportColumnIndexes_(headers) {
   const normalizedHeaders = Array.isArray(headers)
     ? headers.map((header) => String(header || '').trim())
     : [];
 
+  const recordIdIndex = normalizedHeaders.indexOf('record_id');
   const createdAtIndex = normalizedHeaders.indexOf('created_at');
+  const branchNameIndex = normalizedHeaders.indexOf('branch_name');
   const userNameIndex = normalizedHeaders.indexOf('user_name');
   const customerNameIndex = normalizedHeaders.indexOf('customer_name');
   const dealThemeIndex = normalizedHeaders.indexOf('deal_theme');
   const dealContentIndex = normalizedHeaders.indexOf('deal_content');
+  const inputMethodIndex = normalizedHeaders.indexOf('input_method');
+  const userKeyIndex = normalizedHeaders.indexOf('user_key');
 
-  if ([createdAtIndex, userNameIndex, customerNameIndex, dealThemeIndex, dealContentIndex].some((index) => index < 0)) {
+  if ([
+    recordIdIndex,
+    createdAtIndex,
+    branchNameIndex,
+    userNameIndex,
+    customerNameIndex,
+    dealThemeIndex,
+    dealContentIndex,
+    inputMethodIndex,
+    userKeyIndex,
+  ].some((index) => index < 0)) {
     throw new Error('deal_records の見出しが不正です。');
   }
 
   return {
+    recordId: recordIdIndex,
     createdAt: createdAtIndex,
+    branchName: branchNameIndex,
     userName: userNameIndex,
     customerName: customerNameIndex,
     dealTheme: dealThemeIndex,
     dealContent: dealContentIndex,
+    inputMethod: inputMethodIndex,
+    userKey: userKeyIndex,
+  };
+}
+
+function getDealAdditionsColumnIndexes_(headers) {
+  const normalizedHeaders = Array.isArray(headers)
+    ? headers.map((header) => String(header || '').trim())
+    : [];
+
+  const additionIdIndex = normalizedHeaders.indexOf('addition_id');
+  const recordIdIndex = normalizedHeaders.indexOf('record_id');
+  const additionalRecordIndex = normalizedHeaders.indexOf('additional_record');
+  const addedAtIndex = normalizedHeaders.indexOf('added_at');
+  const addedByIndex = normalizedHeaders.indexOf('added_by');
+
+  if ([additionIdIndex, recordIdIndex, additionalRecordIndex, addedAtIndex, addedByIndex].some((index) => index < 0)) {
+    throw new Error('deal_additions の見出しが不正です。');
+  }
+
+  return {
+    additionId: additionIdIndex,
+    recordId: recordIdIndex,
+    additionalRecord: additionalRecordIndex,
+    addedAt: addedAtIndex,
+    addedBy: addedByIndex,
   };
 }
 
@@ -544,12 +983,6 @@ function normalizeDailyReportText_(value) {
     .trim();
 }
 
-function getStartOfToday_() {
-  const now = new Date();
-  const todayText = Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
-  return Utilities.parseDate(`${todayText} 00:00:00`, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd HH:mm:ss');
-}
-
 function groupDailyReportRecords_(records) {
   const groups = [];
   const groupMap = new Map();
@@ -571,12 +1004,33 @@ function groupDailyReportRecords_(records) {
     }
 
     group.records.push({
+      recordId: String(record.recordId || '').trim(),
+      createdAtLabel: String(record.createdAtLabel || '').trim(),
       dateLabel,
       timeLabel: String(record.timeLabel || '').trim(),
+      branchName: String(record.branchName || '').trim(),
+      userName: String(record.userName || '').trim(),
       customerName: String(record.customerName || '').trim(),
-      summary: String(record.summary || '').trim(),
+      inputMethod: String(record.inputMethod || '').trim(),
+      dealTheme: String(record.dealTheme || '').trim(),
+      dealContent: String(record.dealContent || '').trim(),
+      dealSummary: String(record.dealSummary || '').trim(),
+      additions: Array.isArray(record.additions)
+        ? record.additions.map((addition) => ({
+            additionId: String(addition.additionId || '').trim(),
+            additionalRecord: String(addition.additionalRecord || '').trim(),
+            addedAtLabel: String(addition.addedAtLabel || '').trim(),
+            addedByName: String(addition.addedByName || '').trim(),
+          }))
+        : [],
     });
   });
 
   return groups;
+}
+
+function getStartOfToday_() {
+  const now = new Date();
+  const todayText = Utilities.formatDate(now, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
+  return Utilities.parseDate(`${todayText} 00:00:00`, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd HH:mm:ss');
 }

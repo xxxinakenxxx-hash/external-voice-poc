@@ -42,12 +42,12 @@ function issueToken(email) {
 function verifyToken(token) {
   const tokenText = String(token || '').trim();
   if (!tokenText) {
-    return createTokenValidationResult_(false, '', 'トークンがありません。');
+    return createTokenValidationResult_(false, '', '', 'トークンがありません。');
   }
 
   const parts = tokenText.split('.');
   if (parts.length !== 2) {
-    return createTokenValidationResult_(false, '', 'トークンの形式が不正です。');
+    return createTokenValidationResult_(false, '', '', 'トークンの形式が不正です。');
   }
 
   const payloadToken = parts[0];
@@ -58,43 +58,48 @@ function verifyToken(token) {
   try {
     payloadObject = JSON.parse(decodeBase64UrlToText_(payloadToken));
   } catch (error) {
-    return createTokenValidationResult_(false, '', 'トークンの内容を解析できませんでした。');
+    return createTokenValidationResult_(false, '', '', 'トークンの内容を解析できませんでした。');
   }
 
   if (!isTokenPayloadObject_(payloadObject)) {
-    return createTokenValidationResult_(false, '', 'トークンの内容が不正です。');
+    return createTokenValidationResult_(false, '', '', 'トークンの内容が不正です。');
   }
 
   const expectedSignature = computeHmacBase64Url_(payloadToken, secret);
   if (signatureToken !== expectedSignature) {
-    return createTokenValidationResult_(false, '', 'トークンの署名が一致しません。');
+    return createTokenValidationResult_(false, '', '', 'トークンの署名が一致しません。');
   }
 
   const expirationSeconds = Number(payloadObject && payloadObject.exp);
   if (!Number.isFinite(expirationSeconds)) {
-    return createTokenValidationResult_(false, '', 'トークンの有効期限が不正です。');
+    return createTokenValidationResult_(false, '', '', 'トークンの有効期限が不正です。');
   }
 
   const nowSeconds = Math.floor(new Date().getTime() / 1000);
   if (nowSeconds > expirationSeconds) {
-    return createTokenValidationResult_(false, '', 'トークンの有効期限が切れています。');
+    return createTokenValidationResult_(false, '', '', 'トークンの有効期限が切れています。');
   }
 
   const tokenUserHash = String(payloadObject && payloadObject.uh ? payloadObject.uh : '').trim();
   if (!tokenUserHash) {
-    return createTokenValidationResult_(false, '', 'トークンに担当者情報がありません。');
+    return createTokenValidationResult_(false, '', '', 'トークンに担当者情報がありません。');
   }
 
   const userMatch = findUserMasterRowByHash_(tokenUserHash, secret);
   if (!userMatch) {
-    return createTokenValidationResult_(false, '', '担当者を特定できませんでした。');
+    return createTokenValidationResult_(false, '', '', '担当者を特定できませんでした。');
   }
 
   if (userMatch.activeFlag !== '有効') {
-    return createTokenValidationResult_(false, '', '無効な担当者のためトークンを利用できません。');
+    return createTokenValidationResult_(false, '', '', '無効な担当者のためトークンを利用できません。');
   }
 
-  return createTokenValidationResult_(true, userMatch.userKey, '');
+  const role = String(userMatch.role || '').trim();
+  if (!isAllowedRole_(role)) {
+    return createTokenValidationResult_(false, '', '', '利用権限が設定されていません。管理者に連絡してください。');
+  }
+
+  return createTokenValidationResult_(true, userMatch.userKey, role, '');
 }
 
 function doPost(e) {
@@ -108,6 +113,13 @@ function doPost(e) {
       return createJsonResponse_({
         success: false,
         errorMessage: String(verification && verification.errorMessage ? verification.errorMessage : 'トークンが無効です。'),
+      });
+    }
+
+    if (String(verification.role || '').trim() === 'sales_support') {
+      return createJsonResponse_({
+        success: false,
+        errorMessage: 'このアカウントでは商談入力を利用できません。日報の閲覧のみご利用いただけます。',
       });
     }
 
@@ -203,10 +215,11 @@ function parseFormEncodedPayload_(text) {
   return payload;
 }
 
-function createTokenValidationResult_(valid, userKey, errorMessage) {
+function createTokenValidationResult_(valid, userKey, role, errorMessage) {
   return {
     valid,
     userKey,
+    role,
     errorMessage,
   };
 }
@@ -256,6 +269,7 @@ function getUserMasterRows_() {
   const nameIndex = headers.indexOf('user_fullname');
   const branchIndex = headers.indexOf('master_branch_name');
   const activeIndex = headers.indexOf('active_flag');
+  const roleIndex = headers.indexOf('role');
 
   if ([keyIndex, nameIndex, branchIndex, activeIndex].some((index) => index < 0)) {
     throw new Error('user_master の見出しが不正です');
@@ -276,6 +290,7 @@ function getUserMasterRows_() {
       userName: String(row[nameIndex] || '').trim(),
       branchName: String(row[branchIndex] || '').trim(),
       activeFlag: String(row[activeIndex] || ''),
+      role: roleIndex >= 0 ? String(row[roleIndex] || '').trim() : '',
     });
   }
 

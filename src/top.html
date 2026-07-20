@@ -159,6 +159,13 @@
         gap: 12px;
       }
 
+      .button-note {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+
       .mobile-shell {
         display: none;
       }
@@ -369,11 +376,13 @@
           <p class="mobile-user-name"><?= model.userName ?></p>
         </section>
 
-        <? if (model.inputPageLinkUrl) { ?>
+        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl) { ?>
           <section class="mobile-action">
-            <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+            <? if (model.inputPageLinkUrl) { ?>
+              <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+            <? } ?>
             <? if (model.dailyReportLinkUrl) { ?>
-              <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+              <a class="link-button<? if (model.inputPageLinkUrl) { ?> link-button--secondary<? } ?>" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
             <? } ?>
           </section>
           <p class="mobile-footnote">会社のGoogleアカウントで本人確認済みです</p>
@@ -384,7 +393,7 @@
         <section class="hero" aria-label="営業AIメモの入口画面">
           <p class="eyebrow">営業AIメモ</p>
           <h1>営業AIメモ</h1>
-          <p class="subtext">ログイン中の担当者を確認して、商談メモ入力へ進みます。</p>
+          <p class="subtext">ログイン中の担当者を確認して、商談メモ入力や日報の確認へ進みます。</p>
         </section>
 
         <section class="card" aria-live="polite">
@@ -396,15 +405,18 @@
           <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
         <? } ?>
 
-        <? if (model.inputPageLinkUrl) { ?>
+        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl) { ?>
           <section class="card">
-            <p class="label">入力画面へ進む</p>
+            <p class="label">利用できる画面</p>
             <div class="button-stack">
-              <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+              <? if (model.inputPageLinkUrl) { ?>
+                <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
+              <? } ?>
               <? if (model.dailyReportLinkUrl) { ?>
-                <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+                <a class="link-button<? if (model.inputPageLinkUrl) { ?> link-button--secondary<? } ?>" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
               <? } ?>
             </div>
+            <p class="button-note">表示されるボタンは role に応じて自動で切り替わります。</p>
           </section>
         <? } ?>
       </div>

@@ -2,23 +2,61 @@ const AUTH_ERROR_MESSAGES_ = {
   emailMissing: 'ログイン中のメールアドレスを取得できませんでした。',
   userNotFound: '登録されていない担当者です。管理者に連絡してください。',
   sheetReadFailure: '担当者マスタの読み込みに失敗しました。',
+  roleNotConfigured: '利用権限が設定されていません。管理者に連絡してください。',
 };
+
+const AUTH_ALLOWED_ROLES_ = ['sales', 'manager', 'sales_support', 'sysadmin'];
 
 function doGet(e) {
   const view = String(e && e.parameter && e.parameter.view ? e.parameter.view : '').trim();
+  const recordId = String(e && e.parameter && e.parameter.record_id ? e.parameter.record_id : '').trim();
+  const validation = validateUser();
+
+  if (!validation || validation.valid !== true) {
+    return createPageHtmlOutput_('top', createTopPageModel_(validation));
+  }
+
+  const role = String(validation.role || '').trim();
+
   if (view === 'summary') {
-    return createPageHtmlOutput_('summary', createManagerSummaryPageModel_());
+    if (isSummaryViewer_(role)) {
+      return createPageHtmlOutput_('summary', createManagerSummaryPageModel_(validation));
+    }
+
+    return createPageHtmlOutput_(
+      'addition',
+      createAdditionPageModel_('', validation, 'このページを表示する権限がありません'),
+    );
   }
 
   if (view === 'daily') {
-    return createPageHtmlOutput_('daily', createDailyPageModel_());
+    if (recordId) {
+      if (isDailyRecordEditorRole_(role)) {
+        return createPageHtmlOutput_('addition', createAdditionPageModel_(recordId, validation));
+      }
+
+      return createPageHtmlOutput_(
+        'addition',
+        createAdditionPageModel_('', validation, 'このページを表示する権限がありません'),
+      );
+    }
+
+    if (isManagerOrSalesSupportRole_(role)) {
+      return createPageHtmlOutput_('summary', createManagerSummaryPageModel_(validation));
+    }
+
+    if (isDailyViewerRole_(role)) {
+      return createPageHtmlOutput_('daily', createDailyPageModel_(validation));
+    }
   }
 
-  return createPageHtmlOutput_('top', createTopPageModel_());
+  return createPageHtmlOutput_('top', createTopPageModel_(validation));
 }
 
-function createTopPageModel_() {
-  const validation = validateUser();
+function createTopPageModel_(validationOverride) {
+  const validation = validationOverride && typeof validationOverride === 'object'
+    ? validationOverride
+    : validateUser();
 
   const model = {
     pageTitle: '営業AIメモ',
@@ -34,16 +72,21 @@ function createTopPageModel_() {
     return model;
   }
 
-  try {
-    const inputPageUrl = getInputPageUrl_();
-    const token = issueToken(validation.userKey);
-    model.inputPageLinkUrl = `${inputPageUrl}#token=${token}`;
-  } catch (error) {
-    model.noticeMessage = String(error && error.message ? error.message : '入力画面のリンクを作成できませんでした。');
+  const role = String(validation.role || '').trim();
+  const canOpenInputPage = isDailyRecordEditorRole_(role);
+
+  if (canOpenInputPage) {
+    try {
+      const inputPageUrl = getInputPageUrl_();
+      const token = issueToken(validation.userKey);
+      model.inputPageLinkUrl = `${inputPageUrl}#token=${token}`;
+    } catch (error) {
+      model.noticeMessage = String(error && error.message ? error.message : '入力画面のリンクを作成できませんでした。');
+    }
   }
 
   try {
-    model.dailyReportLinkUrl = getDailyReportUrl();
+    model.dailyReportLinkUrl = getRoleDailyReportUrl_(role);
   } catch (error) {
     model.dailyReportLinkUrl = '';
   }
@@ -51,15 +94,73 @@ function createTopPageModel_() {
   return model;
 }
 
-function createManagerSummaryPageModel_() {
-  const hasPermission = isManagerUser_();
+function createManagerSummaryPageModel_(validationOverride) {
+  const validation = validationOverride && typeof validationOverride === 'object'
+    ? validationOverride
+    : validateUser();
+
   const model = {
     pageTitle: '営業AIメモ｜日報まとめ',
-    isManager: hasPermission,
+    validation,
+    isManager: false,
+    isSummaryViewer: false,
     currentDateLabel: Utilities.formatDate(new Date(), WRITE_RECORD_TIMEZONE_, 'yyyy年M月d日'),
     summaryRows: [],
     hasSummaryData: false,
     emptyMessage: '本日の商談記録はありません',
+    noticeMessage: '',
+    topPageLinkUrl: '',
+    dailyReportLinkUrl: '',
+  };
+
+  try {
+    model.topPageLinkUrl = String(ScriptApp.getService().getUrl() || '').trim();
+  } catch (error) {
+    model.topPageLinkUrl = '';
+  }
+
+  if (!validation || validation.valid !== true) {
+    model.noticeMessage = String(validation && validation.errorMessage ? validation.errorMessage : '日報を表示できませんでした。');
+    return model;
+  }
+
+  const role = String(validation.role || '').trim();
+  model.isSummaryViewer = isSummaryViewer_(role);
+  model.isManager = model.isSummaryViewer;
+
+  try {
+    model.dailyReportLinkUrl = getRoleDailyReportUrl_(role);
+  } catch (error) {
+    model.dailyReportLinkUrl = '';
+  }
+
+  try {
+    const reportResult = getMyDealRecords('summary', validation);
+    if (!reportResult || reportResult.success !== true) {
+      model.noticeMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '日報を表示できませんでした。');
+      return model;
+    }
+
+    model.summaryRows = Array.isArray(reportResult.records) ? reportResult.records : [];
+    model.hasSummaryData = model.summaryRows.length > 0;
+  } catch (error) {
+    model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
+  }
+
+  return model;
+}
+
+function createDailyPageModel_(validationOverride) {
+  const validation = validationOverride && typeof validationOverride === 'object'
+    ? validationOverride
+    : validateUser();
+  const model = {
+    pageTitle: '営業AIメモ｜個人日報',
+    validation,
+    userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
+    reportGroups: [],
+    hasReportData: false,
+    emptyMessage: '直近30日の商談記録はありません',
     noticeMessage: '',
     topPageLinkUrl: '',
   };
@@ -70,16 +171,102 @@ function createManagerSummaryPageModel_() {
     model.topPageLinkUrl = '';
   }
 
-  if (!hasPermission) {
-    model.noticeMessage = 'このページを表示する権限がありません';
+  if (!validation || validation.valid !== true) {
+    model.noticeMessage = String(validation && validation.errorMessage ? validation.errorMessage : '日報を表示できませんでした。');
     return model;
   }
 
   try {
-    model.summaryRows = getManagerSummaryData();
-    model.hasSummaryData = Array.isArray(model.summaryRows) && model.summaryRows.length > 0;
+    const reportResult = getMyDealRecords('daily', validation);
+    if (!reportResult || reportResult.success !== true) {
+      model.noticeMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '日報を表示できませんでした。');
+      return model;
+    }
+
+    model.reportGroups = groupDailyReportRecords_(Array.isArray(reportResult.records) ? reportResult.records : []);
+    model.hasReportData = Array.isArray(model.reportGroups) && model.reportGroups.length > 0;
   } catch (error) {
-    model.noticeMessage = String(error && error.message ? error.message : '日報まとめを表示できませんでした。');
+    model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
+  }
+
+  return model;
+}
+
+function createAdditionPageModel_(recordId, validationOverride, noticeMessageOverride) {
+  const validation = validationOverride && typeof validationOverride === 'object'
+    ? validationOverride
+    : validateUser();
+  const role = String(validation && validation.role ? validation.role : '').trim();
+  const model = {
+    pageTitle: '営業AIメモ｜商談記録への追記',
+    validation,
+    recordId: String(recordId || '').trim(),
+    record: null,
+    hasRecordData: false,
+    additions: [],
+    noticeMessage: String(noticeMessageOverride || '').trim(),
+    topPageLinkUrl: '',
+    dailyReportLinkUrl: '',
+    userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
+  };
+
+  try {
+    model.topPageLinkUrl = String(ScriptApp.getService().getUrl() || '').trim();
+  } catch (error) {
+    model.topPageLinkUrl = '';
+  }
+
+  try {
+    model.dailyReportLinkUrl = getRoleDailyReportUrl_(role);
+  } catch (error) {
+    model.dailyReportLinkUrl = '';
+  }
+
+  if (!validation || validation.valid !== true) {
+    model.noticeMessage = String(validation && validation.errorMessage ? validation.errorMessage : '追記画面を表示できませんでした。');
+    return model;
+  }
+
+  if (model.noticeMessage) {
+    return model;
+  }
+
+  if (!isDailyRecordEditorRole_(role)) {
+    model.noticeMessage = 'このページを表示する権限がありません';
+    return model;
+  }
+
+  if (!model.recordId) {
+    model.noticeMessage = '対象の商談記録が見つかりません';
+    return model;
+  }
+
+  try {
+    const result = getMyDealRecords('daily', validation);
+    if (!result || result.success !== true) {
+      model.noticeMessage = String(result && result.errorMessage ? result.errorMessage : '追記画面を表示できませんでした。');
+      return model;
+    }
+
+    const targetRecord = Array.isArray(result.records)
+      ? result.records.find((record) => String(record && record.recordId ? record.recordId : '').trim() === model.recordId)
+      : null;
+
+    if (!targetRecord) {
+      model.noticeMessage = '対象の商談記録が見つかりません';
+      return model;
+    }
+
+    if (!targetRecord.canAdd) {
+      model.noticeMessage = 'この商談記録には追記できません';
+      return model;
+    }
+
+    model.record = targetRecord;
+    model.additions = Array.isArray(targetRecord.additions) ? targetRecord.additions : [];
+    model.hasRecordData = true;
+  } catch (error) {
+    model.noticeMessage = String(error && error.message ? error.message : '追記画面を表示できませんでした。');
   }
 
   return model;
@@ -101,28 +288,34 @@ function validateUser() {
   try {
     userKey = Session.getActiveUser().getEmail() || '';
     if (!userKey) {
-      return createValidationResult_(false, '', '', '', AUTH_ERROR_MESSAGES_.emailMissing);
+      return createValidationResult_(false, '', '', '', '', AUTH_ERROR_MESSAGES_.emailMissing);
     }
 
     const userMasterSheet = getUserMasterSheet_();
     const validationRow = findUserMasterRow_(userMasterSheet, userKey);
 
     if (!validationRow) {
-      return createValidationResult_(false, userKey, '', '', AUTH_ERROR_MESSAGES_.userNotFound);
+      return createValidationResult_(false, userKey, '', '', '', AUTH_ERROR_MESSAGES_.userNotFound);
     }
 
-    const userName = validationRow.userName;
-    const branchName = validationRow.branchName;
+    const userName = String(validationRow.userName || '').trim();
+    const branchName = String(validationRow.branchName || '').trim();
+    const role = String(validationRow.role || '').trim();
 
     if (validationRow.activeFlag !== '有効') {
-      return createValidationResult_(false, userKey, userName, branchName, AUTH_ERROR_MESSAGES_.userNotFound);
+      return createValidationResult_(false, userKey, userName, branchName, '', AUTH_ERROR_MESSAGES_.userNotFound);
     }
 
-    return createValidationResult_(true, userKey, userName, branchName, '');
+    if (!isAllowedRole_(role)) {
+      return createValidationResult_(false, userKey, userName, branchName, '', AUTH_ERROR_MESSAGES_.roleNotConfigured);
+    }
+
+    return createValidationResult_(true, userKey, userName, branchName, role, '');
   } catch (error) {
     return createValidationResult_(
       false,
       userKey,
+      '',
       '',
       '',
       AUTH_ERROR_MESSAGES_.sheetReadFailure,
@@ -205,22 +398,49 @@ function getCurrentUserRole_() {
       return '';
     }
 
-    return String(validationRow.role || '').trim();
+    const role = String(validationRow.role || '').trim();
+    return isAllowedRole_(role) ? role : '';
   } catch (error) {
     return '';
   }
 }
 
-function isManagerUser_() {
-  return getCurrentUserRole_() === 'manager';
+function isSummaryViewer_(role) {
+  const normalizedRole = typeof role === 'string' ? String(role || '').trim() : getCurrentUserRole_();
+  return ['manager', 'sales_support', 'sysadmin'].includes(normalizedRole);
 }
 
-function createValidationResult_(valid, userKey, userName, branchName, errorMessage) {
+function isAllowedRole_(role) {
+  return AUTH_ALLOWED_ROLES_.includes(String(role || '').trim());
+}
+
+function isDailyViewerRole_(role) {
+  return ['sales', 'sysadmin'].includes(String(role || '').trim());
+}
+
+function isManagerOrSalesSupportRole_(role) {
+  return ['manager', 'sales_support'].includes(String(role || '').trim());
+}
+
+function isDailyRecordEditorRole_(role) {
+  return ['sales', 'sysadmin'].includes(String(role || '').trim());
+}
+
+function getRoleDailyReportUrl_(role) {
+  if (isManagerOrSalesSupportRole_(role)) {
+    return getManagerSummaryUrl();
+  }
+
+  return getDailyReportUrl();
+}
+
+function createValidationResult_(valid, userKey, userName, branchName, role, errorMessage) {
   return {
     valid,
     userKey,
     userName,
     branchName,
+    role,
     errorMessage,
   };
 }

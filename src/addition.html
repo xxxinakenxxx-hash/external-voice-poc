@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= model.pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3efe7;
+        --panel: #ffffff;
+        --panel-soft: #faf6ef;
+        --text: #1f2937;
+        --muted: #5c6877;
+        --accent: #173d5f;
+        --accent-strong: #f0892b;
+        --border: #d8e0ea;
+        --shadow: 0 16px 38px rgba(23, 61, 95, 0.12);
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+        --success: #146c43;
+        --success-soft: #e8f6ef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.12), transparent 36%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 30%),
+          linear-gradient(180deg, #fdf8ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      .layout {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 22px 20px;
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -50px;
+        top: -54px;
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.92rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        font-size: 1.02rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .notice--error {
+        border-color: #f5c2c7;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .notice--success {
+        border-color: rgba(20, 108, 67, 0.18);
+        background: var(--success-soft);
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .record-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .record-card {
+        display: grid;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%);
+      }
+
+      .record-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .record-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(240, 137, 43, 0.14);
+        color: #9f4f08;
+        font-size: 0.9rem;
+        font-weight: 900;
+      }
+
+      .meta-pill--dark {
+        background: rgba(23, 61, 95, 0.08);
+        color: var(--accent);
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detail-row {
+        display: grid;
+        gap: 6px;
+      }
+
+      .detail-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 800;
+      }
+
+      .detail-value {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+        line-height: 1.7;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .detail-value--summary {
+        font-size: 1.02rem;
+      }
+
+      .addition-box {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(23, 61, 95, 0.12);
+        background: linear-gradient(180deg, #fbfdff 0%, #f5f9fd 100%);
+      }
+
+      .addition-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .addition-label {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.95rem;
+        font-weight: 900;
+      }
+
+      .addition-meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .addition-text {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      .form-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .form-label {
+        margin: 0;
+        color: var(--accent);
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 160px;
+        padding: 14px 14px 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        line-height: 1.7;
+        resize: vertical;
+        outline: none;
+      }
+
+      .textarea:focus {
+        border-color: rgba(240, 137, 43, 0.58);
+        box-shadow: 0 0 0 4px rgba(240, 137, 43, 0.12);
+      }
+
+      .action-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .save-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 56px;
+        border: none;
+        border-radius: 18px;
+        padding: 12px 18px;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font: inherit;
+        font-size: 1.05rem;
+        font-weight: 800;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+        cursor: pointer;
+      }
+
+      .save-button[disabled] {
+        opacity: 0.65;
+        cursor: progress;
+      }
+
+      .helper-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.7;
+      }
+
+      .footer-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 56px;
+        border-radius: 18px;
+        border: none;
+        padding: 12px 18px;
+        text-decoration: none;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        font-size: 1.05rem;
+        font-weight: 800;
+        box-shadow: none;
+      }
+
+      .link-button--primary {
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        border: none;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+      }
+
+      .empty-state {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      @media (min-width: 768px) {
+        main {
+          padding: 24px 18px 32px;
+        }
+
+        .hero {
+          padding: 28px 26px;
+        }
+
+        .card {
+          padding: 20px 22px;
+        }
+
+        h1 {
+          font-size: 2.12rem;
+        }
+      }
+
+      @media (max-width: 767px) {
+        main {
+          width: min(100%, 430px);
+          margin: 0 auto;
+          padding: calc(16px + env(safe-area-inset-top)) 15px calc(18px + env(safe-area-inset-bottom));
+        }
+
+        .layout {
+          gap: 10px;
+        }
+
+        .hero {
+          padding: 24px 20px;
+          border-radius: 24px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .record-card {
+          padding: 14px;
+        }
+
+        .save-button,
+        .link-button {
+          min-height: 60px;
+          font-size: 1.02rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="layout">
+        <section class="hero" aria-label="追記画面の概要">
+          <p class="eyebrow">追記</p>
+          <h1>営業AIメモ｜商談記録への追記</h1>
+          <p class="subtext">選択した商談記録に補足や訂正を追記します。元の商談記録は更新しません。</p>
+        </section>
+
+        <? if (model.noticeMessage) { ?>
+          <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <? if (model.hasRecordData) { ?>
+          <section class="card" aria-live="polite">
+            <div class="record-grid">
+              <article class="record-card">
+                <div class="record-head">
+                  <div class="record-meta">
+                    <span class="meta-pill"><?= model.record.timeLabel ?></span>
+                    <span class="meta-pill meta-pill--dark"><?= model.record.inputMethod ?></span>
+                    <span class="meta-pill meta-pill--dark"><?= model.record.userName ?></span>
+                    <span class="meta-pill meta-pill--dark"><?= model.record.branchName ?></span>
+                    <span class="meta-pill meta-pill--dark"><?= model.record.recordId ?></span>
+                  </div>
+                </div>
+
+                <div class="detail-grid">
+                  <div class="detail-row">
+                    <p class="detail-label">訪問先</p>
+                    <p class="detail-value"><?= model.record.customerName ?></p>
+                  </div>
+                  <div class="detail-row">
+                    <p class="detail-label">商談要点</p>
+                    <p class="detail-value detail-value--summary"><?= model.record.dealSummary ?></p>
+                  </div>
+                  <div class="detail-row">
+                    <p class="detail-label">案件テーマ</p>
+                    <p class="detail-value"><?= model.record.dealTheme ?></p>
+                  </div>
+                  <div class="detail-row">
+                    <p class="detail-label">商談内容</p>
+                    <p class="detail-value"><?= model.record.dealContent ?></p>
+                  </div>
+                </div>
+
+                <div id="additionList" class="detail-grid">
+                  <? if (model.additions && model.additions.length > 0) { ?>
+                    <? for (var additionIndex = 0; additionIndex < model.additions.length; additionIndex++) { ?>
+                      <? var addition = model.additions[additionIndex]; ?>
+                      <section class="addition-box">
+                        <div class="addition-head">
+                          <p class="addition-label">追記</p>
+                          <p class="addition-meta"><?= addition.addedAtLabel ?> ・ <?= addition.addedByName ?></p>
+                        </div>
+                        <p class="addition-text"><?= addition.additionalRecord ?></p>
+                      </section>
+                    <? } ?>
+                  <? } ?>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="card form-card">
+            <p class="form-label">追記内容</p>
+            <textarea id="additionalRecord" class="textarea" placeholder="補足、訂正、次回の対応などを入力してください"></textarea>
+            <div class="action-row">
+              <button id="saveButton" class="save-button" type="button">追記を保存する</button>
+              <p class="helper-text">追記は元記録の下に並び、商談件数には加算されません。</p>
+            </div>
+            <div id="statusMessage" class="notice" style="display:none;"></div>
+          </section>
+        <? } else { ?>
+          <section class="card">
+            <div class="empty-state">追記する商談記録が見つかりませんでした。</div>
+          </section>
+        <? } ?>
+
+        <? if (model.dailyReportLinkUrl || model.topPageLinkUrl) { ?>
+          <section class="footer-actions">
+            <? if (model.dailyReportLinkUrl) { ?>
+              <a class="link-button link-button--primary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報へ戻る</a>
+            <? } ?>
+            <? if (model.topPageLinkUrl) { ?>
+              <a class="link-button" href="<?= model.topPageLinkUrl ?>" target="_top" rel="noopener">TOPへ戻る</a>
+            <? } ?>
+          </section>
+        <? } ?>
+      </div>
+
+      <? if (model.hasRecordData) { ?>
+        <script>
+          const recordId = <?= JSON.stringify(model.recordId || '') ?>;
+          const saveButton = document.getElementById('saveButton');
+          const additionalRecordTextarea = document.getElementById('additionalRecord');
+          const statusMessage = document.getElementById('statusMessage');
+          const additionsContainer = document.getElementById('additionList');
+
+          function showStatus(message, kind) {
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = message;
+            statusMessage.className = `notice ${kind === 'success' ? 'notice--success' : 'notice--error'}`;
+          }
+
+          function clearStatus() {
+            statusMessage.style.display = 'none';
+            statusMessage.textContent = '';
+            statusMessage.className = 'notice';
+          }
+
+          function createAdditionElement(addition) {
+            const wrapper = document.createElement('section');
+            wrapper.className = 'addition-box';
+
+            const head = document.createElement('div');
+            head.className = 'addition-head';
+
+            const label = document.createElement('p');
+            label.className = 'addition-label';
+            label.textContent = '追記';
+
+            const meta = document.createElement('p');
+            meta.className = 'addition-meta';
+            meta.textContent = `${addition.addedAtLabel || ''} ・ ${addition.addedByName || ''}`.trim();
+
+            const body = document.createElement('p');
+            body.className = 'addition-text';
+            body.textContent = addition.additionalRecord || '';
+
+            head.appendChild(label);
+            head.appendChild(meta);
+            wrapper.appendChild(head);
+            wrapper.appendChild(body);
+
+            return wrapper;
+          }
+
+          saveButton.addEventListener('click', () => {
+            const additionalRecord = additionalRecordTextarea.value.trim();
+            if (!additionalRecord) {
+              showStatus('追記内容を入力してください', 'error');
+              return;
+            }
+
+            saveButton.disabled = true;
+            clearStatus();
+
+            google.script.run
+              .withSuccessHandler((result) => {
+                saveButton.disabled = false;
+
+                if (!result || result.success !== true) {
+                  showStatus((result && result.errorMessage) || '保存に失敗しました。', 'error');
+                  return;
+                }
+
+                const addition = {
+                  additionId: result.additionId || '',
+                  additionalRecord,
+                  addedAtLabel: result.addedAt || '',
+                  addedByName: result.addedByName || '',
+                };
+
+                if (additionsContainer) {
+                  additionsContainer.appendChild(createAdditionElement(addition));
+                }
+
+                additionalRecordTextarea.value = '';
+                showStatus('追記を保存しました', 'success');
+              })
+              .withFailureHandler((error) => {
+                saveButton.disabled = false;
+                showStatus((error && error.message) ? error.message : '保存に失敗しました。', 'error');
+              })
+              .addDealAddition(recordId, additionalRecord);
+          });
+
+        </script>
+      <? } ?>
+    </main>
+  </body>
+</html>
