@@ -98,6 +98,14 @@
       .status.is-listening { color: #a55409; }
       .status.is-error { color: var(--danger); }
       .status.is-success { color: var(--success); }
+      #nearbyStatusGroup { gap: 10px; }
+      #nearbyStatusGroup .status {
+        padding: 10px 12px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+        border-radius: 14px;
+        background: var(--surface-soft);
+      }
       .summary {
         margin: 0;
         padding: 10px 12px;
@@ -878,6 +886,7 @@
           setStatus(elements.candidateStatus, CANDIDATE_IDLE_MESSAGE, '');
           return;
         }
+        setStoreSelectionExpanded(true);
         if (!navigator.geolocation) {
           state.gps.status = 'error';
           state.gps.errorMessage = GPS_UNSUPPORTED_MESSAGE;
