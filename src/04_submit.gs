@@ -126,7 +126,7 @@ function submitMemo(payload) {
     : [{
         customerType: '',
         dealTheme: '',
-        dealContent: inputText,
+        dealContent: '',
         todoItem: '',
         todoDeadline: '',
         extractStatus: '要確認',
@@ -150,10 +150,6 @@ function submitMemo(payload) {
   try {
     writeRecordsToSheet(records);
   } catch (error) {
-    logError('SHEET_WRITE_ERROR', error && error.message ? error.message : String(error), {
-      userKey,
-      inputText,
-    });
     return {
       success: false,
       errorMessage: '保存に失敗しました。しばらく経ってから再度お試しください',
