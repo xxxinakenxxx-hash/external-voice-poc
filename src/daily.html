@@ -27,6 +27,10 @@
         box-sizing: border-box;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -48,7 +52,7 @@
 
       .layout {
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
       .hero {
@@ -96,9 +100,9 @@
       .card {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 22px;
+        border-radius: 20px;
         box-shadow: var(--shadow);
-        padding: 18px;
+        padding: 16px;
       }
 
       .notice {
@@ -117,23 +121,118 @@
         font-weight: 700;
       }
 
+      .search-panel {
+        display: grid;
+        gap: 10px;
+      }
+
+      .search-fields {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .search-field {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .search-field--wide {
+        grid-column: 1 / -1;
+      }
+
+      .search-label {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .search-input,
+      .search-select {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .search-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .search-button,
+      .search-clear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .search-button {
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .search-clear {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--accent);
+      }
+
+      .search-error {
+        margin: 0;
+        color: var(--danger);
+        font-size: 0.88rem;
+        line-height: 1.5;
+        font-weight: 800;
+      }
+
+      .search-summary {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
       .day-group {
         display: grid;
-        gap: 12px;
+        gap: 8px;
       }
 
       .day-label {
         margin: 0;
-        font-size: 1.08rem;
+        font-size: 1rem;
         font-weight: 900;
         color: var(--accent);
       }
 
+      .todo-help {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.5;
+        font-weight: 700;
+      }
+
       .report-card {
         display: grid;
-        gap: 10px;
-        padding: 13px 14px;
-        border-radius: 16px;
+        gap: 8px;
+        padding: 11px 12px;
+        border-radius: 15px;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%);
       }
@@ -141,14 +240,22 @@
       .report-head {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 6px 10px;
-        align-items: start;
+        gap: 4px 8px;
+        align-items: center;
+      }
+
+      .report-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        justify-content: flex-end;
       }
 
       .report-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 5px;
         align-items: center;
         min-width: 0;
       }
@@ -156,13 +263,13 @@
       .meta-pill {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         width: fit-content;
-        padding: 6px 10px;
+        padding: 5px 9px;
         border-radius: 999px;
         background: rgba(240, 137, 43, 0.14);
         color: #9f4f08;
-        font-size: 0.84rem;
+        font-size: 0.8rem;
         font-weight: 900;
       }
 
@@ -171,38 +278,114 @@
         color: var(--accent);
       }
 
-      .action-link {
+      .action-link,
+      .detail-toggle {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        justify-self: end;
-        min-width: 4.2rem;
-        min-height: 32px;
-        padding: 6px 10px;
+        min-width: 4rem;
+        min-height: 28px;
+        padding: 5px 9px;
         border-radius: 999px;
-        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
-        color: #fff;
-        text-decoration: none;
-        font-size: 0.84rem;
+        border: 1px solid transparent;
+        font-size: 0.8rem;
         line-height: 1;
         font-weight: 800;
-        box-shadow: 0 12px 24px rgba(232, 122, 31, 0.20);
         white-space: nowrap;
       }
 
-      .report-grid {
-        display: grid;
-        gap: 10px;
+      .action-link {
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 12px 24px rgba(232, 122, 31, 0.20);
       }
 
-      .detail-grid {
+      .detail-toggle {
+        background: rgba(23, 61, 95, 0.06);
+        color: var(--accent);
+        border-color: rgba(23, 61, 95, 0.14);
+        cursor: pointer;
+      }
+
+      .detail-toggle[aria-expanded="true"] {
+        background: rgba(23, 61, 95, 0.12);
+      }
+
+      .report-body {
+        display: grid;
+        gap: 6px;
+      }
+
+      .customer-name {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.95rem;
+        line-height: 1.45;
+        font-weight: 900;
+        word-break: break-word;
+      }
+
+      .todo-line {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+      }
+
+      .todo-checkbox {
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-strong);
+        flex: 0 0 auto;
+      }
+
+      .todo-summary {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.98rem;
+        line-height: 1.55;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .todo-feedback {
+        margin: 0;
+        min-height: 1.1em;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.4;
+      }
+
+      .todo-feedback--success {
+        color: var(--success);
+      }
+
+      .todo-feedback--error {
+        color: var(--danger);
+      }
+
+      .detail-panel {
         display: grid;
         gap: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(23, 61, 95, 0.14);
+      }
+
+      .detail-panel[hidden] {
+        display: none !important;
       }
 
       .detail-row {
         display: grid;
         gap: 4px;
+      }
+
+      .detail-row--inline {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: baseline;
+        gap: 2px;
       }
 
       .detail-label {
@@ -227,9 +410,9 @@
 
       .addition-box {
         display: grid;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 14px;
+        gap: 6px;
+        padding: 10px;
+        border-radius: 12px;
         border: 1px solid rgba(23, 61, 95, 0.12);
         background: linear-gradient(180deg, #fbfdff 0%, #f5f9fd 100%);
       }
@@ -237,7 +420,7 @@
       .addition-head {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 4px;
         align-items: center;
         justify-content: space-between;
       }
@@ -245,22 +428,22 @@
       .addition-label {
         margin: 0;
         color: var(--accent);
-        font-size: 0.88rem;
+        font-size: 0.84rem;
         font-weight: 900;
       }
 
       .addition-meta {
         margin: 0;
         color: var(--muted);
-        font-size: 0.84rem;
+        font-size: 0.8rem;
         font-weight: 700;
       }
 
       .addition-text {
         margin: 0;
         color: var(--text);
-        font-size: 0.98rem;
-        line-height: 1.6;
+        font-size: 0.95rem;
+        line-height: 1.55;
         white-space: pre-wrap;
       }
 
@@ -276,7 +459,7 @@
 
       .footer-actions {
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
       .link-button {
@@ -331,24 +514,36 @@
         }
 
         .card {
-          padding: 16px;
-          border-radius: 20px;
+          padding: 14px;
+          border-radius: 18px;
         }
 
         .report-card {
-          padding: 12px;
+          padding: 10px 11px;
         }
 
-        .action-link {
-          min-width: 4rem;
-          min-height: 30px;
-          padding: 5px 9px;
-          font-size: 0.8rem;
+        .action-link,
+        .detail-toggle {
+          min-height: 28px;
+          padding: 4px 8px;
+          font-size: 0.78rem;
         }
 
         .link-button {
           min-height: 60px;
           font-size: 1.02rem;
+        }
+
+        .todo-summary {
+          font-size: 0.96rem;
+        }
+
+        .search-fields {
+          grid-template-columns: 1fr;
+        }
+
+        .search-field--wide {
+          grid-column: auto;
         }
       }
     </style>
@@ -367,10 +562,51 @@
         <? } ?>
 
         <? if (!model.noticeMessage) { ?>
+          <section class="card search-panel" aria-label="日報検索">
+            <form method="get" action="<?= model.topPageLinkUrl ?>">
+              <input type="hidden" name="view" value="daily">
+              <div class="search-fields">
+                <label class="search-field">
+                  <span class="search-label">期間</span>
+                  <select class="search-select" name="period">
+                    <option value="last_30_days" <? if (model.searchPeriod === 'last_30_days') { ?>selected<? } ?>>過去30日</option>
+                    <option value="today" <? if (model.searchPeriod === 'today') { ?>selected<? } ?>>今日</option>
+                    <option value="previous_day" <? if (model.searchPeriod === 'previous_day') { ?>selected<? } ?>>前日</option>
+                    <option value="last_7_days" <? if (model.searchPeriod === 'last_7_days') { ?>selected<? } ?>>過去7日</option>
+                    <option value="custom" <? if (model.searchPeriod === 'custom') { ?>selected<? } ?>>期間指定</option>
+                  </select>
+                </label>
+                <label class="search-field search-field--wide">
+                  <span class="search-label">キーワード（顧客名・案件テーマ・商談内容・ToDo・追記）</span>
+                  <input class="search-input" type="search" name="keyword" value="<?= model.searchKeyword ?>" autocomplete="off">
+                </label>
+                <label class="search-field">
+                  <span class="search-label">開始日</span>
+                  <input class="search-input" type="date" name="start_date" value="<?= model.searchStartDate ?>">
+                </label>
+                <label class="search-field">
+                  <span class="search-label">終了日</span>
+                  <input class="search-input" type="date" name="end_date" value="<?= model.searchEndDate ?>">
+                </label>
+              </div>
+              <? if (model.searchErrorMessage) { ?>
+                <p class="search-error" aria-live="assertive"><?= model.searchErrorMessage ?></p>
+              <? } ?>
+              <div class="search-actions">
+                <button class="search-button" type="submit">検索</button>
+                <a class="search-clear" href="<?= model.topPageLinkUrl ?>?view=daily">条件クリア</a>
+              </div>
+            </form>
+          </section>
+
           <section class="card" aria-live="polite">
             <p class="day-label"><?= model.userName ?> さんの記録</p>
+            <p class="todo-help">□にチェックするとTODOにコピーされます</p>
+            <? if (!model.searchErrorMessage) { ?>
+              <p class="search-summary">検索結果：<?= model.searchResultCount ?>件</p>
+            <? } ?>
 
-            <? if (model.hasReportData) { ?>
+            <? if (!model.searchErrorMessage && model.hasReportData) { ?>
               <div class="day-group">
                 <? for (var groupIndex = 0; groupIndex < model.reportGroups.length; groupIndex++) { ?>
                   <? var group = model.reportGroups[groupIndex]; ?>
@@ -378,30 +614,51 @@
                     <p class="day-label"><?= group.dateLabel ?></p>
                     <? for (var recordIndex = 0; recordIndex < group.records.length; recordIndex++) { ?>
                       <? var record = group.records[recordIndex]; ?>
-                      <article class="report-card">
+                      <article class="report-card" data-report-card data-record-id="<?= record.recordId ?>">
                         <div class="report-head">
                           <div class="report-meta">
                             <span class="meta-pill"><?= record.timeLabel ?></span>
                             <span class="meta-pill meta-pill--dark"><?= record.inputMethod ?></span>
                             <span class="meta-pill meta-pill--dark"><?= record.userName ?></span>
                           </div>
-                          <? if (record.canAdd) { ?>
-                            <a class="action-link" href="<?= model.topPageLinkUrl ?>?view=daily&record_id=<?= record.recordId ?>" target="_top" rel="noopener">追記</a>
-                          <? } ?>
+                          <div class="report-actions">
+                            <? if (record.canAdd) { ?>
+                              <a class="action-link" href="<?= model.topPageLinkUrl ?>?view=daily&record_id=<?= record.recordId ?>" target="_top" rel="noopener">追記</a>
+                            <? } ?>
+                            <button
+                              type="button"
+                              class="detail-toggle"
+                              aria-expanded="false"
+                              aria-controls="detail-<?= record.recordId ?>"
+                              data-detail-toggle
+                            >詳細</button>
+                          </div>
                         </div>
 
-                        <div class="report-grid">
+                        <div class="report-body">
+                          <p class="customer-name"><?= record.customerName ?></p>
+
+                          <div class="todo-line">
+                            <input
+                              type="checkbox"
+                              class="todo-checkbox"
+                              data-todo-checkbox
+                              data-record-id="<?= record.recordId ?>"
+                              data-can-create-todo="<?= record.canCreateTodo ? '1' : '0' ?>"
+                              data-has-active-todo="<?= record.hasActiveTodo ? '1' : '0' ?>"
+                              <? if (!record.canCreateTodo) { ?>disabled aria-disabled="true"<? } ?>
+                              <? if (record.hasActiveTodo) { ?>checked disabled aria-disabled="true"<? } ?>
+                            >
+                            <p class="todo-summary"><?= record.dealSummary ?></p>
+                          </div>
+
+                          <p class="todo-feedback" data-todo-feedback aria-live="polite" hidden></p>
+                        </div>
+
+                        <div class="detail-panel" id="detail-<?= record.recordId ?>" hidden>
                           <div class="detail-grid">
-                            <div class="detail-row">
-                              <p class="detail-label">訪問先</p>
-                              <p class="detail-value"><?= record.customerName ?></p>
-                            </div>
-                            <div class="detail-row">
-                              <p class="detail-label">商談要点</p>
-                              <p class="detail-value detail-value--summary"><?= record.dealSummary ?></p>
-                            </div>
-                            <div class="detail-row">
-                              <p class="detail-label">案件テーマ</p>
+                            <div class="detail-row detail-row--inline">
+                              <p class="detail-label">テーマ：</p>
                               <p class="detail-value"><?= record.dealTheme ?></p>
                             </div>
                             <div class="detail-row">
@@ -412,6 +669,7 @@
 
                           <? if (record.additions && record.additions.length > 0) { ?>
                             <div class="detail-grid">
+                              <p class="detail-label">追記一覧</p>
                               <? for (var additionIndex = 0; additionIndex < record.additions.length; additionIndex++) { ?>
                                 <? var addition = record.additions[additionIndex]; ?>
                                 <section class="addition-box">
@@ -430,7 +688,7 @@
                   </section>
                 <? } ?>
               </div>
-            <? } else { ?>
+            <? } else if (!model.searchErrorMessage) { ?>
               <div class="empty-state"><?= model.emptyMessage ?></div>
             <? } ?>
           </section>
@@ -443,5 +701,93 @@
         <? } ?>
       </div>
     </main>
+    <script>
+      (() => {
+        const cards = document.querySelectorAll('[data-report-card]');
+
+        cards.forEach((card) => {
+          const detailToggle = card.querySelector('[data-detail-toggle]');
+          const detailPanel = card.querySelector('.detail-panel');
+          if (detailToggle && detailPanel) {
+            detailToggle.addEventListener('click', () => {
+              const expanded = detailToggle.getAttribute('aria-expanded') === 'true';
+              const nextExpanded = !expanded;
+              detailToggle.setAttribute('aria-expanded', String(nextExpanded));
+              detailPanel.hidden = !nextExpanded;
+            });
+          }
+
+          const checkbox = card.querySelector('[data-todo-checkbox]');
+          const feedback = card.querySelector('[data-todo-feedback]');
+          if (!checkbox) {
+            return;
+          }
+
+          const recordId = String(checkbox.getAttribute('data-record-id') || '').trim();
+          const canCreateTodo = checkbox.getAttribute('data-can-create-todo') === '1';
+          const hasActiveTodo = checkbox.getAttribute('data-has-active-todo') === '1';
+
+          checkbox.checked = hasActiveTodo;
+          checkbox.disabled = hasActiveTodo || !canCreateTodo;
+
+          const showFeedback = (message, kind) => {
+            if (!feedback) {
+              return;
+            }
+
+            feedback.textContent = message;
+            feedback.hidden = !message;
+            feedback.classList.remove('todo-feedback--success', 'todo-feedback--error');
+            if (kind) {
+              feedback.classList.add(kind);
+            }
+          };
+
+          if (hasActiveTodo) {
+            showFeedback('', '');
+          }
+
+          checkbox.addEventListener('change', () => {
+            if (!checkbox.checked) {
+              return;
+            }
+
+            if (!recordId || !canCreateTodo || checkbox.disabled) {
+              checkbox.checked = false;
+              return;
+            }
+
+            checkbox.disabled = true;
+            showFeedback('TODOを登録中です。', '');
+
+            google.script.run
+              .withSuccessHandler((result) => {
+                if (result && result.success === true) {
+                  checkbox.checked = true;
+                  checkbox.disabled = true;
+                  showFeedback('TODOを登録しました。', 'todo-feedback--success');
+                  return;
+                }
+
+                checkbox.checked = false;
+                checkbox.disabled = false;
+                showFeedback(
+                  String(result && result.errorMessage ? result.errorMessage : 'TODOの登録に失敗しました。'),
+                  'todo-feedback--error',
+                );
+              })
+              .withFailureHandler((error) => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
+                showFeedback(
+                  String(error && error.message ? error.message : 'TODOの登録に失敗しました。'),
+                  'todo-feedback--error',
+                );
+              })
+              .createTodoFromDeal(recordId);
+          });
+        });
+      })();
+    </script>
   </body>
 </html>

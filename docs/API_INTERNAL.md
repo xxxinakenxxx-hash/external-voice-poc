@@ -34,6 +34,18 @@
 
 API-20 以降（runMorningBriefing・sendChatMessage 等）は **活用フェーズ（Phase 2）**であり、Phase 1 では実装しない。
 
+### 1.1 TD-01 TODO関数（管理番号）
+
+TD-01 で追加する TODO 関数は、本改善内の管理番号として扱う。正式な API-ID は後続の正本文書整理で採番する。
+
+| 管理番号 | 関数名 | 種別 | 呼び出し元 | 概要 |
+|---|---|---|---|---|
+| TD-API-01 | getMyTodoTasks() | client→GAS | TODO画面 | ログイン本人のTODO一覧を返す |
+| TD-API-02 | createTodoTask(payload) | client→GAS | TODO画面 | 直接登録で本人TODOを追加する |
+| TD-API-03 | createTodoFromDeal(recordId) | client→GAS | 個人日報 | 本人の商談からTODOを作成する |
+| TD-API-04 | updateTodoTask(payload) | client→GAS | TODO画面 | 本人TODOを更新する |
+| TD-API-05 | completeTodoTask(todoId) | client→GAS | TODO画面 | 本人TODOの対象行を削除する |
+
 ---
 
 ## 2. 呼び出し関係

@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= model.pageTitle ?></title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3efe7;
+        --panel: #ffffff;
+        --panel-soft: #faf6ef;
+        --text: #1f2937;
+        --muted: #5c6877;
+        --accent: #173d5f;
+        --accent-strong: #f0892b;
+        --border: #d8e0ea;
+        --shadow: 0 16px 38px rgba(23, 61, 95, 0.12);
+        --danger: #b42318;
+        --danger-soft: #fdecec;
+        --warn: #9f4f08;
+        --warn-soft: #fff7e8;
+        --info-soft: #eef4fb;
+        --info: #20486e;
+        --success: #146c43;
+        --success-soft: #e8f6ef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(240, 137, 43, 0.12), transparent 36%),
+          radial-gradient(circle at bottom right, rgba(23, 61, 95, 0.10), transparent 30%),
+          linear-gradient(180deg, #fdf8ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      }
+
+      .layout {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 22px 20px;
+        background: linear-gradient(135deg, rgba(23, 61, 95, 0.98), rgba(30, 83, 128, 0.96));
+        color: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -52px;
+        top: -54px;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.92rem;
+        line-height: 1.2;
+      }
+
+      .subtext {
+        margin: 10px 0 0;
+        font-size: 1.02rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .notice {
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .notice--error {
+        border-color: #f5c2c7;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .notice--success {
+        border-color: rgba(20, 108, 67, 0.18);
+        background: var(--success-soft);
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .panel-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section-title {
+        margin: 0;
+        color: var(--accent);
+        font-size: 1.02rem;
+        font-weight: 900;
+      }
+
+      .helper-text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.7;
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field-row {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field-label {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.94rem;
+        font-weight: 900;
+      }
+
+      .field-input,
+      .field-select,
+      .field-textarea {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        line-height: 1.6;
+        outline: none;
+      }
+
+      .field-input,
+      .field-select {
+        min-height: 48px;
+        padding: 12px 14px;
+      }
+
+      .field-textarea {
+        min-height: 96px;
+        padding: 12px 14px;
+        resize: vertical;
+      }
+
+      .field-input:focus,
+      .field-select:focus,
+      .field-textarea:focus {
+        border-color: rgba(240, 137, 43, 0.58);
+        box-shadow: 0 0 0 4px rgba(240, 137, 43, 0.12);
+      }
+
+      .action-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .save-button,
+      .link-button,
+      .tab-button,
+      .inline-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        text-decoration: none;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .save-button {
+        width: 100%;
+        min-height: 56px;
+        border-radius: 18px;
+        padding: 12px 18px;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font-size: 1.05rem;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+      }
+
+      .save-button[disabled] {
+        opacity: 0.65;
+        cursor: progress;
+      }
+
+      .tab-row {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .tab-button {
+        min-height: 46px;
+        border-radius: 999px;
+        padding: 10px 12px;
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--accent);
+        font-size: 0.95rem;
+      }
+
+      .tab-button.is-active {
+        background: rgba(23, 61, 95, 0.08);
+        border-color: rgba(23, 61, 95, 0.2);
+        color: var(--accent);
+      }
+
+      .todo-view {
+        display: none;
+        gap: 12px;
+      }
+
+      .todo-view.is-active {
+        display: grid;
+      }
+
+      .group-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .group-card {
+        display: grid;
+        gap: 6px;
+        padding: 0 0 10px;
+        border-bottom: 1px solid rgba(23, 61, 95, 0.12);
+        background: transparent;
+      }
+
+      .group-label {
+        margin: 0;
+        color: var(--accent);
+        font-size: 1.02rem;
+        font-weight: 900;
+      }
+
+      .todo-grid {
+        display: block;
+      }
+
+      .todo-item {
+        display: block;
+        padding: 0;
+        border-bottom: 1px solid rgba(216, 224, 234, 0.88);
+        background: transparent;
+      }
+
+      .todo-item:last-child {
+        border-bottom: none;
+      }
+
+      .todo-item--overdue {
+        border-bottom-color: rgba(180, 35, 24, 0.28);
+      }
+
+      .todo-item--today {
+        border-bottom-color: rgba(159, 79, 8, 0.24);
+      }
+
+      .todo-item--future {
+        border-bottom-color: rgba(32, 72, 110, 0.16);
+      }
+
+      .todo-item.is-complete-pending {
+        opacity: 0.64;
+      }
+
+      .todo-item.is-complete-pending .todo-content-inline,
+      .todo-item.is-complete-pending .todo-due-inline,
+      .todo-item.is-complete-pending .todo-priority-inline {
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+      }
+
+      .todo-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 7px;
+        align-items: center;
+        min-height: 38px;
+        overflow: hidden;
+      }
+
+      .todo-separator {
+        flex: 0 0 auto;
+        color: rgba(92, 104, 119, 0.7);
+        font-size: 0.88rem;
+        font-weight: 700;
+        line-height: 1;
+        user-select: none;
+      }
+
+      .todo-content-inline {
+        flex: 1 1 auto;
+        margin: 0;
+        min-width: 0;
+        color: var(--text);
+        font-size: 0.93rem;
+        line-height: 1.4;
+        font-weight: 700;
+        word-break: break-word;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .todo-due-inline {
+        flex: 0 0 auto;
+        min-width: 0;
+        color: var(--text);
+        font-size: 0.88rem;
+        font-weight: 800;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .todo-priority-inline {
+        flex: 0 0 auto;
+        justify-self: start;
+        white-space: nowrap;
+      }
+
+      .todo-edit-inline {
+        flex: 0 0 auto;
+        justify-self: end;
+        min-height: 26px;
+        padding: 0 8px;
+        font-size: 0.8rem;
+      }
+
+      .todo-head {
+        display: grid;
+        gap: 6px;
+      }
+
+      .todo-head-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .todo-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: rgba(240, 137, 43, 0.14);
+        color: #9f4f08;
+        font-size: 0.8rem;
+        font-weight: 900;
+      }
+
+      .meta-pill--dark {
+        background: rgba(23, 61, 95, 0.08);
+        color: var(--accent);
+      }
+
+      .meta-pill--source {
+        background: rgba(20, 108, 67, 0.10);
+        color: var(--success);
+      }
+
+      .priority-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .todo-body {
+        display: grid;
+        gap: 5px;
+      }
+
+      .todo-content {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.96rem;
+        line-height: 1.5;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .todo-meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px 6px;
+        align-items: center;
+      }
+
+      .todo-created-inline {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .priority-pill--high {
+        background: rgba(180, 35, 24, 0.10);
+        color: var(--danger);
+      }
+
+      .priority-pill--medium {
+        background: rgba(240, 137, 43, 0.14);
+        color: var(--warn);
+      }
+
+      .priority-pill--low {
+        background: rgba(23, 61, 95, 0.08);
+        color: var(--accent);
+      }
+
+      .todo-summary {
+        display: grid;
+        gap: 8px;
+      }
+
+      .todo-summary-row {
+        display: grid;
+        gap: 4px;
+      }
+
+      .todo-summary-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 800;
+      }
+
+      .todo-summary-value {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.98rem;
+        line-height: 1.6;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .todo-summary-value--content {
+        white-space: pre-wrap;
+      }
+
+      .todo-form-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .toggle-area {
+        display: grid;
+        gap: 10px;
+      }
+
+      .checkbox-row {
+        display: flex;
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .checkbox-input {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--accent-strong);
+      }
+
+      .inline-status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+
+      .inline-status--error {
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .inline-status--success {
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .edit-box {
+        display: grid;
+        gap: 8px;
+        padding: 8px 0 0;
+        border-top: 1px dashed rgba(23, 61, 95, 0.14);
+      }
+
+      .todo-edit-panel[hidden] {
+        display: none !important;
+      }
+
+      .edit-box > summary {
+        list-style: none;
+      }
+
+      .edit-box > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .edit-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: fit-content;
+        min-height: 28px;
+        padding: 0 6px;
+        border: none;
+        border-radius: 999px;
+        background: rgba(23, 61, 95, 0.08);
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .edit-form {
+        display: grid;
+        gap: 8px;
+        padding: 4px 0 0;
+      }
+
+      .edit-form-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .edit-actions {
+        display: grid;
+        gap: 8px;
+      }
+
+      .inline-button {
+        min-height: 38px;
+        border-radius: 14px;
+        padding: 8px 12px;
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        font-size: 0.92rem;
+      }
+
+      .inline-button--secondary {
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+        color: var(--accent);
+        border: 1px solid var(--border);
+      }
+
+      .inline-button[disabled] {
+        opacity: 0.62;
+        cursor: progress;
+      }
+
+      .bulk-action-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .todo-add-card {
+        gap: 8px;
+        padding: 14px;
+      }
+
+      .todo-add-card .save-button {
+        min-height: 48px;
+        font-size: 0.98rem;
+      }
+
+      .todo-add-card .helper-text {
+        font-size: 0.9rem;
+      }
+
+      .empty-state {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .footer-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .link-button {
+        width: 100%;
+        min-height: 56px;
+        border-radius: 18px;
+        padding: 12px 18px;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        font-size: 1.05rem;
+      }
+
+      .link-button--primary {
+        background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
+        color: #fff;
+        border: none;
+        box-shadow: 0 16px 30px rgba(232, 122, 31, 0.22);
+      }
+
+      @media (min-width: 768px) {
+        main {
+          padding: 24px 18px 32px;
+        }
+
+        .hero {
+          padding: 28px 26px;
+        }
+
+        .card {
+          padding: 20px 22px;
+        }
+
+        .todo-add-card {
+          padding: 14px 16px;
+        }
+
+        h1 {
+          font-size: 2.12rem;
+        }
+
+        .group-card {
+          padding: 0 0 12px;
+        }
+
+        .todo-item {
+          padding: 0;
+        }
+      }
+
+      @media (max-width: 767px) {
+        main {
+          width: min(100%, 430px);
+          margin: 0 auto;
+          padding: calc(16px + env(safe-area-inset-top)) 15px calc(18px + env(safe-area-inset-bottom));
+        }
+
+        .layout {
+          gap: 10px;
+        }
+
+        .hero {
+          padding: 24px 20px;
+          border-radius: 24px;
+        }
+
+        .card {
+          padding: 16px;
+          border-radius: 20px;
+        }
+
+        .todo-add-card {
+          padding: 12px 14px;
+        }
+
+        .tab-row {
+          gap: 6px;
+        }
+
+        .tab-button {
+          min-height: 44px;
+          padding: 9px 10px;
+          font-size: 0.92rem;
+        }
+
+        .group-card {
+          padding: 0 0 10px;
+        }
+
+        .todo-item {
+          padding: 0;
+        }
+
+        .todo-row {
+          gap: 5px;
+          min-height: 36px;
+        }
+
+        .checkbox-row {
+          gap: 5px;
+        }
+
+        .todo-due-inline {
+          font-size: 0.8rem;
+        }
+
+        .priority-pill {
+          padding: 3px 6px;
+          font-size: 0.74rem;
+        }
+
+        .save-button,
+        .link-button,
+        .inline-button {
+          min-height: 60px;
+          font-size: 1.02rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="layout">
+        <section class="hero" aria-label="TODO画面の概要">
+          <p class="eyebrow">営業AIメモ</p>
+          <h1>営業AIメモ｜TODO</h1>
+          <p class="subtext">本人のTODOだけを、お客様別・日付別・重要度別で切り替えて確認できます。</p>
+        </section>
+
+        <? if (model.noticeMessage) { ?>
+          <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
+        <? } ?>
+
+        <? if (!model.noticeMessage) { ?>
+          <section class="card panel-stack todo-add-card">
+            <div class="toggle-area">
+              <p class="section-title">TODOを追加</p>
+              <form id="todoAddForm" class="field-grid">
+                <div class="field-row">
+                  <label class="field-label" for="todoCustomerName">お客様名</label>
+                  <input id="todoCustomerName" name="customerName" class="field-input" type="text" maxlength="120" placeholder="未入力でも登録できます">
+                </div>
+                <div class="field-row">
+                  <label class="field-label" for="todoContent">TODO内容</label>
+                  <textarea id="todoContent" name="todoContent" class="field-textarea" maxlength="1000" placeholder="必須です"></textarea>
+                </div>
+                <div class="field-row">
+                  <label class="field-label" for="todoDueDate">期限</label>
+                  <input id="todoDueDate" name="dueDate" class="field-input" type="date">
+                </div>
+                <div class="field-row">
+                  <label class="field-label" for="todoPriority">重要度</label>
+                  <select id="todoPriority" name="priority" class="field-select">
+                    <option value="高">高</option>
+                    <option value="中" selected>中</option>
+                    <option value="低">低</option>
+                  </select>
+                </div>
+                <div class="action-row">
+                  <button id="todoAddButton" class="save-button" type="submit">TODOを追加する</button>
+                  <p class="helper-text">保存後はこの画面に追加表示されます。</p>
+                  <div id="todoAddStatus" class="notice" style="display:none;"></div>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="card panel-stack" aria-label="表示切替">
+            <p class="section-title">表示切替</p>
+            <div class="tab-row" role="tablist" aria-label="TODO表示切替">
+              <button class="tab-button is-active" type="button" data-view-target="customer" aria-pressed="true">お客様別</button>
+              <button class="tab-button" type="button" data-view-target="date" aria-pressed="false">日付別</button>
+              <button class="tab-button" type="button" data-view-target="priority" aria-pressed="false">重要度別</button>
+            </div>
+            <div class="bulk-action-row">
+              <button id="todoBulkCompleteButton" class="inline-button inline-button--secondary" type="button" disabled>チェック済みを削除</button>
+              <div id="todoBulkCompleteStatus" class="notice" style="display:none;"></div>
+            </div>
+          </section>
+
+          <section class="card panel-stack">
+            <section class="todo-view is-active" data-view-panel="customer" role="tabpanel" aria-label="お客様別">
+              <? if (model.hasTodoData && model.todoGroupsByCustomer && model.todoGroupsByCustomer.length > 0) { ?>
+                <div class="group-stack">
+                  <? for (var customerGroupIndex = 0; customerGroupIndex < model.todoGroupsByCustomer.length; customerGroupIndex++) { ?>
+                    <? var customerGroup = model.todoGroupsByCustomer[customerGroupIndex]; ?>
+                    <section class="group-card">
+                      <p class="group-label"><?= customerGroup.groupLabel ?></p>
+                      <div class="todo-grid">
+                        <? for (var customerTaskIndex = 0; customerTaskIndex < customerGroup.tasks.length; customerTaskIndex++) { ?>
+                          <? var customerTask = customerGroup.tasks[customerTaskIndex]; ?>
+                          <div class="todo-item <? if (customerTask.dueState === 'overdue') { ?>todo-item--overdue<? } else if (customerTask.dueState === 'today') { ?>todo-item--today<? } else { ?>todo-item--future<? } ?>" data-todo-id="<?= customerTask.todoId ?>">
+                            <div class="todo-row">
+                              <label class="checkbox-row" aria-label="完了候補にする">
+                                <input class="checkbox-input" type="checkbox" data-todo-complete="<?= customerTask.todoId ?>">
+                              </label>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <p class="todo-content-inline"><?= customerTask.todoContent ?></p>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="todo-due-inline"><?= customerTask.dueDateLabel ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="priority-pill priority-pill--<? if (customerTask.priority === '高') { ?>high<? } else if (customerTask.priority === '低') { ?>low<? } else { ?>medium<? } ?> todo-priority-inline"><?= customerTask.priority ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <button class="edit-toggle todo-edit-inline" type="button" data-todo-edit-toggle data-todo-edit-target="<?= customerTask.todoId ?>">編集</button>
+                            </div>
+
+                            <div class="edit-box todo-edit-panel" data-todo-edit-panel data-todo-edit-target="<?= customerTask.todoId ?>" hidden>
+                              <form class="edit-form" data-todo-edit-form data-todo-id="<?= customerTask.todoId ?>">
+                                <div class="edit-form-grid">
+                                  <div class="field-row">
+                                    <label class="field-label" for="customerName-<?= customerTask.todoId ?>">お客様名</label>
+                                    <input id="customerName-<?= customerTask.todoId ?>" name="customerName" class="field-input" type="text" maxlength="120" value="<?= customerTask.customerName ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="todoContent-<?= customerTask.todoId ?>">TODO内容</label>
+                                    <textarea id="todoContent-<?= customerTask.todoId ?>" name="todoContent" class="field-textarea" maxlength="1000"><?= customerTask.todoContent ?></textarea>
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="dueDate-<?= customerTask.todoId ?>">期限</label>
+                                    <input id="dueDate-<?= customerTask.todoId ?>" name="dueDate" class="field-input" type="date" value="<?= customerTask.dueDate ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="priority-<?= customerTask.todoId ?>">重要度</label>
+                                    <select id="priority-<?= customerTask.todoId ?>" name="priority" class="field-select">
+                                      <option value="高"<? if (customerTask.priority === '高') { ?> selected<? } ?>>高</option>
+                                      <option value="中"<? if (customerTask.priority === '中') { ?> selected<? } ?>>中</option>
+                                      <option value="低"<? if (customerTask.priority === '低') { ?> selected<? } ?>>低</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div class="edit-actions">
+                                  <button class="inline-button" type="submit">保存する</button>
+                                  <div class="notice" data-todo-edit-status style="display:none;"></div>
+                                </div>
+                              </form>
+                            </div>
+                            <div class="notice" data-todo-item-status style="display:none;"></div>
+                          </div>
+                        <? } ?>
+                      </div>
+                    </section>
+                  <? } ?>
+                </div>
+              <? } else { ?>
+                <div class="empty-state"><?= model.emptyMessage ?></div>
+              <? } ?>
+            </section>
+
+            <section class="todo-view" data-view-panel="date" role="tabpanel" aria-label="日付別">
+              <? if (model.hasTodoData && model.todoGroupsByDate && model.todoGroupsByDate.length > 0) { ?>
+                <div class="group-stack">
+                  <? for (var dateGroupIndex = 0; dateGroupIndex < model.todoGroupsByDate.length; dateGroupIndex++) { ?>
+                    <? var dateGroup = model.todoGroupsByDate[dateGroupIndex]; ?>
+                    <section class="group-card">
+                      <p class="group-label"><?= dateGroup.groupLabel ?></p>
+                      <div class="todo-grid">
+                        <? for (var dateTaskIndex = 0; dateTaskIndex < dateGroup.tasks.length; dateTaskIndex++) { ?>
+                          <? var dateTask = dateGroup.tasks[dateTaskIndex]; ?>
+                          <div class="todo-item <? if (dateTask.dueState === 'overdue') { ?>todo-item--overdue<? } else if (dateTask.dueState === 'today') { ?>todo-item--today<? } else { ?>todo-item--future<? } ?>" data-todo-id="<?= dateTask.todoId ?>">
+                            <div class="todo-row">
+                              <label class="checkbox-row" aria-label="完了候補にする">
+                                <input class="checkbox-input" type="checkbox" data-todo-complete="<?= dateTask.todoId ?>">
+                              </label>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <p class="todo-content-inline"><?= dateTask.todoContent ?></p>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="todo-due-inline"><?= dateTask.dueDateLabel ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="priority-pill priority-pill--<? if (dateTask.priority === '高') { ?>high<? } else if (dateTask.priority === '低') { ?>low<? } else { ?>medium<? } ?> todo-priority-inline"><?= dateTask.priority ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <button class="edit-toggle todo-edit-inline" type="button" data-todo-edit-toggle data-todo-edit-target="<?= dateTask.todoId ?>">編集</button>
+                            </div>
+                            <div class="edit-box todo-edit-panel" data-todo-edit-panel data-todo-edit-target="<?= dateTask.todoId ?>" hidden>
+                              <form class="edit-form" data-todo-edit-form data-todo-id="<?= dateTask.todoId ?>">
+                                <div class="edit-form-grid">
+                                  <div class="field-row">
+                                    <label class="field-label" for="customerName-date-<?= dateTask.todoId ?>">お客様名</label>
+                                    <input id="customerName-date-<?= dateTask.todoId ?>" name="customerName" class="field-input" type="text" maxlength="120" value="<?= dateTask.customerName ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="todoContent-date-<?= dateTask.todoId ?>">TODO内容</label>
+                                    <textarea id="todoContent-date-<?= dateTask.todoId ?>" name="todoContent" class="field-textarea" maxlength="1000"><?= dateTask.todoContent ?></textarea>
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="dueDate-date-<?= dateTask.todoId ?>">期限</label>
+                                    <input id="dueDate-date-<?= dateTask.todoId ?>" name="dueDate" class="field-input" type="date" value="<?= dateTask.dueDate ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="priority-date-<?= dateTask.todoId ?>">重要度</label>
+                                    <select id="priority-date-<?= dateTask.todoId ?>" name="priority" class="field-select">
+                                      <option value="高"<? if (dateTask.priority === '高') { ?> selected<? } ?>>高</option>
+                                      <option value="中"<? if (dateTask.priority === '中') { ?> selected<? } ?>>中</option>
+                                      <option value="低"<? if (dateTask.priority === '低') { ?> selected<? } ?>>低</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div class="edit-actions">
+                                  <button class="inline-button" type="submit">保存する</button>
+                                  <div class="notice" data-todo-edit-status style="display:none;"></div>
+                                </div>
+                              </form>
+                            </div>
+                            <div class="notice" data-todo-item-status style="display:none;"></div>
+                          </div>
+                        <? } ?>
+                      </div>
+                    </section>
+                  <? } ?>
+                </div>
+              <? } else { ?>
+                <div class="empty-state"><?= model.emptyMessage ?></div>
+              <? } ?>
+            </section>
+
+            <section class="todo-view" data-view-panel="priority" role="tabpanel" aria-label="重要度別">
+              <? if (model.hasTodoData && model.todoGroupsByPriority && model.todoGroupsByPriority.length > 0) { ?>
+                <div class="group-stack">
+                  <? for (var priorityGroupIndex = 0; priorityGroupIndex < model.todoGroupsByPriority.length; priorityGroupIndex++) { ?>
+                    <? var priorityGroup = model.todoGroupsByPriority[priorityGroupIndex]; ?>
+                    <section class="group-card">
+                      <p class="group-label"><?= priorityGroup.groupLabel ?></p>
+                      <div class="todo-grid">
+                        <? for (var priorityTaskIndex = 0; priorityTaskIndex < priorityGroup.tasks.length; priorityTaskIndex++) { ?>
+                          <? var priorityTask = priorityGroup.tasks[priorityTaskIndex]; ?>
+                          <div class="todo-item <? if (priorityTask.dueState === 'overdue') { ?>todo-item--overdue<? } else if (priorityTask.dueState === 'today') { ?>todo-item--today<? } else { ?>todo-item--future<? } ?>" data-todo-id="<?= priorityTask.todoId ?>">
+                            <div class="todo-row">
+                              <label class="checkbox-row" aria-label="完了候補にする">
+                                <input class="checkbox-input" type="checkbox" data-todo-complete="<?= priorityTask.todoId ?>">
+                              </label>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <p class="todo-content-inline"><?= priorityTask.todoContent ?></p>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="todo-due-inline"><?= priorityTask.dueDateLabel ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <span class="priority-pill priority-pill--<? if (priorityTask.priority === '高') { ?>high<? } else if (priorityTask.priority === '低') { ?>low<? } else { ?>medium<? } ?> todo-priority-inline"><?= priorityTask.priority ?></span>
+                              <span class="todo-separator" aria-hidden="true">｜</span>
+                              <button class="edit-toggle todo-edit-inline" type="button" data-todo-edit-toggle data-todo-edit-target="<?= priorityTask.todoId ?>">編集</button>
+                            </div>
+                            <div class="edit-box todo-edit-panel" data-todo-edit-panel data-todo-edit-target="<?= priorityTask.todoId ?>" hidden>
+                              <form class="edit-form" data-todo-edit-form data-todo-id="<?= priorityTask.todoId ?>">
+                                <div class="edit-form-grid">
+                                  <div class="field-row">
+                                    <label class="field-label" for="customerName-priority-<?= priorityTask.todoId ?>">お客様名</label>
+                                    <input id="customerName-priority-<?= priorityTask.todoId ?>" name="customerName" class="field-input" type="text" maxlength="120" value="<?= priorityTask.customerName ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="todoContent-priority-<?= priorityTask.todoId ?>">TODO内容</label>
+                                    <textarea id="todoContent-priority-<?= priorityTask.todoId ?>" name="todoContent" class="field-textarea" maxlength="1000"><?= priorityTask.todoContent ?></textarea>
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="dueDate-priority-<?= priorityTask.todoId ?>">期限</label>
+                                    <input id="dueDate-priority-<?= priorityTask.todoId ?>" name="dueDate" class="field-input" type="date" value="<?= priorityTask.dueDate ?>">
+                                  </div>
+                                  <div class="field-row">
+                                    <label class="field-label" for="priority-priority-<?= priorityTask.todoId ?>">重要度</label>
+                                    <select id="priority-priority-<?= priorityTask.todoId ?>" name="priority" class="field-select">
+                                      <option value="高"<? if (priorityTask.priority === '高') { ?> selected<? } ?>>高</option>
+                                      <option value="中"<? if (priorityTask.priority === '中') { ?> selected<? } ?>>中</option>
+                                      <option value="低"<? if (priorityTask.priority === '低') { ?> selected<? } ?>>低</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div class="edit-actions">
+                                  <button class="inline-button" type="submit">保存する</button>
+                                  <div class="notice" data-todo-edit-status style="display:none;"></div>
+                                </div>
+                              </form>
+                            </div>
+                            <div class="notice" data-todo-item-status style="display:none;"></div>
+                          </div>
+                        <? } ?>
+                      </div>
+                    </section>
+                  <? } ?>
+                </div>
+              <? } else { ?>
+                <div class="empty-state"><?= model.emptyMessage ?></div>
+              <? } ?>
+            </section>
+          </section>
+        <? } ?>
+
+        <? if (model.topPageLinkUrl) { ?>
+          <section class="footer-actions">
+            <a class="link-button link-button--primary" href="<?= model.topPageLinkUrl ?>" target="_top" rel="noopener">TOPへ戻る</a>
+          </section>
+        <? } ?>
+      </div>
+
+      <? if (!model.noticeMessage) { ?>
+        <script>
+          const todoAddForm = document.getElementById('todoAddForm');
+          const todoAddButton = document.getElementById('todoAddButton');
+          const todoAddStatus = document.getElementById('todoAddStatus');
+          const todoBulkCompleteButton = document.getElementById('todoBulkCompleteButton');
+          const todoBulkCompleteStatus = document.getElementById('todoBulkCompleteStatus');
+          const viewButtons = Array.from(document.querySelectorAll('[data-view-target]'));
+          const viewPanels = Array.from(document.querySelectorAll('[data-view-panel]'));
+          const editForms = Array.from(document.querySelectorAll('[data-todo-edit-form]'));
+          const completeCheckboxes = Array.from(document.querySelectorAll('[data-todo-complete]'));
+          let isBulkCompleting = false;
+
+          function setStatus(container, message, kind) {
+            if (!container) {
+              return;
+            }
+
+            if (!message) {
+              container.style.display = 'none';
+              container.textContent = '';
+              container.className = 'notice';
+              return;
+            }
+
+            container.style.display = 'block';
+            container.textContent = message;
+            container.className = kind === 'success' ? 'notice notice--success' : 'notice notice--error';
+          }
+
+          function setActiveView(viewName) {
+            viewButtons.forEach((button) => {
+              const isActive = String(button.dataset.viewTarget || '') === viewName;
+              button.classList.toggle('is-active', isActive);
+              button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+
+            viewPanels.forEach((panel) => {
+              const isActive = String(panel.dataset.viewPanel || '') === viewName;
+              panel.classList.toggle('is-active', isActive);
+            });
+          }
+
+          function getFormPayload(form) {
+            const formData = new FormData(form);
+            return {
+              todoId: String(form.dataset.todoId || '').trim(),
+              customerName: String(formData.get('customerName') || '').trim(),
+              todoContent: String(formData.get('todoContent') || '').trim(),
+              dueDate: String(formData.get('dueDate') || '').trim(),
+              priority: String(formData.get('priority') || '').trim(),
+            };
+          }
+
+          function getTodoPriorityClass(priority) {
+            if (priority === '高') {
+              return 'high';
+            }
+
+            if (priority === '低') {
+              return 'low';
+            }
+
+            return 'medium';
+          }
+
+          function getTodoDueStateClass(dueState) {
+            if (dueState === 'overdue') {
+              return 'todo-item--overdue';
+            }
+
+            if (dueState === 'today') {
+              return 'todo-item--today';
+            }
+
+            return 'todo-item--future';
+          }
+
+          function getTodoDisplayCustomerName(task) {
+            const customerDisplayName = String((task && task.customerDisplayName) || '').trim();
+            if (customerDisplayName) {
+              return customerDisplayName;
+            }
+
+            const customerName = String((task && task.customerName) || '').trim();
+            return customerName || 'その他';
+          }
+
+          function createMetaPill(text, className) {
+            const pill = document.createElement('span');
+            pill.className = className;
+            pill.textContent = String(text || '');
+            return pill;
+          }
+
+          function getTodoItemsById(todoId) {
+            return Array.from(document.querySelectorAll('[data-todo-id]')).filter((item) => {
+              return String(item.dataset.todoId || '') === todoId;
+            });
+          }
+
+          function getTodoCompleteCheckboxesById(todoId) {
+            return Array.from(document.querySelectorAll('[data-todo-complete]')).filter((checkbox) => {
+              return String(checkbox.dataset.todoComplete || '') === todoId;
+            });
+          }
+
+          function getSelectedTodoIds() {
+            const selectedIds = new Set();
+            Array.from(document.querySelectorAll('[data-todo-complete]:checked')).forEach((checkbox) => {
+              const todoId = String(checkbox.dataset.todoComplete || '').trim();
+              if (todoId) {
+                selectedIds.add(todoId);
+              }
+            });
+            return Array.from(selectedIds);
+          }
+
+          function setTodoPendingState(todoId, isPending) {
+            getTodoItemsById(todoId).forEach((item) => {
+              item.classList.toggle('is-complete-pending', isPending);
+              const statusContainer = item.querySelector('[data-todo-item-status]');
+              if (statusContainer) {
+                setStatus(statusContainer, '', 'error');
+              }
+            });
+
+            getTodoCompleteCheckboxesById(todoId).forEach((relatedCheckbox) => {
+              relatedCheckbox.checked = isPending;
+            });
+
+            updateBulkCompleteButton();
+          }
+
+          function setTodoCompleteDisabled(todoId, isDisabled) {
+            getTodoCompleteCheckboxesById(todoId).forEach((relatedCheckbox) => {
+              relatedCheckbox.disabled = isDisabled;
+            });
+          }
+
+          function removeTodoItems(todoId) {
+            getTodoItemsById(todoId).forEach((item) => {
+              item.remove();
+            });
+          }
+
+          function setTodoItemsHidden(todoId, isHidden) {
+            getTodoItemsById(todoId).forEach((item) => {
+              item.hidden = isHidden;
+            });
+          }
+
+          function updateBulkCompleteButton() {
+            if (!todoBulkCompleteButton) {
+              return;
+            }
+
+            const selectedCount = getSelectedTodoIds().length;
+            todoBulkCompleteButton.disabled = isBulkCompleting || selectedCount === 0;
+            todoBulkCompleteButton.textContent = selectedCount > 0 ? 'チェック済みを削除（' + selectedCount + '件）' : 'チェック済みを削除';
+          }
+
+          function completeTodoTaskAsync(todoId) {
+            return new Promise((resolve) => {
+              google.script.run
+                .withSuccessHandler((result) => {
+                  resolve({ todoId, result });
+                })
+                .withFailureHandler((error) => {
+                  resolve({ todoId, error });
+                })
+                .completeTodoTask(todoId);
+            });
+          }
+
+          function bindTodoEditForm(form) {
+            if (!form || form.dataset.todoBound === 'true') {
+              return;
+            }
+
+            form.dataset.todoBound = 'true';
+            const statusContainer = form.querySelector('[data-todo-edit-status]');
+
+            form.addEventListener('submit', (event) => {
+              event.preventDefault();
+
+              const payload = getFormPayload(form);
+              if (!payload.todoContent) {
+                setStatus(statusContainer, 'TODO内容を入力してください。', 'error');
+                return;
+              }
+
+              setStatus(statusContainer, '', 'error');
+
+              const saveButton = form.querySelector('button[type="submit"]');
+              if (saveButton) {
+                saveButton.disabled = true;
+              }
+
+              google.script.run
+                .withSuccessHandler((result) => {
+                  if (saveButton) {
+                    saveButton.disabled = false;
+                  }
+
+                  if (!result || result.success !== true) {
+                    setStatus(statusContainer, (result && result.errorMessage) || '保存に失敗しました。', 'error');
+                    return;
+                  }
+
+                  setStatus(statusContainer, '保存しました。', 'success');
+                })
+                .withFailureHandler((error) => {
+                  if (saveButton) {
+                    saveButton.disabled = false;
+                  }
+                  setStatus(statusContainer, (error && error.message) ? error.message : '保存に失敗しました。', 'error');
+                })
+                .updateTodoTask(payload);
+            });
+          }
+
+          function bindTodoCompleteCheckbox(checkbox) {
+            if (!checkbox || checkbox.dataset.todoBound === 'true') {
+              return;
+            }
+
+            checkbox.dataset.todoBound = 'true';
+
+            checkbox.addEventListener('change', () => {
+              const todoId = String(checkbox.dataset.todoComplete || '').trim();
+              if (!todoId) {
+                checkbox.checked = false;
+                return;
+              }
+
+              setTodoPendingState(todoId, checkbox.checked);
+            });
+          }
+
+          async function handleBulkCompleteClick() {
+            if (isBulkCompleting) {
+              return;
+            }
+
+            const selectedTodoIds = getSelectedTodoIds();
+            if (selectedTodoIds.length === 0) {
+              updateBulkCompleteButton();
+              return;
+            }
+
+            isBulkCompleting = true;
+            updateBulkCompleteButton();
+            setStatus(todoBulkCompleteStatus, '削除を受け付けました。', 'success');
+            selectedTodoIds.forEach((todoId) => setTodoCompleteDisabled(todoId, true));
+            selectedTodoIds.forEach((todoId) => setTodoItemsHidden(todoId, true));
+
+            let successCount = 0;
+            let failureMessage = '';
+
+            for (const todoId of selectedTodoIds) {
+              const completed = await completeTodoTaskAsync(todoId);
+              if (completed.result && completed.result.success === true) {
+                successCount += 1;
+                removeTodoItems(todoId);
+                continue;
+              }
+
+              const errorMessage = completed.error && completed.error.message
+                ? completed.error.message
+                : (completed.result && completed.result.errorMessage) || '削除に失敗しました。';
+              failureMessage = failureMessage || errorMessage;
+              setTodoItemsHidden(todoId, false);
+              setTodoPendingState(todoId, false);
+              getTodoItemsById(todoId).forEach((item) => {
+                setStatus(item.querySelector('[data-todo-item-status]'), errorMessage, 'error');
+              });
+            }
+
+            isBulkCompleting = false;
+            selectedTodoIds.forEach((todoId) => setTodoCompleteDisabled(todoId, false));
+            updateBulkCompleteButton();
+
+            if (failureMessage) {
+              setStatus(todoBulkCompleteStatus, successCount > 0 ? successCount + '件削除しました。一部は削除できませんでした。' : failureMessage, 'error');
+              return;
+            }
+
+            setStatus(todoBulkCompleteStatus, successCount + '件削除しました。', 'success');
+          }
+
+          function bindTodoEditToggle(button) {
+            if (!button || button.dataset.todoBound === 'true') {
+              return;
+            }
+
+            button.dataset.todoBound = 'true';
+            button.addEventListener('click', () => {
+              const targetId = String(button.dataset.todoEditTarget || '').trim();
+              if (!targetId) {
+                return;
+              }
+
+              const panel = document.querySelector('[data-todo-edit-panel][data-todo-edit-target="' + targetId + '"]');
+              if (!panel) {
+                return;
+              }
+
+              panel.hidden = !panel.hidden;
+            });
+          }
+
+          function bindTodoItemBehaviors(root) {
+            if (!root || !root.querySelectorAll) {
+              return;
+            }
+
+            Array.from(root.querySelectorAll('[data-todo-edit-form]')).forEach(bindTodoEditForm);
+            Array.from(root.querySelectorAll('[data-todo-complete]')).forEach(bindTodoCompleteCheckbox);
+            Array.from(root.querySelectorAll('[data-todo-edit-toggle]')).forEach(bindTodoEditToggle);
+          }
+
+          function createTodoItemElement(task) {
+            const todoId = String((task && task.todoId) || '').trim();
+            if (!todoId) {
+              return null;
+            }
+
+            const item = document.createElement('div');
+            item.className = ['todo-item', getTodoDueStateClass(task.dueState)].join(' ');
+            item.dataset.todoId = todoId;
+
+            const row = document.createElement('div');
+            row.className = 'todo-row';
+
+            const checkboxLabel = document.createElement('label');
+            checkboxLabel.className = 'checkbox-row';
+            checkboxLabel.setAttribute('aria-label', '完了候補にする');
+
+            const checkbox = document.createElement('input');
+            checkbox.className = 'checkbox-input';
+            checkbox.type = 'checkbox';
+            checkbox.dataset.todoComplete = todoId;
+
+            checkboxLabel.appendChild(checkbox);
+
+            const firstSeparator = document.createElement('span');
+            firstSeparator.className = 'todo-separator';
+            firstSeparator.setAttribute('aria-hidden', 'true');
+            firstSeparator.textContent = '｜';
+
+            const content = document.createElement('p');
+            content.className = 'todo-content-inline';
+            content.textContent = String((task && task.todoContent) || '');
+
+            const secondSeparator = document.createElement('span');
+            secondSeparator.className = 'todo-separator';
+            secondSeparator.setAttribute('aria-hidden', 'true');
+            secondSeparator.textContent = '｜';
+
+            const dueInline = document.createElement('span');
+            dueInline.className = 'todo-due-inline';
+            dueInline.textContent = String((task && task.dueDateLabel) || '期限なし');
+
+            const thirdSeparator = document.createElement('span');
+            thirdSeparator.className = 'todo-separator';
+            thirdSeparator.setAttribute('aria-hidden', 'true');
+            thirdSeparator.textContent = '｜';
+
+            const priorityInline = document.createElement('span');
+            priorityInline.className = ['priority-pill', 'priority-pill--' + getTodoPriorityClass(task && task.priority), 'todo-priority-inline'].join(' ');
+            priorityInline.textContent = String((task && task.priority) || '');
+
+            const fourthSeparator = document.createElement('span');
+            fourthSeparator.className = 'todo-separator';
+            fourthSeparator.setAttribute('aria-hidden', 'true');
+            fourthSeparator.textContent = '｜';
+
+            const editToggle = document.createElement('button');
+            editToggle.className = 'edit-toggle todo-edit-inline';
+            editToggle.type = 'button';
+            editToggle.dataset.todoEditToggle = '';
+            editToggle.dataset.todoEditTarget = todoId;
+            editToggle.textContent = '編集';
+
+            row.appendChild(checkboxLabel);
+            row.appendChild(firstSeparator);
+            row.appendChild(content);
+            row.appendChild(secondSeparator);
+            row.appendChild(dueInline);
+            row.appendChild(thirdSeparator);
+            row.appendChild(priorityInline);
+            row.appendChild(fourthSeparator);
+            row.appendChild(editToggle);
+            item.appendChild(row);
+
+            const editBox = document.createElement('div');
+            editBox.className = 'edit-box todo-edit-panel';
+            editBox.dataset.todoEditPanel = '';
+            editBox.dataset.todoEditTarget = todoId;
+            editBox.hidden = true;
+
+            const editForm = document.createElement('form');
+            editForm.className = 'edit-form';
+            editForm.dataset.todoEditForm = '';
+            editForm.dataset.todoId = todoId;
+
+            const editGrid = document.createElement('div');
+            editGrid.className = 'edit-form-grid';
+
+            const customerRow = document.createElement('div');
+            customerRow.className = 'field-row';
+
+            const customerLabel = document.createElement('label');
+            customerLabel.className = 'field-label';
+            customerLabel.setAttribute('for', 'customerName-new-' + todoId);
+            customerLabel.textContent = 'お客様名';
+
+            const customerInput = document.createElement('input');
+            customerInput.id = 'customerName-new-' + todoId;
+            customerInput.name = 'customerName';
+            customerInput.className = 'field-input';
+            customerInput.type = 'text';
+            customerInput.maxLength = 120;
+            customerInput.value = String((task && task.customerName) || '');
+
+            customerRow.appendChild(customerLabel);
+            customerRow.appendChild(customerInput);
+
+            const todoRow = document.createElement('div');
+            todoRow.className = 'field-row';
+
+            const todoLabel = document.createElement('label');
+            todoLabel.className = 'field-label';
+            todoLabel.setAttribute('for', 'todoContent-new-' + todoId);
+            todoLabel.textContent = 'TODO内容';
+
+            const todoTextarea = document.createElement('textarea');
+            todoTextarea.id = 'todoContent-new-' + todoId;
+            todoTextarea.name = 'todoContent';
+            todoTextarea.className = 'field-textarea';
+            todoTextarea.maxLength = 1000;
+            todoTextarea.value = String((task && task.todoContent) || '');
+
+            todoRow.appendChild(todoLabel);
+            todoRow.appendChild(todoTextarea);
+
+            const dueDateRow = document.createElement('div');
+            dueDateRow.className = 'field-row';
+
+            const dueDateLabel = document.createElement('label');
+            dueDateLabel.className = 'field-label';
+            dueDateLabel.setAttribute('for', 'dueDate-new-' + todoId);
+            dueDateLabel.textContent = '期限';
+
+            const dueDateInput = document.createElement('input');
+            dueDateInput.id = 'dueDate-new-' + todoId;
+            dueDateInput.name = 'dueDate';
+            dueDateInput.className = 'field-input';
+            dueDateInput.type = 'date';
+            dueDateInput.value = String((task && task.dueDate) || '');
+
+            dueDateRow.appendChild(dueDateLabel);
+            dueDateRow.appendChild(dueDateInput);
+
+            const priorityRow = document.createElement('div');
+            priorityRow.className = 'field-row';
+
+            const priorityLabel = document.createElement('label');
+            priorityLabel.className = 'field-label';
+            priorityLabel.setAttribute('for', 'priority-new-' + todoId);
+            priorityLabel.textContent = '重要度';
+
+            const prioritySelect = document.createElement('select');
+            prioritySelect.id = 'priority-new-' + todoId;
+            prioritySelect.name = 'priority';
+            prioritySelect.className = 'field-select';
+
+            ['高', '中', '低'].forEach((optionValue) => {
+              const option = document.createElement('option');
+              option.value = optionValue;
+              option.textContent = optionValue;
+              if (String((task && task.priority) || '中') === optionValue) {
+                option.selected = true;
+              }
+              prioritySelect.appendChild(option);
+            });
+
+            priorityRow.appendChild(priorityLabel);
+            priorityRow.appendChild(prioritySelect);
+
+            editGrid.appendChild(customerRow);
+            editGrid.appendChild(todoRow);
+            editGrid.appendChild(dueDateRow);
+            editGrid.appendChild(priorityRow);
+
+            const editActions = document.createElement('div');
+            editActions.className = 'edit-actions';
+
+            const saveButton = document.createElement('button');
+            saveButton.className = 'inline-button';
+            saveButton.type = 'submit';
+            saveButton.textContent = '保存する';
+
+            const editStatus = document.createElement('div');
+            editStatus.className = 'notice';
+            editStatus.dataset.todoEditStatus = '';
+            editStatus.style.display = 'none';
+
+            editActions.appendChild(saveButton);
+            editActions.appendChild(editStatus);
+
+            editForm.appendChild(editGrid);
+            editForm.appendChild(editActions);
+            editBox.appendChild(editForm);
+
+            const itemStatus = document.createElement('div');
+            itemStatus.className = 'notice';
+            itemStatus.dataset.todoItemStatus = '';
+            itemStatus.style.display = 'none';
+
+            item.appendChild(editBox);
+            item.appendChild(itemStatus);
+
+            return item;
+          }
+
+          function appendTodoTaskToCustomerView(task) {
+            const customerPanel = document.querySelector('[data-view-panel="customer"]');
+            if (!customerPanel) {
+              return false;
+            }
+
+            const todoItem = createTodoItemElement(task);
+            if (!todoItem) {
+              return false;
+            }
+
+            const customerDisplayName = getTodoDisplayCustomerName(task);
+            let groupStack = customerPanel.querySelector('.group-stack');
+
+            if (!groupStack) {
+              const emptyState = customerPanel.querySelector('.empty-state');
+              if (emptyState) {
+                emptyState.remove();
+              }
+
+              groupStack = document.createElement('div');
+              groupStack.className = 'group-stack';
+              customerPanel.appendChild(groupStack);
+            }
+
+            let groupCard = null;
+            Array.from(groupStack.querySelectorAll('.group-card')).some((candidate) => {
+              const groupLabel = candidate.querySelector('.group-label');
+              if (groupLabel && String(groupLabel.textContent || '').trim() === customerDisplayName) {
+                groupCard = candidate;
+                return true;
+              }
+
+              return false;
+            });
+
+            if (!groupCard) {
+              groupCard = document.createElement('section');
+              groupCard.className = 'group-card';
+
+              const groupLabel = document.createElement('p');
+              groupLabel.className = 'group-label';
+              groupLabel.textContent = customerDisplayName;
+
+              const todoGrid = document.createElement('div');
+              todoGrid.className = 'todo-grid';
+
+              groupCard.appendChild(groupLabel);
+              groupCard.appendChild(todoGrid);
+              groupStack.appendChild(groupCard);
+            }
+
+            const todoGrid = groupCard.querySelector('.todo-grid');
+            if (!todoGrid) {
+              return false;
+            }
+
+            todoGrid.appendChild(todoItem);
+            bindTodoItemBehaviors(todoItem);
+            return true;
+          }
+
+          viewButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+              setActiveView(String(button.dataset.viewTarget || 'customer'));
+            });
+          });
+
+          bindTodoItemBehaviors(document);
+          updateBulkCompleteButton();
+
+          if (todoBulkCompleteButton) {
+            todoBulkCompleteButton.addEventListener('click', handleBulkCompleteClick);
+          }
+
+          if (todoAddForm) {
+            todoAddForm.addEventListener('submit', (event) => {
+              event.preventDefault();
+
+              const payload = {
+                customerName: String(document.getElementById('todoCustomerName').value || '').trim(),
+                todoContent: String(document.getElementById('todoContent').value || '').trim(),
+                dueDate: String(document.getElementById('todoDueDate').value || '').trim(),
+                priority: String(document.getElementById('todoPriority').value || '').trim(),
+              };
+
+              if (!payload.todoContent) {
+                setStatus(todoAddStatus, 'TODO内容を入力してください。', 'error');
+                return;
+              }
+
+              todoAddButton.disabled = true;
+              setStatus(todoAddStatus, '', 'error');
+
+              google.script.run
+                .withSuccessHandler((result) => {
+                  todoAddButton.disabled = false;
+
+                  if (!result || result.success !== true) {
+                    setStatus(todoAddStatus, (result && result.errorMessage) || '保存に失敗しました。', 'error');
+                    return;
+                  }
+
+                  if (result.task) {
+                    appendTodoTaskToCustomerView(result.task);
+                  } else {
+                    console.warn('createTodoTask result.task 未返却');
+                  }
+
+                  todoAddForm.reset();
+                  document.getElementById('todoPriority').value = '中';
+                  setStatus(todoAddStatus, 'TODOを保存しました。', 'success');
+                })
+                .withFailureHandler((error) => {
+                  todoAddButton.disabled = false;
+                  setStatus(todoAddStatus, (error && error.message) ? error.message : '保存に失敗しました。', 'error');
+                })
+                .createTodoTask(payload);
+            });
+          }
+        </script>
+      <? } ?>
+    </main>
+  </body>
+</html>

@@ -46,6 +46,7 @@ function getChatWebhookPropertyName_(target) {
 }
 
 const OUTPUT_CONFIG_SHEET_NAME_ = 'output_config';
+const SEARCH_RESULT_LIMIT_ = 30;
 const OUTPUT_CONFIG_DEFAULTS_ = [
   { key: 'daily_report_enabled', value: true, description: '個人日報通知の有効・無効' },
   { key: 'manager_summary_enabled', value: true, description: '管理職向け日報まとめ通知の有効・無効' },
@@ -261,7 +262,7 @@ function getManagerSummaryData() {
   }
 }
 
-function getMyDealRecords(viewName, validationOverride) {
+function getMyDealRecords(viewName, validationOverride, searchOptions) {
   const normalizedViewName = normalizeMyDealRecordsViewName_(viewName);
   if (!normalizedViewName) {
     return {
@@ -300,6 +301,15 @@ function getMyDealRecords(viewName, validationOverride) {
     };
   }
 
+  const normalizedSearch = normalizeMyDealRecordSearchOptions_(normalizedViewName, searchOptions);
+  if (!normalizedSearch.success) {
+    return {
+      success: false,
+      records: [],
+      errorMessage: normalizedSearch.errorMessage,
+    };
+  }
+
   let sheet;
   try {
     sheet = getDealRecordsSheet_();
@@ -323,8 +333,12 @@ function getMyDealRecords(viewName, validationOverride) {
   const indexes = getDailyReportColumnIndexes_(values[0]);
   const now = new Date();
   const config = getOutputConfig();
-  const records = [];
+  const candidates = [];
   const ownUserKey = String(validation.userKey || '').trim();
+  const normalizedOwnUserKey = normalizeTodoUserKeyForComparison_(ownUserKey);
+  const activeTodoSourceRecordIds = normalizedViewName === 'daily'
+    ? getActiveTodoSourceRecordIdsForDailyView_(ownUserKey)
+    : new Set();
   const sameBranchUserKeys = normalizedViewName === 'summary' && ['manager'].includes(role)
     ? new Set(getUserKeysInSameBranch_(String(validation.branchName || '').trim()))
     : null;
@@ -336,7 +350,7 @@ function getMyDealRecords(viewName, validationOverride) {
       continue;
     }
 
-    if (!isWithinMyDealRecordWindow_(normalizedViewName, createdAt, now, config)) {
+    if (!isWithinMyDealRecordSearchPeriod_(createdAt, now, config, normalizedSearch)) {
       continue;
     }
 
@@ -350,10 +364,36 @@ function getMyDealRecords(viewName, validationOverride) {
       continue;
     }
 
+    if (normalizedSearch.staffUserKey && rowUserKey !== normalizedSearch.staffUserKey) {
+      continue;
+    }
+
+    if (normalizedSearch.staffName
+      && String(row[indexes.userName] || '').trim() !== normalizedSearch.staffName) {
+      continue;
+    }
+
     const recordDisplay = buildDealRecordDisplay_(row, indexes, createdAt);
     recordDisplay.canAdd = canAddDealAddition_(role, ownUserKey, rowUserKey);
-    records.push(recordDisplay);
+    recordDisplay.canCreateTodo = normalizedViewName === 'daily'
+      && normalizeTodoUserKeyForComparison_(rowUserKey) === normalizedOwnUserKey;
+    recordDisplay.hasActiveTodo = activeTodoSourceRecordIds.has(recordDisplay.recordId);
+    candidates.push({ record: recordDisplay, row });
   }
+
+  const additionsByCandidateRecordId = getDealAdditionsByRecordIds_(
+    candidates.map((candidate) => candidate.record.recordId),
+  );
+  const records = candidates
+    .filter((candidate) => isMyDealRecordSearchMatch_(
+      candidate.row,
+      indexes,
+      candidate.record,
+      additionsByCandidateRecordId[candidate.record.recordId],
+      normalizedSearch,
+      normalizedViewName,
+    ))
+    .map((candidate) => candidate.record);
 
   records.sort((left, right) => {
     const leftTime = left.createdAtSortKey ? left.createdAtSortKey.getTime() : 0;
@@ -365,10 +405,12 @@ function getMyDealRecords(viewName, validationOverride) {
     return String(right.recordId || '').localeCompare(String(left.recordId || ''), 'ja');
   });
 
-  const additionsByRecordId = getDealAdditionsByRecordIds_(records.map((record) => record.recordId));
+  const limitedRecords = records.slice(0, SEARCH_RESULT_LIMIT_);
 
-  const enrichedRecords = records.map((record) => {
-    const additions = Array.isArray(additionsByRecordId[record.recordId]) ? additionsByRecordId[record.recordId] : [];
+  const enrichedRecords = limitedRecords.map((record) => {
+    const additions = Array.isArray(additionsByCandidateRecordId[record.recordId])
+      ? additionsByCandidateRecordId[record.recordId]
+      : [];
     return {
       recordId: record.recordId,
       createdAtLabel: record.createdAtLabel,
@@ -377,11 +419,15 @@ function getMyDealRecords(viewName, validationOverride) {
       branchName: record.branchName,
       userName: record.userName,
       customerName: record.customerName,
+      todoItem: record.todoItem,
+      deadlineNormalized: record.deadlineNormalized,
       inputMethod: record.inputMethod,
       dealTheme: record.dealTheme,
       dealContent: record.dealContent,
       dealSummary: record.dealSummary,
       canAdd: record.canAdd === true,
+      canCreateTodo: record.canCreateTodo === true,
+      hasActiveTodo: record.hasActiveTodo === true,
       additions,
     };
   });
@@ -391,6 +437,157 @@ function getMyDealRecords(viewName, validationOverride) {
     records: enrichedRecords,
     errorMessage: '',
   };
+}
+
+function normalizeMyDealRecordSearchOptions_(viewName, searchOptions) {
+  const options = searchOptions && typeof searchOptions === 'object' ? searchOptions : {};
+  const defaultPeriod = viewName === 'daily' ? 'last_30_days' : 'today';
+  const period = String(options.period || defaultPeriod).trim().toLowerCase();
+  const allowedPeriods = ['today', 'previous_day', 'last_7_days', 'last_30_days', 'custom'];
+  if (!allowedPeriods.includes(period)) {
+    return { success: false, errorMessage: 'Invalid search period.' };
+  }
+
+  const startDateText = String(options.startDate || '').trim();
+  const endDateText = String(options.endDate || '').trim();
+  const customStartDate = period === 'custom' ? parseMyDealRecordSearchDate_(startDateText, false) : null;
+  const customEndDate = period === 'custom' ? parseMyDealRecordSearchDate_(endDateText, true) : null;
+  if (period === 'custom' && (!customStartDate || !customEndDate)) {
+    return { success: false, errorMessage: 'Enter a valid start date and end date.' };
+  }
+
+  if (customStartDate && customEndDate && customStartDate.getTime() > customEndDate.getTime()) {
+    return { success: false, errorMessage: 'The start date must not be later than the end date.' };
+  }
+
+  return {
+    success: true,
+    period,
+    startDate: customStartDate,
+    endDate: customEndDate,
+    keyword: normalizeMyDealRecordSearchText_(options.keyword),
+    staffUserKey: viewName === 'summary' ? String(options.staffUserKey || '').trim() : '',
+    staffName: viewName === 'summary' ? String(options.staffName || '').trim() : '',
+  };
+}
+
+function parseMyDealRecordSearchDate_(value, endOfDay) {
+  const normalizedValue = String(value || '').trim().replace(/-/g, '/');
+  if (!/^\d{4}\/\d{2}\/\d{2}$/.test(normalizedValue)) {
+    return null;
+  }
+
+  try {
+    const parsedDate = Utilities.parseDate(
+      `${normalizedValue} ${endOfDay ? '23:59:59' : '00:00:00'}`,
+      WRITE_RECORD_TIMEZONE_,
+      'yyyy/MM/dd HH:mm:ss',
+    );
+    const normalizedDateText = Utilities.formatDate(parsedDate, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
+    return normalizedDateText === normalizedValue ? parsedDate : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function isWithinMyDealRecordSearchPeriod_(createdAt, currentDate, config, searchOptions) {
+  let startDate;
+  let endDate;
+  const today = new Date(currentDate.getTime());
+  const todayText = Utilities.formatDate(today, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd');
+
+  if (searchOptions.period === 'custom') {
+    startDate = getCollectionWindowStart_(searchOptions.startDate, config.collectFromHour);
+    endDate = getCollectionWindowEnd_(searchOptions.endDate, currentDate, config.collectToHour);
+  } else if (searchOptions.period === 'previous_day') {
+    const previousDay = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    startDate = getCollectionWindowStart_(previousDay, config.collectFromHour);
+    endDate = getCollectionWindowEnd_(previousDay, currentDate, config.collectToHour);
+  } else {
+    const dayCount = searchOptions.period === 'last_7_days'
+      ? 7
+      : searchOptions.period === 'last_30_days'
+        ? 30
+        : 1;
+    const firstDay = new Date(today.getTime() - (dayCount - 1) * 24 * 60 * 60 * 1000);
+    startDate = getCollectionWindowStart_(firstDay, config.collectFromHour);
+    endDate = getCollectionWindowEnd_(today, currentDate, config.collectToHour);
+  }
+
+  if (searchOptions.period === 'today' && todayText !== Utilities.formatDate(createdAt, WRITE_RECORD_TIMEZONE_, 'yyyy/MM/dd')) {
+    return false;
+  }
+
+  return createdAt.getTime() >= startDate.getTime() && createdAt.getTime() <= endDate.getTime();
+}
+
+function isMyDealRecordSearchMatch_(row, indexes, record, additions, searchOptions, viewName) {
+  if (!searchOptions.keyword) {
+    return true;
+  }
+
+  const searchableValues = [
+    row[indexes.customerName],
+    indexes.storeName >= 0 ? row[indexes.storeName] : '',
+    row[indexes.dealTheme],
+    row[indexes.dealContent],
+  ];
+  if (viewName === 'daily') {
+    searchableValues.push(row[indexes.todoItem]);
+  }
+
+  (Array.isArray(additions) ? additions : []).forEach((addition) => {
+    searchableValues.push(addition.additionalRecord);
+  });
+
+  return searchableValues.some((value) => normalizeMyDealRecordSearchText_(value).includes(searchOptions.keyword));
+}
+
+function normalizeMyDealRecordSearchText_(value) {
+  return String(value || '').replace(/[\s\u3000]+/g, ' ').trim().toLowerCase();
+}
+
+function normalizeTodoUserKeyForComparison_(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getActiveTodoSourceRecordIdsForDailyView_(userKey) {
+  const normalizedUserKey = normalizeTodoUserKeyForComparison_(userKey);
+  if (!normalizedUserKey) {
+    return new Set();
+  }
+
+  let sheet;
+  try {
+    sheet = getTodoTasksSheet_();
+  } catch (error) {
+    return new Set();
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return new Set();
+  }
+
+  const indexes = getTodoTasksColumnIndexes_(values[0]);
+  const sourceRecordIds = new Set();
+
+  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
+    const row = values[rowIndex];
+    const rowUserKey = normalizeTodoUserKeyForComparison_(row[indexes.userKey]);
+    if (rowUserKey !== normalizedUserKey) {
+      continue;
+    }
+
+    const sourceRecordId = String(row[indexes.sourceRecordId] || '').trim();
+    if (!sourceRecordId) {
+      continue;
+    }
+
+    sourceRecordIds.add(sourceRecordId);
+  }
+
+  return sourceRecordIds;
 }
 
 function addDealAddition(recordId, additionalRecord) {
@@ -764,6 +961,8 @@ function buildDealRecordDisplay_(row, indexes, createdAt) {
   const branchName = String(row[indexes.branchName] || '').trim();
   const userName = String(row[indexes.userName] || '').trim();
   const customerName = String(row[indexes.customerName] || '').trim();
+  const todoItem = String(row[indexes.todoItem] || '').trim();
+  const deadlineNormalized = normalizeTodoDueDate_(row[indexes.deadlineNormalized]);
   const inputMethod = String(row[indexes.inputMethod] || '').trim();
   const dealTheme = String(row[indexes.dealTheme] || '').trim();
   const dealContent = String(row[indexes.dealContent] || '').trim();
@@ -778,10 +977,15 @@ function buildDealRecordDisplay_(row, indexes, createdAt) {
     branchName,
     userName,
     customerName,
+    todoItem,
+    deadlineNormalized,
     inputMethod,
     dealTheme,
     dealContent,
     dealSummary,
+    canAdd: false,
+    canCreateTodo: false,
+    hasActiveTodo: false,
   };
 }
 
@@ -818,9 +1022,16 @@ function getDailyReportColumnIndexes_(headers) {
 
   const recordIdIndex = normalizedHeaders.indexOf('record_id');
   const createdAtIndex = normalizedHeaders.indexOf('created_at');
+  const todoItemIndex = normalizedHeaders.indexOf('todo_item');
+  const deadlineNormalizedIndex = normalizedHeaders.indexOf('deadline_normalized');
   const branchNameIndex = normalizedHeaders.indexOf('branch_name');
   const userNameIndex = normalizedHeaders.indexOf('user_name');
   const customerNameIndex = normalizedHeaders.indexOf('customer_name');
+  const storeNameIndex = [
+    'store_name_gps',
+    'store_name',
+    'store_name_normalized',
+  ].map((header) => normalizedHeaders.indexOf(header)).find((index) => index >= 0);
   const dealThemeIndex = normalizedHeaders.indexOf('deal_theme');
   const dealContentIndex = normalizedHeaders.indexOf('deal_content');
   const inputMethodIndex = normalizedHeaders.indexOf('input_method');
@@ -829,6 +1040,8 @@ function getDailyReportColumnIndexes_(headers) {
   if ([
     recordIdIndex,
     createdAtIndex,
+    todoItemIndex,
+    deadlineNormalizedIndex,
     branchNameIndex,
     userNameIndex,
     customerNameIndex,
@@ -843,9 +1056,12 @@ function getDailyReportColumnIndexes_(headers) {
   return {
     recordId: recordIdIndex,
     createdAt: createdAtIndex,
+    todoItem: todoItemIndex,
+    deadlineNormalized: deadlineNormalizedIndex,
     branchName: branchNameIndex,
     userName: userNameIndex,
     customerName: customerNameIndex,
+    storeName: storeNameIndex === undefined ? -1 : storeNameIndex,
     dealTheme: dealThemeIndex,
     dealContent: dealContentIndex,
     inputMethod: inputMethodIndex,
@@ -1026,6 +1242,10 @@ function groupDailyReportRecords_(records) {
       userName: String(record.userName || '').trim(),
       canAdd: record.canAdd === true,
       customerName: String(record.customerName || '').trim(),
+      todoItem: String(record.todoItem || '').trim(),
+      deadlineNormalized: String(record.deadlineNormalized || '').trim(),
+      canCreateTodo: record.canCreateTodo === true,
+      hasActiveTodo: record.hasActiveTodo === true,
       inputMethod: String(record.inputMethod || '').trim(),
       dealTheme: String(record.dealTheme || '').trim(),
       dealContent: String(record.dealContent || '').trim(),

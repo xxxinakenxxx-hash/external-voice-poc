@@ -376,13 +376,16 @@
           <p class="mobile-user-name"><?= model.userName ?></p>
         </section>
 
-        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl) { ?>
+        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl || model.todoPageLinkUrl) { ?>
           <section class="mobile-action">
             <? if (model.inputPageLinkUrl) { ?>
               <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
             <? } ?>
             <? if (model.dailyReportLinkUrl) { ?>
-              <a class="link-button<? if (model.inputPageLinkUrl) { ?> link-button--secondary<? } ?>" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+              <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+            <? } ?>
+            <? if (model.todoPageLinkUrl) { ?>
+              <a class="link-button link-button--secondary" href="<?= model.todoPageLinkUrl ?>" target="_top" rel="noopener">TODOを見る</a>
             <? } ?>
           </section>
           <p class="mobile-footnote">会社のGoogleアカウントで本人確認済みです</p>
@@ -405,7 +408,7 @@
           <section class="notice notice--error" aria-live="assertive"><?= model.noticeMessage ?></section>
         <? } ?>
 
-        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl) { ?>
+        <? if (model.inputPageLinkUrl || model.dailyReportLinkUrl || model.todoPageLinkUrl) { ?>
           <section class="card">
             <p class="label">利用できる画面</p>
             <div class="button-stack">
@@ -413,7 +416,10 @@
                 <a class="link-button" href="<?= model.inputPageLinkUrl ?>" target="_top" rel="noopener">商談メモを入力する</a>
               <? } ?>
               <? if (model.dailyReportLinkUrl) { ?>
-                <a class="link-button<? if (model.inputPageLinkUrl) { ?> link-button--secondary<? } ?>" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+                <a class="link-button link-button--secondary" href="<?= model.dailyReportLinkUrl ?>" target="_top" rel="noopener">日報を見る</a>
+              <? } ?>
+              <? if (model.todoPageLinkUrl) { ?>
+                <a class="link-button link-button--secondary" href="<?= model.todoPageLinkUrl ?>" target="_top" rel="noopener">TODOを見る</a>
               <? } ?>
             </div>
             <p class="button-note">表示されるボタンは role に応じて自動で切り替わります。</p>

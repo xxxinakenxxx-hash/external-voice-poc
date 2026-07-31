@@ -4,14 +4,43 @@
 このファイルは、別チャットに引き継いでも単体で現在地が復元できることを目的とする。
 claudeはプロジェクト内でチャット連携を持たないため、本ファイルが唯一の引き継ぎ手段である。
 
-最終更新：2026-07-20（R-01実装・反映完了。R-03実機確認で判明したiPhone位置情報案内不足を修正中。OUT-04の履歴は保持。）
+最終更新：2026-07-31（SRCH-04の最終静的確認・ユーザー実機確認・「改善不具合対応」シートH17/H18更新を完了。最終Git commit/pushを実施中。`clasp push --force`はSRCH-03後の最新ソースが12:37:04に反映済みで、その後のソース変更がないため未実行。）
 
 ---
 
 ## 1. 現在地
 
-- 現在の状態：**R-01の実装・静的チェック・モック確認・2回の `clasp push --force` は完了。R-02・R-03は未着手。コミット前の最終整備中。** `setupSheets()` は実行経路がなく未実行だが、隔離モック確認で代替した。OUT-04の履歴は残すが、現在地としては扱わない。
+- **SRCH-01（共通検索処理）は完了確定。** `src/06_output.gs` に共通検索条件の正規化、今日・前日・過去7日・過去30日・期間指定、キーワード部分一致、管理職向け担当者条件、権限先行判定、追記の一括結合、結果上限30件を実装した。個人日報ではToDoを検索対象に含め、管理職向けではToDoを検索対象から除外している。検索結果は新しい順で返し、`original_text`、メールアドレス、`user_key` は返却モデルに含めていない。構文確認、分離モック確認、`git diff --check` は成功。SRCH-01の変更対象は `src/06_output.gs` と本台帳のみで、`src/01_auth.gs` は変更不要だった。`clasp push --force` は 2026-07-31 11:55:21 に15ファイル反映済み。画面変更はなく、デプロイ更新・実機確認・実データ操作は対象外。次の状態はSRCH-02の実装指示・着手待ち、SRCH-02未着手。
+- **SRCH-02（個人日報検索）は完了確定。** `src/01_auth.gs` の個人日報ルートで検索条件を受け取り、`src/daily.html` に今日・前日・過去7日・過去30日・期間指定、開始日・終了日、キーワード、検索、条件クリア、結果件数、0件、入力エラー表示を追加し、SRCH-01の `getMyDealRecords('daily', validation, searchOptions)` へ接続した。初期値は従来どおり過去30日。日付グループ、TODOチェック、詳細開閉、追記0件非表示、追記リンクを維持した。`src/summary.html`、DB、権限、実データは変更していない。構文確認、`git diff --check`、隔離確認、`clasp push --force`（12:10:49、15ファイル反映）に成功。ユーザー実機で初期30日、キーワード「森と山」、期間指定（2026/07/24〜2026/07/31）、0件（2026/07/01〜2026/07/04・2026/08/01〜2026/08/08）、スマートフォン表示を確認し、完了確定とした。SRCH-03未着手。
+- **SRCH-03（管理職向け日報検索）は完了確定。** `src/01_auth.gs` でS-06の検索条件を受け取り、現行閲覧範囲内の有効担当者名だけを検索候補として生成し、`src/summary.html` に今日・前日・過去7日・過去30日・期間指定、開始日・終了日、担当者、キーワード、検索、条件クリア、結果件数、0件、入力エラー表示を追加してSRCH-01の `getMyDealRecords('summary', validation, searchOptions)` へ接続した。担当者選択値に `user_key` を使わず、HTMLへ `user_key`・メールアドレス・`original_text` を渡していない。管理職向けのキーワード対象は顧客名／店舗名、案件テーマ、商談内容、追記内容で、ToDoは対象外のまま維持した。managerは同一営業所、sales_support/sysadminは現行範囲を維持し、追記表示・追記権限・圧縮表示・`src/daily.html` は変更していない。`.gs`構文確認、重複ID確認、禁止情報のHTML非混入確認、`git diff --check`、隔離モック確認に成功した。`clasp push --force`は12:37:04に15ファイル反映済み。ユーザー実機で初期表示が今日、期間切替、担当者検索、キーワード検索、検索条件保持、0件・不正期間時の表示、既存表示およびPC・スマートフォン表示を確認し、完了確定とした。SRCH-04未着手。
+- **SRCH-04（統合確認・公開完了）はユーザー確認済み。** 個人日報で初期30日、期間指定、キーワード、ToDo検索、追記検索、0件、不正日付、追記ボタンを確認済み。管理職向け日報まとめで初期当日、期間指定、担当者、キーワード、0件、不正日付、権限範囲、追記表示を確認済み。`sales`、`manager`、`sales_support`、`sysadmin`の閲覧範囲と追記権限を確認済み。`original_text`、メールアドレス、`user_key`、トークン等が表示されないことを確認済み。既存機能の回帰はなし。最終静的確認、`git diff --check`、前工程の隔離確認結果の引継ぎを完了した。SRCH-03後の最新ソースが12:37:04に`clasp push --force`済みで、その後ソース変更がないためSRCH-04では再実行していない。`docs/TEST_PLAN.md`へ結果を記録済み。「改善不具合対応」シートH17/H18を「完了」へ更新済み。最終Git commit/pushをこの工程で実施する。**
+- 現在の状態：**R-03はユーザー確認により完了確定済み。R-03未完了表記は ChatGPT 側の指示・記録漏れとして補正し、再要求・再実装・再確認には進まない。TD-01は完了確定済み。TD-02はユーザーの最終実画面確認により完了確定済み。TD-03もユーザー実画面確認により完了確定済み。TD-04は、TD-02戻し修正（完了削除前の確認ダイアログ削除）後に `clasp push --force` 成功、ユーザーによるデプロイA更新後のPC確認OK、iPhone確認OK、確認用TODOなしを確認済み。`TEST_PLAN.md` と本台帳へ結果を記録したため完了確定済み。TD-04外の後続改善として、TODO完了操作を「チェック→取り消し線→チェック済みを削除」方式へ変更し、ユーザー実画面確認OK。削除ボタン押下後に対象行を先に画面から隠す体感速度改善も実装し、`clasp push --force` 後のユーザー実画面確認OK。Git操作、デプロイ操作は未実施。TD系は一区切り。** OUT-04の履歴は残すが、現在地としては扱わない。
+- 追記：軽微改善パックとして、改善不具合対応シートの行4・行10・行19・行20を対象に、個人日報と日報まとめの表示調整を実装・静的確認・`clasp push --force`・デプロイA更新後のユーザー実画面確認まで完了したため、完了確定とする。個人日報はタイトル下に「□にチェックするとTODOにコピーされます」を追加し、詳細内の案件テーマを `テーマ：内容` 表記へ変更した。日報まとめは管理職が全員分を一覧しやすいよう、1件ごとの表示を要約中心に圧縮し、一覧では案件テーマ・商談内容を独立した縦長項目として表示しない。ユーザー確認結果は、補足文表示OK、管理職向け日報まとめOK、既存動作OKである。テーマ表記は、テンプレート側の括弧削除まで完了し、既存保存データに含まれる括弧はデータ由来のため無理に補正しない方針とした。静的確認は `daily.html` のHTML内JavaScript抽出後 `node --check` 成功、`git diff --check` 成功、表示要素の静的確認成功。`clasp push --force` は初回 `Pushed 15 files at 9:16:09.`、テーマ表記の括弧削除後の再反映 `Pushed 15 files at 9:22:54.` を確認した。前日表示、検索機能、改善不具合報告フォーム作成、Git操作はこの軽微改善パックには含めない。
 - 追記：前回の停止状態から、R-01本体の実装やファイル編集には進めていない。Git基準状態の確認と `TASK_CURRENT.md` の現在地補正のみを行う。
+- 追記：R-03はユーザー確認により完了確定済みとする。R-03の再実装・再確認は行わない。TODO付加の前提整理だけを進め、TD-01本体はまだ未着手である。
+- 追記：TD-01の実装として `src/00_setup.gs` に `todo_tasks` シート定義を追加し、`src/07_todo.gs` に `getMyTodoTasks`・`createTodoTask`・`createTodoFromDeal`・`updateTodoTask`・`completeTodoTask` を実装した。`docs/DB_SCHEMA.md` と `docs/API_INTERNAL.md` も TD-01 内容へ更新済みである。静的確認は `node --check` 成功、隔離モックは sales/sysadmin 成功・manager/sales_support 拒否・本人TODOのみ取得・他人recordId拒否・重複拒否・完了削除・deal_records/deal_additions不変・機微情報非返却を確認して成功した。`clasp push --force` は再実行で成功し、`Pushed 14 files at 17:52:58.` を確認した。ユーザーが Apps Script エディタで `setupSheets()` を1回実行し、`todo_tasks` シート作成と A〜H の見出し（`todo_id` / `user_key` / `customer_name` / `todo_content` / `due_date` / `priority` / `source_record_id` / `created_at`）を確認済みである。実シート作成確認まで完了したため、TD-01は完了確定とする。`clasp status` では tracked files に `src/00_setup.gs` と `src/07_todo.gs` を含むことを確認済みである。
+- 追記：TD-02の実装を完了した。変更したファイルは `src/01_auth.gs`、`src/07_todo.gs`、`src/top.html`、`src/todo.html`、`docs/SCREEN_FLOW.md`、`docs/SPEC_WEBAPP.md`、`tasks/TASK_CURRENT.md`。`doGet(e)` に `view=todo` 分岐を追加し、`createTodoPageModel_()` を新設した。TOP には `sales` と `sysadmin` だけに `TODOを見る` を追加し、`manager` と `sales_support` には出さないようにした。`todo.html` を新規作成し、本人TODO一覧、直接追加、編集、完了削除、お客様別・日付別・重要度別の表示切替を実装した。`user_key`、メールアドレス、トークン、認証情報は HTML に渡していない。`todo_tasks`、`deal_records`、`deal_additions` の実データ操作はしていない。`node --check` と `todo.html` の内包 JavaScript 構文確認、`git diff --check`、隔離モック確認は成功した。`src/00_setup.gs` に既存の範囲外差分が残っているため、今回の `clasp push --force` は未実行。Git 操作、デプロイ操作、Drive 操作もしていない。次の状態は TD-02 のユーザー確認待ち、TD-03 未着手。
+- 追記：TD-02の `TODOを見る` が公開TOPで出なかった原因は `src/01_auth.gs` の `getTodoPageUrl_()` 未定義だった。`getTodoPageUrl_()` を追加して `ScriptApp.getService().getUrl()` に `?view=todo` を付けるように修正し、`sales` / `sysadmin` のみTODO導線あり、`manager` / `sales_support` なしの方針は維持した。静的確認と隔離確認を再度行い、`clasp push --force` を実行して `Pushed 15 files at 10:44:48.` で反映済み。`src/00_setup.gs` には差分なし。Git・デプロイ・Drive操作はしていない。次の状態はユーザーの公開TOP再確認待ち、TD-03未着手。
+- 追記：その後の切り分けで、`doGet(e)` には `view=todo` 分岐があり、`src/todo.html` も `clasp status` の tracked files に含まれていることを確認した。`src/07_todo.gs` の `createTodoPageModel_()` は `sales` / `sysadmin` のみ許可し、`sysadmin` を拒否していない。`clasp deployments` では `@HEAD` と複数の版付きデプロイが見えており、公開URLが旧版デプロイを指している場合は `?view=todo` が開かないままになる。現時点の判断は、ローカルコードの `view=todo` 対応は成立しているが、公開側のデプロイ版ズレの可能性が高い、である。こちらではデプロイ操作はしていない。TD-03未着手。
+- 追記：TD-02のTODO追加後に白画面になった件は、`src/todo.html` の成功後再表示が `window.location.reload()` だったことが原因候補だったため、`?view=todo` を明示した `window.top.location.replace(...)` へ切り替えた。TODO追加成功時は公開TOPではなくTODO画面へ戻し、失敗時は入力内容を保持したまま画面内にエラーを出す方針に寄せた。`todo.html` の変更後は構文確認と差分確認を実施済み。`clasp push --force` はこれから反映する。
+- 追記：白画面対策の変更を `clasp push --force` で反映し、`Pushed 15 files at 11:08:23.` を確認した。`todo.html` の成功後再表示は `window.top.location.replace(...?view=todo)` を優先し、失敗時は入力内容を消さずに画面内エラーを出す構成のまま維持した。`node --check` 相当の構文確認、`todo.html` のJSモック確認、`git diff --check` は成功した。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：白画面の再修正として、`src/01_auth.gs` の TODO 画面モデル受け渡しに `todoPageLinkUrl` を明示し、`src/todo.html` 側の `reloadAfterSuccess()` は画面URLを `window.location.href` から作らず、サーバー側から渡された `TODO_PAGE_URL` に直接戻す形へ修正した。これで `script.googleusercontent.com/userCodeAppPanel?view=todo` を踏まず、正しい `/exec?view=todo` へ戻す。追加・編集・完了削除の成功後も同じ URL を使う。`node --check`、`todo.html` 本体JSの静的確認、隔離モック確認、`git diff --check` は成功した。`clasp push --force` は成功済みで `Pushed 15 files at 11:08:23.` を確認した。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：TD-02のTODO追加後の白画面を止めるため、自動遷移そのものを廃止した。`src/todo.html` から `reloadAfterSuccess()` と `TODO_PAGE_URL` を使う遷移処理を外し、TODO追加成功時は「TODOを保存しました。画面を開き直すと一覧に反映されます。」、編集成功時は「保存しました。画面を開き直すと一覧に反映されます。」、完了削除成功時は「削除しました。画面を開き直すと反映されます。」を画面内に表示する方式へ切り替えた。TODO追加時は入力欄をクリアし、重要度を中へ戻す。削除時は対象行を画面から外す。`src/07_todo.gs` と `src/01_auth.gs` は変更していない。`todo.html` のJS構文確認、`git diff --check` は成功した。`clasp push --force` はこれから実行する。
+- 追記：成功後遷移の廃止を `clasp push --force` で反映し、`Pushed 15 files at 11:59:45.` を確認した。`todo.html` は成功後に画面内メッセージだけを出し、入力欄クリア・重要度を中へ戻す・削除時の行除去を行う。`window.location.reload()`、`window.location.replace()`、`window.top.location.replace()`、`window.location.href` を使った再表示はやめた。`src/07_todo.gs` と `src/01_auth.gs` は変更していない。`todo.html` のJS構文確認、隔離モック確認、`git diff --check` は成功した。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：TD-01由来の `src/00_setup.gs` 残差分を整理した。`todo_tasks` シート定義を `src/00_setup.gs` から削除し、`todo_tasks` の実シートはユーザー実行済み・A〜H見出し確認済みのまま変更していない。`setupSheets()` は実行していない。スプレッドシート操作はしていない。`clasp push --force` は未実行のまま。TD-02 の GAS 反映判断は、この整理後の状態へ戻した。
+- 追記：TD-02の `clasp push --force` が成功した。`Pushed 15 files at 10:32:16.` を確認した。GAS 反映対象には `src/01_auth.gs`、`src/07_todo.gs`、`src/top.html`、`src/todo.html`、`src/00_setup.gs` などが含まれていたが、`src/00_setup.gs` は差分なしのまま反映された。
+- 追記：TD-02のTODO追加後表示を修正した。`src/todo.html` の `createTodoTask` 成功時に `result.task` が返れば、現在表示中のお客様別一覧へその場で1行追加し、`result.task` 未返却時は一覧へ追加せず「TODOを保存しました。」のみ表示するようにした。`window.location` 系の再表示は使っていない。`src/01_auth.gs` と `src/07_todo.gs` は変更していない。`todo.html` のJS構文確認、`git diff --check`、`clasp push --force` はこれから実施する。
+- 追記：TODO追加後表示の再修正を `clasp push --force` で反映し、`Pushed 15 files at 12:16:39.` を確認した。`src/todo.html` は `result.task` が返れば現在表示中のお客様別一覧へその場で1行追加し、`result.task` 未返却なら一覧追加せず「TODOを保存しました。」のみ表示する。`window.location` 系の再表示は使っていない。`todo.html` のJS構文確認と `git diff --check` は成功した。`src/01_auth.gs` と `src/07_todo.gs` は変更していない。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：TD-02のTODO一覧表示を compact 化した。`src/todo.html` の初期表示から `TODO内容`、`期限`、`登録日時` の見出しラベルを外し、各TODOを縦長カードではなく行に近い見た目へ寄せた。登録日時は編集詳細内へ移し、直接追加は小さめの補助文言へ変更した。成功メッセージは `TODOを保存しました。`、`保存しました。`、`削除しました。` に整理し、`画面を開き直す` 系の文言は削除した。`src/01_auth.gs` と `src/07_todo.gs` は変更していない。`node --check`、`git diff --check`、`clasp push --force` はこれから実施する。
+- 追記：TD-02のTODO一覧表示 compact 化と文言整理を `clasp push --force` で反映し、`Pushed 15 files at 12:30:53.` を確認した。`src/todo.html` の初期表示は縦長カードではなく行寄りの compact 表示にし、登録日時は編集詳細へ移した。直接追加は補助文言へ下げ、成功後の `画面を開き直す` 系文言は削除した。`node --check` と `git diff --check` は成功した。`src/01_auth.gs` と `src/07_todo.gs` は変更していない。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：TD-02のTODO一覧を1件1行の表示へ修正し、`clasp push --force` で反映した。`src/todo.html` の各TODOは `完了チェック｜TODO内容｜期限｜重要度｜編集` の順で並ぶ行表示にし、お客様名はグループ見出しへ寄せ、各行から `その他` と `直接追加` のタグを外した。登録日時は初期表示に出さず、編集詳細へ退避した。TODO追加・編集・完了削除の処理ロジックは変えていない。`node --check` と `git diff --check` は成功し、`Pushed 15 files at 12:47:52.` を確認した。Git・デプロイ・Drive操作はしていない。TD-03未着手。
+- 追記：TD-02のTODO一覧を本当に1件1行へやり直した。初期表示は `完了チェック｜TODO内容｜期限｜重要度｜編集` のみを見せ、編集フォームは初期表示せず、編集ボタンを押したTODOだけ行の下に開くようにした。複数TODOの編集フォームが最初から全部見える状態はやめた。TODO追加・編集・完了削除の処理ロジックは変えていない。`node --check`、`git diff --check`、`clasp push --force` はこれから実施する。
+- 追記：TD-02のTODO一覧を1件1行へやり直し、編集フォームを初期非表示にした。初期表示は `完了チェック｜TODO内容｜期限｜重要度｜編集` のみとし、`customerName`、`todoContent`、`dueDate`、`priority`、`保存する` は初期表示しない。編集ボタンを押したTODOだけ行の下に編集フォームが開くようにし、複数TODOの編集フォームが最初から全部見える状態はやめた。TODO追加・編集・完了削除の処理ロジックは変えていない。`node --check`、`git diff --check`、`clasp push --force` は成功した。
+- 追記：TD-02のTODO一覧HTML構造をさらに見直し、`article.todo-item` をやめて 1件1行の `div` ベース構造へ再構築した。初期表示は `□ 完了 ｜ TODO内容 ｜ 期限 ｜ 重要度 ｜ 編集` の並びだけを出し、各行から `その他`、`直接追加`、`登録日時` は出していない。編集フォームは hidden の別パネルのまま維持し、`[hidden] { display: none !important; }` を追加した。TODO追加・編集・完了削除の処理ロジックは変えていない。`node --check`、`git diff --check` は成功し、`clasp push --force` は成功して `Pushed 15 files at 13:05:13.` を確認した。
+- 追記：TD-02のユーザー実画面確認が完了した。TOPに「TODOを見る」導線が表示され、TODO画面の表示、TODO追加、追加後に白画面にならないこと、追加したTODOのその場一覧表示を確認済みである。TODO一覧はカード表示をやめた1件1行表示であり、編集フォームは初期表示せず編集ボタン押下時だけ開く。古い「画面を開き直す」「再読み込み」文言は表示されない。以上によりTD-02は完了確定とし、TD-03は未着手とする。今回の記録ではソースコード、`clasp push --force`、デプロイ、`setupSheets()`、スプレッドシート、Git操作を行っていない。
+- 追記：ユーザー確認により、直前のTD-02完了確定を撤回した。TODO一覧の表示は不合格のため、TD-02は未完了へ戻す。最終是正として、初期表示の各TODOを `完了チェック｜TODO内容｜期限｜重要度｜編集` の横1行に固定し、TODO内容だけを省略可能な可変領域にした。初期表示には input、textarea、select、保存ボタンを出さず、編集フォームは `hidden` のままとし、編集ボタン押下時だけ開く。カード風の角丸・大きな余白・縦積み表示は追加していない。TODO追加・編集・完了削除の処理ロジック、および成功後の `window.location` 系処理は変更していない。HTML内JavaScriptの `node --check`、初期行3件・hidden編集パネル3件・成功後遷移コード0件の静的確認、`git diff --check` は成功した。`clasp push --force` は成功し、`Pushed 15 files at 13:25:28.` を確認した。TD-02はユーザーによる最終実画面確認待ちであり、TD-03は未着手。
+- 追記：元のTD-02実装指示書は、TD-02単独で完了確定せず、ユーザー実画面確認前の状態に留める前提だった。その後、実画面確認まで進み、一度TD-02完了確定として記録したが、ユーザーがTODO一覧表示を不合格と判定したため完了確定を撤回した。1TODO＝1行への是正後もチェックボックス横の「完了」表示が不要と判定された。前回は既存のTD-01／TD-02差分を停止条件として誤認し、変更せず停止した。今回は既存差分を保持したまま、3表示区分と追加後に生成するTODO行から表示文字「完了」だけを削除した。HTML内JavaScriptの `node --check`、初期行3件・チェックボックス3件・hidden編集パネル3件・表示用「完了」0件の静的確認、`git diff --check` は成功した。`clasp push --force` は成功し、`Pushed 15 files at 13:40:16.` を確認した。TD-02は未完了でユーザーによる最終実画面確認待ち、TD-03は未着手である。
+- 追記：TD-02の最終実画面確認が完了した。チェックボックス横に「完了」の文字が表示されていないこと、TODOが1件1行で表示されていること、初期表示が `チェックボックス｜TODO内容｜期限｜重要度｜編集` の5項目だけであることを確認済みである。「編集」を押した対象TODOだけ編集フォームが開き、他のTODOの編集フォームは閉じたままである。以上によりTD-02を完了確定とする。TD-03は未着手であり、次の状態はTD-03実装指示待ちである。
 - 追記：EX-03R 実機確認の結果、TOP用デプロイAを「アクセスユーザーとして実行」「自分として実行」の両方で確認したが、いずれも `Session.getActiveUser().getEmail()` は「取得できず」だった。`Session.getEffectiveUser().getEmail()` は `inamori240@marubishi-group.co.jp` を取得し、`EX03_API_URL` は送信API用デプロイBのURLを正常表示した。GitHub Pages の外部ページからデプロイBへのPOSTは成功し、HTTP 200、JSON応答取得、`receivedToken=EX02_DUMMY_TOKEN`、`receivedText=EX-02 communication test` を確認した。デプロイ分離でも「TOPのGoogleログイン中メール取得」と「外部POST」の同時成立は確認できなかったため、EX-03R は停止条件に該当する。EX-04以降、IS-06以降には進まない。
 - 追記：EX-03R2 では `external/gas-poc/appsscript.json` の `oauthScopes` に `https://www.googleapis.com/auth/userinfo.email` を追加し、既存設定は維持した。JSON構文確認を行い、`external/gas-poc/` で `clasp push --force` を実行して `appsscript.json` と `Code.gs` の 2 ファイルを反映済み。次の状態はユーザーによる EX-03R2 実機確認待ち。
 - 追記：EX-03R2 で `external/gas-poc/appsscript.json` の `oauthScopes` に `https://www.googleapis.com/auth/userinfo.email` を追加済み。JSON構文確認済み。`external/gas-poc/` で `clasp push --force` 成功済み。スコープ追加後、新規作成したTOP用デプロイAで確認し、実行するユーザー＝自分、アクセスできるユーザー＝marubishi-group.co.jp の全員、承認画面は表示されなかった。`Session.getActiveUser().getEmail()` で `inamori240@marubishi-group.co.jp` の取得に成功し、`Session.getEffectiveUser().getEmail()` でも `inamori240@marubishi-group.co.jp` の取得に成功した。`EX03_API_URL` はデプロイBのURLを正常表示し、GitHub Pages の外部ページからデプロイBへのPOSTを再確認して HTTP 200、JSON応答取得成功、`receivedToken=EX02_DUMMY_TOKEN`、`receivedText=EX-02 communication test` を確認した。TOP認証と外部POSTが同時に成立し、EX-03R2 の完了条件を満たしたため、EX-03 は成立。次の状態は「案B改成立判定待ち」。EX-04以降、IS-06以降には未着手。
@@ -42,6 +71,7 @@ claudeはプロジェクト内でチャット連携を持たないため、本�
 - **E-3（書込列数）**：Phase 1書込は12列固定、シート全体定義は18列（＋GPS3列S〜U）と両文書に明記
 - **F（活用3案のPhase 1繰入）**：#13日報・#14マネージャー資料・#15朝TODO配信をPhase 1側MVPに含める形に案件概要書8章を修正
 - **R-01（基盤・入力・保存の改修）**：`src/00_setup.gs`、`src/02_ai.gs`、`src/03_write.gs`、`src/04_submit.gs`、`src/05_token.gs`、`external/input-page/index.html` を改修し、R-01 の基盤・入力・保存の流れを正本に合わせて反映した。`tmpR01_checkResolveCustomerStore()` は確認後に削除済み。
+- **TD-01（TODOデータ基盤・本人限定処理）**：`src/00_setup.gs`、`src/07_todo.gs`、`docs/DB_SCHEMA.md`、`docs/API_INTERNAL.md`、`tasks/TASK_CURRENT.md` を更新し、`todo_tasks` 基盤と本人限定の取得・登録・更新・完了削除を実装した。`setupSheets()` の1回実行により `todo_tasks` シートと A〜H 見出しをユーザー確認済み。TD-01は完了確定。
 
 ### 1-2. 手順2で確定した内容（2026-07-08・全項目けんたろう判断済み）※§1-3で正本反映済み
 
@@ -816,7 +846,7 @@ claudeはプロジェクト内でチャット連携を持たないため、本�
 - 追記：PERMISSION_DENIED、TIMEOUT、その他失敗を分けて表示するようにした。
 - 追記：静的確認は `node --check` 成功、HTML内ID重複なし確認成功、`git diff --check` 成功。
 - 追記：実通信・iPhone再確認は未実施。
-- 追記：R-03はまだ完了していない。
+- 追記：この時点ではR-03を未完了として記録していたが、現在はユーザー確認により完了確定済みである。
 - 追記：次の状態は、iPhoneでの再確認待ち。
 
 ## 46. 2026-07-21 R-03 GPS検索後の店舗選択欄自動展開と表示改善
@@ -828,7 +858,7 @@ claudeはプロジェクト内でチャット連携を持たないため、本�
 - 追記：状態表示枠の余白と折返し表示を改善した。
 - 追記：静的確認は `node --check`、HTML内ID重複なし確認、`git diff --check` を実施し、いずれも成功した。
 - 追記：修正版のiPhone再確認は2026-07-21に完了し、自動展開と表示改善を確認した。
-- 追記：R-03は未完了である。
+- 追記：この時点ではR-03を未完了として扱っていたが、現在はユーザー確認により完了確定済みである。
 
 ## 47. 2026-07-21 R-03 公開反映・iPhone・日報追記確認結果
 
@@ -845,7 +875,7 @@ claudeはプロジェクト内でチャット連携を持たないため、本�
 - 追記：同じ実機操作を再実施しない。
 - 追記：未確認項目は残っている。
 - 追記：AI異常5区分とTEST_PLANの全消し込みは未完了である。
-- 追記：R-03は未完了である。
+- 追記：この時点ではR-03を未完了として扱っていたが、現在はユーザー確認により完了確定済みである。
 
 ## 48. 2026-07-21 R-03 Node.js隔離確認・保存修正結果
 
@@ -859,3 +889,181 @@ claudeはプロジェクト内でチャット連携を持たないため、本�
 - 追記：JSON解析不能後の保存成功相当も `success:true` として削除経路へ入ることを確認した。
 - 追記：上記は Node.js隔離確認であり、実通信確認・iPhone実機確認ではない。
 - 追記：未送信テキスト保持・削除の確認は完了したが、R-03全体は未完了である。
+
+## 49. 2026-07-30 TD-03 個人日報圧縮・TODOチェック連携の実装確認
+
+- 追記：TD-03として、個人日報の表示モデルへ `todo_item` と `deadline_normalized` を追加し、`todoItem`・`deadlineNormalized`・`hasActiveTodo`・`canCreateTodo` を持たせる実装を行った。
+- 追記：`src/07_todo.gs` に、認証済み利用者の有効な `source_record_id` を一度だけ集める private 処理 `getActiveTodoSourceRecordIdsByUserKey_()` を追加した。
+- 追記：`src/06_output.gs` 側では日報生成中に `todo_tasks` をレコードごとに再読込せず、Set でまとめて照合する構成にした。
+- 追記：`src/07_todo.gs` の `createTodoFromDeal(recordId)` は、元商談の再取得、本人照合、重複防止、`todo_item` 優先・空欄時は商談要点の TODO 内容決定を維持している。
+- 追記：`src/daily.html` の個人日報カードを圧縮し、閉じた状態では時刻・商談区分・担当者名・追記・詳細・お客様名・TODO化チェックボックス・商談要点だけを表示するようにした。
+- 追記：詳細は同一カード内の開閉部品にして、案件テーマ・商談内容・追記一覧を別画面遷移なし・サーバー通信なしで開閉できるようにした。
+- 追記：TODO化チェックボックスは `recordId` のみを送って `createTodoFromDeal(recordId)` を呼び、登録済みは初期チェック済み・操作不可、未登録の本人所有商談のみ操作可とした。
+- 追記：チェック解除による TODO 削除は実装していない。
+- 追記：追記リンクは従来どおり維持し、URL・`record_id`・権限制御は変更していない。
+- 追記：`docs/SCREEN_FLOW.md` と `docs/SPEC_WEBAPP.md` に、今回確定した個人日報圧縮・詳細開閉・TODOチェック連携のみを反映した。
+- 追記：管理職向け日報まとめ、`summary.html`、管理職集計処理、TODO画面、TOP画面、外部入力画面、商談送信・保存API は変更していない。
+- 追記：静的確認は `node --check` による `.gs` 構文確認と、抽出した `daily.html` の JavaScript 構文確認を成功させた。
+- 追記：HTML の重複 ID、閉じタグ、テンプレート構文も確認し、`git diff --check` も成功した。
+- 追記：隔離モックでは、個人日報が 3 件取得され、本人の未登録商談は `canCreateTodo:true` かつ `hasActiveTodo:false`、登録済み商談は `hasActiveTodo:true` であることを確認した。
+- 追記：隔離モックでは、`createTodoFromDeal('R2')` が成功し、`todo_item` から TODO 内容が作られることと、`createTodoFromDeal('R1')` が重複拒否、`createTodoFromDeal('R3')` が本人外拒否になることを確認した。
+- 追記：実データ操作、`clasp run`、デプロイ、Git、Drive、外部入力画面操作は行っていない。
+- 追記：`clasp push --force` は未実行である。理由は、このワークツリーに TD-03 以外の既存変更が `src/01_auth.gs`、`src/top.html`、`docs/API_INTERNAL.md`、`docs/DB_SCHEMA.md` などへ残っており、許可範囲外差分に触れずに GAS へ反映する条件を満たせないためである。
+- 追記：TD-03は「実装・静的確認・隔離モック確認済み、条件付き反映は未実行、ユーザーのデプロイ更新・実画面確認待ち」である。
+- 追記：TD-04は未着手である。
+
+## 50. 2026-07-30 TD-03 `clasp push --force` 反映結果
+
+- 追記：TD-03の反映停止理由を是正し、`src` 配下の差分が TD-01・TD-02 の承認済み変更と TD-03 変更だけであることを確認したうえで、`clasp push --force` を1回実行した。
+- 追記：`Pushed 15 files at 15:01:06.` を確認した。
+- 追記：反映対象には `src/00_setup.gs`、`src/01_auth.gs`、`src/02_ai.gs`、`src/03_write.gs`、`src/04_submit.gs`、`src/05_token.gs`、`src/06_output.gs`、`src/07_todo.gs`、`src/addition.html`、`src/appsscript.json`、`src/daily.html`、`src/index.html`、`src/summary.html`、`src/todo.html`、`src/top.html` が含まれた。
+- 追記：TD-01・TD-02の承認済み差分は停止理由に該当しなかった。
+- 追記：デプロイ、Git、Drive、実データ操作はしていない。
+- 追記：TD-03はまだ完了確定しない。
+- 追記：次の状態はユーザーによるデプロイ更新・実画面確認待ちである。
+- 追記：TD-04は未着手である。
+
+## 51. 2026-07-30 TD-03 実画面確認の是正修正
+
+- 追記：TD-03の実画面確認で、追記0件のカードでも `追記一覧` と `追記はありません。` が表示される不具合を確認した。
+- 追記：TD-03の実画面確認で、本人所有の未登録商談でも TODO チェックボックスが無効化される不具合を確認した。
+- 追記：`src/daily.html` では、追記が 1 件以上ある場合だけ `追記一覧` と追記内容を描画するようにした。
+- 追記：`src/06_output.gs` では、本人判定の user_key 比較を正規化し、本人の未登録商談を `canCreateTodo:true` として渡せるようにした。
+- 追記：隔離モックで、本人所有・未登録は未チェックかつ disabled なし、本人所有・登録済みは checked ありかつ disabled あり、本人所有ではない商談は disabled ありになることを確認した。
+- 追記：隔離モックで、追記0件のカードは `追記一覧` と `追記はありません。` を出さず、追記1件以上のカードだけ追記一覧を表示することを確認した。
+- 追記：静的確認は `.gs` と HTML 内 JavaScript の構文確認、`git diff --check` を成功させた。
+- 追記：`clasp push --force` はまだ実行していない。確認がすべて成功したので、この後に反映する。
+- 追記：TD-03は再度ユーザー実画面確認待ちであり、TD-04は未着手である。
+
+## 52. 2026-07-30 TD-03 実画面確認是正の `clasp push --force` 反映結果
+
+- 追記：TD-03の是正修正を `clasp push --force` で反映し、`Pushed 15 files at 15:43:03.` を確認した。
+- 追記：今回の修正ファイルは `src/06_output.gs` と `src/daily.html`、記録更新は `tasks/TASK_CURRENT.md` である。
+- 追記：追記0件の空表示と、本人の未登録商談の TODO チェック有効化を是正した修正が反映された。
+- 追記：デプロイ、Git、Drive、実データ操作はしていない。
+- 追記：TD-03はまだ完了確定しない。
+- 追記：次の状態はユーザーによる再度の実画面確認待ちである。
+- 追記：TD-04は未着手である。
+
+## 53. 2026-07-30 TD-03 実画面確認完了・完了確定
+
+- 追記：個人日報カードの圧縮表示は OK である。
+- 追記：初期表示で案件テーマ・商談内容・追記一覧が閉じていることを確認した。
+- 追記：「詳細」で同一カード内の詳細を開閉できることを確認した。
+- 追記：追記0件では「追記一覧」「追記はありません。」を表示しないことを確認した。
+- 追記：未登録TODOのチェックボックスを操作できることを確認した。
+- 追記：チェック後にTODO登録成功表示が出ることを確認した。
+- 追記：登録後はチェック済み・操作不可になることを確認した。
+- 追記：「追記」から対象商談の追記画面を開けることを確認した。
+- 追記：TD-03は実装、静的確認、隔離モック確認、`clasp push --force`、デプロイ更新後の実画面確認まで完了したため、完了確定とする。
+- 追記：TD-01・TD-02の完了確定履歴は維持する。
+- 追記：ソースコード変更、`clasp push --force`、デプロイ操作、Git操作、Drive操作、実データ操作、TD-04の実装はしていない。
+- 追記：TD-04は未着手である。
+- 追記：次の状態は TD-04実装指示待ちである。
+
+## 54. 2026-07-30 TD-04公開前確認で検出したTD-02戻し修正
+
+- 追記：TD-04公開前確認の途中で、`src/todo.html` の完了削除処理に `window.confirm('このTODOを完了削除します。よろしいですか？')` が残っていることを確認した。
+- 追記：TD-02実装指示書およびTODO改善計画では、初期版の完了削除は確認ダイアログを出さずに行う方針であるため、TD-04内では修正せず、TD-02戻し修正として扱った。
+- 追記：ユーザーへ確認し、UNDOは追加しない、確認ダイアログも出さない方針で承認を得た。
+- 追記：`src/todo.html` から完了削除前の確認ダイアログだけを削除した。`completeTodoTask(todoId)` の呼び出し、成功後の行削除、失敗時のチェック復元、TODO追加・編集・3表示の処理は変更していない。
+- 追記：HTML内JavaScriptを抽出して `node --check` を実行し、成功した。
+- 追記：`src/todo.html` 内の `window.confirm` と `このTODOを完了削除します` の検索結果は0件である。
+- 追記：`git diff --check` は成功した。
+- 追記：`clasp push --force` は未実行である。デプロイ、Git、Drive、実データ操作もしていない。
+- 追記：TD-01〜TD-03の完了確定履歴は維持する。
+- 追記：次の状態はTD-04公開前確認の再開待ちである。
+
+## 55. 2026-07-30 TD-04公開前確認再開・GAS反映結果
+
+- 追記：TD-04公開前確認を再開した。
+- 追記：`src/00_setup.gs`、`src/01_auth.gs`、`src/06_output.gs`、`src/07_todo.gs` を一時 `.js` へコピーして `node --check` を実行し、すべて成功した。
+- 追記：`src/todo.html` と `src/daily.html` のHTML内JavaScriptを抽出して `node --check` を実行し、成功した。
+- 追記：`src/todo.html` と `src/daily.html` の静的重複IDなし、主要タグ数の整合、`google.script.run` の成功・失敗ハンドラ、TODO操作の二重実行防止を確認した。
+- 追記：`src/todo.html` 内の `window.confirm` と `このTODOを完了削除します` の検索結果は0件である。
+- 追記：`src/todo.html`、`src/daily.html`、`src/top.html` に `original_text`、`user_key`、`userKey`、`TOKEN`、`apiKey`、`API_KEY` の埋め込みがないことを確認した。
+- 追記：`git diff --check` は成功した。
+- 追記：`tmp_td01_`、`tmp_td02_`、`tmp_td03_`、`tmp_td04_` の一時ファイル残存は0件である。
+- 追記：TD-03後に `src/todo.html` を変更したため、ユーザーの個別承認を得て `clasp push --force` を実行した。
+- 追記：`clasp push --force` は成功し、`Pushed 15 files at 16:48:05.` を確認した。
+- 追記：反映対象には `src/todo.html` を含む15ファイルが含まれた。
+- 追記：デプロイ、Git、Drive、実データ操作はしていない。
+- 追記：TD-01〜TD-03の完了確定履歴は維持する。
+- 追記：次の状態はユーザーによる既存の「営業AIメモ｜利用開始・本人確認」デプロイA更新とPC/iPhone実画面確認待ちである。
+
+## 56. 2026-07-30 TD-04 実画面確認完了・完了確定
+
+- 追記：ユーザーが既存の「営業AIメモ｜利用開始・本人確認」デプロイAを更新後、TD-04のPC実画面確認を実施し、結果はOKである。
+- 追記：ユーザーがiPhone実画面確認を実施し、結果はOKである。
+- 追記：確認用TODOは残っていない。
+- 追記：TODO操作による `deal_records` と `deal_additions` の詳細な実シート目視確認は省略したが、コード上、TODO直接登録・編集・日報TODO化・完了削除は `todo_tasks` を対象とし、`deal_records` と `deal_additions` を更新しない構成である。
+- 追記：`docs/TEST_PLAN.md` にTD-04のTODO画面・TOP導線、個人日報圧縮・TODOチェック連携、iPhone Safari表示、データ影響、未実施・後続改善を記録した。
+- 追記：TD-01〜TD-04のTODO機能・個人日報表示改善は完了確定とする。
+- 追記：Git commit、Git pushは未実施である。
+- 追記：「改善不具合対応」シートはCodex変更対象外のため未更新である。
+- 追記：ユーザー方針により、TODO完了操作は今後「チェックを入れる→取り消し線→まとめて削除」方式へ改善する。これはTD-04には含めず、次の後続改善として扱う。
+- 追記：次工程には未着手である。
+
+## 57. 2026-07-30 TODO完了操作の後続改善実装
+
+- 追記：ユーザー方針により、TD-04完了確定後の後続改善として、TODO画面の完了操作を「チェックを入れる→取り消し線→チェック済みを削除」方式へ変更した。
+- 追記：`src/todo.html` に「チェック済みを削除」ボタンを追加した。
+- 追記：TODO行のチェックボックスを押した時点では `completeTodoTask(todoId)` を呼ばず、画面上の同一TODO行をチェック済み・取り消し線表示にそろえるだけにした。
+- 追記：「チェック済みを削除」ボタン押下時に、選択中のTODO IDごとに既存の `completeTodoTask(todoId)` を呼び、成功したTODO行を画面から削除する。
+- 追記：削除に失敗したTODOはチェックを戻し、画面内エラーを表示する。
+- 追記：サーバー側の `src/07_todo.gs`、DB定義、シート名、列名、`deal_records`、`deal_additions` は変更していない。
+- 追記：`docs/TEST_PLAN.md` の TD-04 後続改善欄に、実装・静的確認OK、GAS反映前として記録した。
+- 追記：HTML内JavaScriptを抽出して `node --check` を実行し、成功した。
+- 追記：`src/todo.html` 内の `window.confirm`、`このTODOを完了削除します`、`完了して削除` の検索結果は0件である。
+- 追記：`git diff --check` は成功した。
+- 追記：ユーザー承認後、`clasp push --force` を実行し、`Pushed 15 files at 17:17:21.` を確認した。
+- 追記：反映対象には `src/todo.html` を含む15ファイルが含まれた。
+- 追記：デプロイ、Git、Drive、実データ操作はしていない。
+- 追記：次の状態は、ユーザーによるデプロイA更新と実画面確認待ちである。
+
+## 58. 2026-07-31 TODO完了削除の体感速度改善
+
+- 追記：ユーザーがTODO完了操作の後続改善を実画面確認し、結果はOKである。
+- 追記：ただし、Chrome DevTools上で削除通信が約3秒かかっており、削除処理時間が長いとの指摘があった。
+- 追記：`src/todo.html` の「チェック済みを削除」処理を、ボタン押下後に対象TODO行を先に画面から隠す方式へ変更した。
+- 追記：GAS側の `completeTodoTask(todoId)` 呼び出しは維持し、通信完了後に対象行をDOMから削除する。
+- 追記：GAS側の削除に失敗した場合は、隠したTODO行を再表示し、チェックを戻してエラー表示する。
+- 追記：サーバー側の `src/07_todo.gs`、DB定義、シート名、列名、`deal_records`、`deal_additions` は変更していない。
+- 追記：`docs/TEST_PLAN.md` の TD-04 後続改善欄に、削除処理時間の指摘と体感速度改善を追記した。
+- 追記：HTML内JavaScriptを抽出して `node --check` を実行し、成功した。
+- 追記：ユーザー承認後、`clasp push --force` を実行し、`Pushed 15 files at 8:19:56.` を確認した。
+- 追記：反映対象には `src/todo.html` を含む15ファイルが含まれた。
+- 追記：ユーザーがデプロイA更新後のTODO画面を実画面確認し、結果はOKである。
+- 追記：デプロイ操作、Git、Drive、実データ操作はCodexではしていない。
+- 追記：TD-01〜TD-04本体およびTD-04後のTODO完了操作改善は一区切りとする。
+
+## 59. 2026-07-31 SRCH-03 管理職向け日報検索の実装確認
+
+- 追記：`src/01_auth.gs` のS-06ルートで、期間、開始日、終了日、担当者名、キーワードを受け取り、SRCH-01の共通検索処理へ渡すようにした。
+- 追記：管理職向けページモデルへ検索条件、検索結果件数、0件表示、入力エラー表示、担当者候補を追加した。
+- 追記：担当者候補は、managerでは同一営業所の有効担当者、sales_support/sysadminでは現行閲覧範囲に対応する有効担当者とし、担当者の`user_key`はHTMLへ渡していない。
+- 追記：`src/summary.html` に今日・前日・過去7日・過去30日・期間指定、開始日・終了日、担当者、キーワード、検索、条件クリアを追加した。
+- 追記：既存の日報まとめの圧縮・要約表示、追記表示、追記リンクと権限制御を維持した。管理職向け検索へToDo条件は追加していない。
+- 追記：`.gs`構文確認、重複ID確認、`summary.html`の`user_key`・`userKey`・`original_text`・メールアドレス非混入確認、`git diff --check`に成功した。
+- 追記：隔離モックで、managerの同一営業所限定、sysadminの有効担当者全体、無効担当者の候補除外、担当者名条件、追記キーワード検索、管理職向けToDo非検索を確認して成功した。
+- 追記：一時確認ファイル`tmp_srch03_verify.js`は確認後に削除した。
+- 追記：`src/daily.html`、DB、シート、権限定義、実データは変更していない。
+- 追記：`clasp push --force`、デプロイ、Git、Drive、実機確認は未実施である。ユーザー承認後の`clasp push --force`と、ユーザーによるデプロイA更新後のPC・スマートフォン実機確認が必要である。
+- 追記：SRCH-03は実装・静的確認・隔離確認済み、ユーザー実機確認待ち。SRCH-04は未着手である。
+
+## 60. 2026-07-31 SRCH-03 `clasp push --force` 反映結果
+
+- 追記：ユーザーの明示承認後、プロジェクトルートで`clasp push --force`を実行した。
+- 追記：`Pushed 15 files at 12:37:04.`を確認した。`src/summary.html`、`src/01_auth.gs`を含む15ファイルが反映対象となった。
+- 追記：デプロイ更新、Git、Drive、実データ操作は行っていない。
+- 追記：次の状態はユーザーによるデプロイA更新後のPC・スマートフォン実機確認待ちである。SRCH-04は未着手である。
+
+## 61. 2026-07-31 SRCH-03 ユーザー実機確認完了
+
+- 追記：ユーザー実機で、初期表示が「今日」であることを確認した。
+- 追記：期間を切り替えると表示が変わることを確認した。
+- 追記：担当者検索、キーワード検索がOKであることを確認した。
+- 追記：検索後も期間、担当者、キーワード等の検索条件が保持されることを確認した。
+- 追記：0件時・不正期間時の表示として「本日の商談はありません」「検索条件に一致する商談記録はありません」を確認した。
+- 追記：既存表示およびPC・スマートフォン表示が問題ないことを確認した。
+- 追記：SRCH-03は実装、静的確認、隔離確認、`clasp push --force`、ユーザー実機確認まで完了したため、完了確定とする。SRCH-04は未着手である。

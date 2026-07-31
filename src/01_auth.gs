@@ -20,12 +20,33 @@ function doGet(e) {
 
   if (view === 'summary') {
     if (isSummaryViewer_(role)) {
-      return createPageHtmlOutput_('summary', createManagerSummaryPageModel_(validation));
+      return createPageHtmlOutput_('summary', createManagerSummaryPageModel_(validation, {
+        period: e && e.parameter ? e.parameter.period : '',
+        startDate: e && e.parameter ? e.parameter.start_date : '',
+        endDate: e && e.parameter ? e.parameter.end_date : '',
+        staffName: e && e.parameter ? e.parameter.staff_name : '',
+        keyword: e && e.parameter ? e.parameter.keyword : '',
+      }));
     }
 
     return createPageHtmlOutput_(
       'addition',
       createAdditionPageModel_('', validation, 'このページを表示する権限がありません'),
+    );
+  }
+
+  if (view === 'todo') {
+    if (isTodoViewerRole_(role)) {
+      const todoPageModel = createTodoPageModel_(validation);
+      todoPageModel.todoPageLinkUrl = getTodoPageUrl_();
+      return createPageHtmlOutput_('todo', todoPageModel);
+    }
+
+    const todoErrorModel = createTodoPageModel_(validation, 'このページを表示する権限がありません');
+    todoErrorModel.todoPageLinkUrl = getTodoPageUrl_();
+    return createPageHtmlOutput_(
+      'todo',
+      todoErrorModel,
     );
   }
 
@@ -46,7 +67,12 @@ function doGet(e) {
     }
 
     if (isDailyViewerRole_(role)) {
-      return createPageHtmlOutput_('daily', createDailyPageModel_(validation));
+      return createPageHtmlOutput_('daily', createDailyPageModel_(validation, {
+        period: e && e.parameter ? e.parameter.period : '',
+        startDate: e && e.parameter ? e.parameter.start_date : '',
+        endDate: e && e.parameter ? e.parameter.end_date : '',
+        keyword: e && e.parameter ? e.parameter.keyword : '',
+      }));
     }
   }
 
@@ -64,6 +90,7 @@ function createTopPageModel_(validationOverride) {
     userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
     inputPageLinkUrl: '',
     dailyReportLinkUrl: '',
+    todoPageLinkUrl: '',
     noticeMessage: '',
   };
 
@@ -91,13 +118,29 @@ function createTopPageModel_(validationOverride) {
     model.dailyReportLinkUrl = '';
   }
 
+  try {
+    model.todoPageLinkUrl = isTodoViewerRole_(role) ? getTodoPageUrl_() : '';
+  } catch (error) {
+    model.todoPageLinkUrl = '';
+  }
+
   return model;
 }
 
-function createManagerSummaryPageModel_(validationOverride) {
+function createManagerSummaryPageModel_(validationOverride, searchOptionsOverride) {
   const validation = validationOverride && typeof validationOverride === 'object'
     ? validationOverride
     : validateUser();
+  const searchOptions = searchOptionsOverride && typeof searchOptionsOverride === 'object'
+    ? searchOptionsOverride
+    : {};
+  const normalizedSearchOptions = {
+    period: String(searchOptions.period || 'today').trim().toLowerCase(),
+    startDate: String(searchOptions.startDate || '').trim(),
+    endDate: String(searchOptions.endDate || '').trim(),
+    staffName: String(searchOptions.staffName || '').trim(),
+    keyword: String(searchOptions.keyword || '').trim(),
+  };
 
   const model = {
     pageTitle: '営業AIメモ｜日報まとめ',
@@ -107,8 +150,18 @@ function createManagerSummaryPageModel_(validationOverride) {
     currentDateLabel: Utilities.formatDate(new Date(), WRITE_RECORD_TIMEZONE_, 'yyyy年M月d日'),
     summaryRows: [],
     hasSummaryData: false,
-    emptyMessage: '本日の商談記録はありません',
+    emptyMessage: normalizedSearchOptions.period === 'today'
+      ? '本日の商談記録はありません'
+      : '検索条件に一致する商談記録はありません',
     noticeMessage: '',
+    searchErrorMessage: '',
+    searchPeriod: normalizedSearchOptions.period,
+    searchStartDate: normalizedSearchOptions.startDate,
+    searchEndDate: normalizedSearchOptions.endDate,
+    searchStaffName: normalizedSearchOptions.staffName,
+    searchKeyword: normalizedSearchOptions.keyword,
+    searchResultCount: 0,
+    searchStaffOptions: [],
     topPageLinkUrl: '',
     dailyReportLinkUrl: '',
   };
@@ -129,19 +182,26 @@ function createManagerSummaryPageModel_(validationOverride) {
   model.isManager = model.isSummaryViewer;
 
   try {
+    model.searchStaffOptions = getSummarySearchStaffOptions_(validation);
+  } catch (error) {
+    model.searchStaffOptions = [];
+  }
+
+  try {
     model.dailyReportLinkUrl = getRoleDailyReportUrl_(role);
   } catch (error) {
     model.dailyReportLinkUrl = '';
   }
 
   try {
-    const reportResult = getMyDealRecords('summary', validation);
+    const reportResult = getMyDealRecords('summary', validation, normalizedSearchOptions);
     if (!reportResult || reportResult.success !== true) {
-      model.noticeMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '日報を表示できませんでした。');
+      model.searchErrorMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '検索条件を確認してください。');
       return model;
     }
 
     model.summaryRows = Array.isArray(reportResult.records) ? reportResult.records : [];
+    model.searchResultCount = model.summaryRows.length;
     model.hasSummaryData = model.summaryRows.length > 0;
   } catch (error) {
     model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
@@ -150,18 +210,62 @@ function createManagerSummaryPageModel_(validationOverride) {
   return model;
 }
 
-function createDailyPageModel_(validationOverride) {
+function getSummarySearchStaffOptions_(validation) {
+  const role = String(validation && validation.role || '').trim();
+  const branchName = String(validation && validation.branchName || '').trim();
+  const visibleUserKeys = role === 'manager'
+    ? new Set(getUserKeysInSameBranch_(branchName))
+    : null;
+  const optionsByUserKey = new Map();
+
+  for (const row of getUserMasterRows_()) {
+    const userKey = String(row.userKey || '').trim();
+    const userName = String(row.userName || '').trim();
+    if (!userKey || !userName || String(row.activeFlag || '').trim() !== '有効') {
+      continue;
+    }
+
+    if (visibleUserKeys && !visibleUserKeys.has(userKey)) {
+      continue;
+    }
+
+    optionsByUserKey.set(userKey, { userName });
+  }
+
+  return Array.from(optionsByUserKey.values()).sort((left, right) => (
+    String(left.userName || '').localeCompare(String(right.userName || ''), 'ja')
+  ));
+}
+
+function createDailyPageModel_(validationOverride, searchOptionsOverride) {
   const validation = validationOverride && typeof validationOverride === 'object'
     ? validationOverride
     : validateUser();
+  const searchOptions = searchOptionsOverride && typeof searchOptionsOverride === 'object'
+    ? searchOptionsOverride
+    : {};
+  const normalizedSearchOptions = {
+    period: String(searchOptions.period || 'last_30_days').trim().toLowerCase(),
+    startDate: String(searchOptions.startDate || '').trim(),
+    endDate: String(searchOptions.endDate || '').trim(),
+    keyword: String(searchOptions.keyword || '').trim(),
+  };
   const model = {
     pageTitle: '営業AIメモ｜個人日報',
     validation,
     userName: validation && validation.valid ? String(validation.userName || '').trim() : '',
     reportGroups: [],
     hasReportData: false,
-    emptyMessage: '直近30日の商談記録はありません',
+    emptyMessage: normalizedSearchOptions.period === 'last_30_days'
+      ? '直近30日の商談記録はありません'
+      : '検索条件に一致する商談記録はありません',
     noticeMessage: '',
+    searchErrorMessage: '',
+    searchPeriod: normalizedSearchOptions.period,
+    searchStartDate: normalizedSearchOptions.startDate,
+    searchEndDate: normalizedSearchOptions.endDate,
+    searchKeyword: normalizedSearchOptions.keyword,
+    searchResultCount: 0,
     topPageLinkUrl: '',
   };
 
@@ -177,13 +281,15 @@ function createDailyPageModel_(validationOverride) {
   }
 
   try {
-    const reportResult = getMyDealRecords('daily', validation);
+    const reportResult = getMyDealRecords('daily', validation, normalizedSearchOptions);
     if (!reportResult || reportResult.success !== true) {
-      model.noticeMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '日報を表示できませんでした。');
+      model.searchErrorMessage = String(reportResult && reportResult.errorMessage ? reportResult.errorMessage : '検索条件を確認してください。');
       return model;
     }
 
-    model.reportGroups = groupDailyReportRecords_(Array.isArray(reportResult.records) ? reportResult.records : []);
+    const reportRecords = Array.isArray(reportResult.records) ? reportResult.records : [];
+    model.searchResultCount = reportRecords.length;
+    model.reportGroups = groupDailyReportRecords_(reportRecords);
     model.hasReportData = Array.isArray(model.reportGroups) && model.reportGroups.length > 0;
   } catch (error) {
     model.noticeMessage = String(error && error.message ? error.message : '日報を表示できませんでした。');
@@ -423,6 +529,10 @@ function isDailyViewerRole_(role) {
   return ['sales', 'sysadmin'].includes(String(role || '').trim());
 }
 
+function isTodoViewerRole_(role) {
+  return ['sales', 'sysadmin'].includes(String(role || '').trim());
+}
+
 function isManagerOrSalesSupportRole_(role) {
   return ['manager', 'sales_support'].includes(String(role || '').trim());
 }
@@ -437,6 +547,15 @@ function getRoleDailyReportUrl_(role) {
   }
 
   return getDailyReportUrl();
+}
+
+function getTodoPageUrl_() {
+  const baseUrl = String(ScriptApp.getService().getUrl() || '').trim();
+  if (!baseUrl) {
+    throw new Error('TODO画面URLを取得できませんでした。');
+  }
+
+  return `${baseUrl}?view=todo`;
 }
 
 function createValidationResult_(valid, userKey, userName, branchName, role, errorMessage) {

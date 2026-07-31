@@ -115,6 +115,79 @@
         font-weight: 700;
       }
 
+      .search-form {
+        display: grid;
+        gap: 12px;
+      }
+
+      .search-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .search-field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .search-field label {
+        color: var(--accent);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .search-field input,
+      .search-field select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 8px 10px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .search-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .search-button,
+      .clear-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        border-radius: 14px;
+        padding: 8px 12px;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .search-button {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .clear-button {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--accent);
+      }
+
+      .search-status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
       .summary-grid {
         display: grid;
         gap: 12px;
@@ -122,8 +195,8 @@
 
       .summary-card {
         display: grid;
-        gap: 10px;
-        padding: 13px 14px;
+        gap: 6px;
+        padding: 8px 10px;
         border-radius: 16px;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%);
@@ -132,8 +205,8 @@
       .summary-head {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 6px 10px;
-        align-items: start;
+        gap: 6px 8px;
+        align-items: center;
       }
 
       .summary-meta {
@@ -164,37 +237,56 @@
 
       .summary-grid-inner {
         display: grid;
-        gap: 10px;
+        gap: 4px;
       }
 
       .detail-grid {
         display: grid;
+        grid-template-columns: minmax(110px, 0.9fr) minmax(0, 2.8fr);
         gap: 8px;
+        align-items: center;
+      }
+
+      .summary-grid-inner > .detail-grid + .detail-grid,
+      .detail-grid > .detail-row:nth-child(n + 3) {
+        display: none;
       }
 
       .detail-row {
-        display: grid;
-        gap: 4px;
+        min-width: 0;
       }
 
       .detail-label {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.84rem;
-        font-weight: 800;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
       }
 
       .detail-value {
         margin: 0;
         color: var(--text);
-        font-size: 0.98rem;
-        line-height: 1.6;
+        font-size: 0.92rem;
+        line-height: 1.45;
         font-weight: 700;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         word-break: break-word;
       }
 
+      .detail-grid > .detail-row:first-child .detail-value {
+        color: var(--accent);
+        font-weight: 900;
+      }
+
       .detail-value--summary {
-        font-size: 0.99rem;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
       }
 
       .action-link {
@@ -202,14 +294,14 @@
         align-items: center;
         justify-content: center;
         justify-self: end;
-        min-width: 4.2rem;
-        min-height: 32px;
-        padding: 6px 10px;
+        min-width: 3.8rem;
+        min-height: 28px;
+        padding: 5px 9px;
         border-radius: 999px;
         background: linear-gradient(180deg, var(--accent-strong) 0%, #dd6e11 100%);
         color: #fff;
         text-decoration: none;
-        font-size: 0.84rem;
+        font-size: 0.8rem;
         line-height: 1;
         font-weight: 800;
         box-shadow: 0 12px 24px rgba(232, 122, 31, 0.20);
@@ -303,6 +395,14 @@
         h1 {
           font-size: 2.12rem;
         }
+
+        .search-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .search-field--keyword {
+          grid-column: span 2;
+        }
       }
 
       @media (max-width: 767px) {
@@ -327,7 +427,17 @@
         }
 
         .summary-card {
-          padding: 12px;
+          gap: 6px;
+          padding: 10px;
+        }
+
+        .detail-grid {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+
+        .detail-value--summary {
+          -webkit-line-clamp: 3;
         }
 
         .action-link {
@@ -350,7 +460,7 @@
         <section class="hero" aria-label="日報まとめの概要">
           <p class="eyebrow">管理職向け</p>
           <h1>営業AIメモ｜日報まとめ</h1>
-          <p class="subtext">当日0時から現在時刻までの商談記録を、閲覧権限に応じて表示します。</p>
+          <p class="subtext">期間・担当者・キーワードで、閲覧権限の範囲内の日報を検索できます。</p>
         </section>
 
         <? if (model.noticeMessage) { ?>
@@ -358,6 +468,55 @@
         <? } ?>
 
         <? if (!model.noticeMessage) { ?>
+          <section class="card" aria-label="日報検索">
+            <form class="search-form" method="get" action="<?= model.topPageLinkUrl ?>">
+              <input type="hidden" name="view" value="summary">
+              <div class="search-grid">
+                <div class="search-field">
+                  <label for="search-period">期間</label>
+                  <select id="search-period" name="period">
+                    <option value="today" <? if (model.searchPeriod === 'today') { ?>selected<? } ?>>今日</option>
+                    <option value="previous_day" <? if (model.searchPeriod === 'previous_day') { ?>selected<? } ?>>前日</option>
+                    <option value="last_7_days" <? if (model.searchPeriod === 'last_7_days') { ?>selected<? } ?>>過去7日</option>
+                    <option value="last_30_days" <? if (model.searchPeriod === 'last_30_days') { ?>selected<? } ?>>過去30日</option>
+                    <option value="custom" <? if (model.searchPeriod === 'custom') { ?>selected<? } ?>>期間指定</option>
+                  </select>
+                </div>
+                <div class="search-field">
+                  <label for="search-staff">担当者</label>
+                  <select id="search-staff" name="staff_name">
+                    <option value="">全担当者</option>
+                    <? for (var staffIndex = 0; staffIndex < model.searchStaffOptions.length; staffIndex++) { ?>
+                      <? var staff = model.searchStaffOptions[staffIndex]; ?>
+                      <option value="<?= staff.userName ?>" <? if (model.searchStaffName === staff.userName) { ?>selected<? } ?>><?= staff.userName ?></option>
+                    <? } ?>
+                  </select>
+                </div>
+                <div class="search-field">
+                  <label for="search-start-date">開始日（期間指定時）</label>
+                  <input id="search-start-date" name="start_date" type="date" value="<?= model.searchStartDate ?>">
+                </div>
+                <div class="search-field">
+                  <label for="search-end-date">終了日（期間指定時）</label>
+                  <input id="search-end-date" name="end_date" type="date" value="<?= model.searchEndDate ?>">
+                </div>
+                <div class="search-field search-field--keyword">
+                  <label for="search-keyword">キーワード（顧客名・案件テーマ・商談内容・追記内容）</label>
+                  <input id="search-keyword" name="keyword" type="search" value="<?= model.searchKeyword ?>" placeholder="キーワードを入力">
+                </div>
+              </div>
+              <div class="search-actions">
+                <button class="search-button" type="submit">検索</button>
+                <a class="clear-button" href="<?= model.topPageLinkUrl ?>?view=summary">条件クリア</a>
+              </div>
+            </form>
+            <? if (model.searchErrorMessage) { ?>
+              <p class="notice notice--error" aria-live="assertive"><?= model.searchErrorMessage ?></p>
+            <? } else { ?>
+              <p class="search-status" aria-live="polite">検索結果：<?= model.searchResultCount ?>件</p>
+            <? } ?>
+          </section>
+
           <section class="card" aria-live="polite">
             <p class="eyebrow" style="color: var(--accent);"><?= model.currentDateLabel ?></p>
             <p class="detail-label">閲覧範囲の商談記録</p>
