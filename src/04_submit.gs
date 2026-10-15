@@ -129,6 +129,7 @@ function submitMemo(payload) {
         dealContent: '',
         todoItem: '',
         todoDeadline: '',
+        recordType: 'normal',
         extractStatus: '要確認',
       }];
 
@@ -146,6 +147,29 @@ function submitMemo(payload) {
     longitude,
     userKey,
   }));
+
+  const missingSaFields = getMissingSaRequestFields_(sourceRecords);
+  if (missingSaFields.length) {
+    const followupMessage = `SA案件の確認：${missingSaFields.map((field) => `「${field}」`).join('、')}を追加してください。単語・短文で構いません。`;
+    return {
+      success: true,
+      requiresSaFollowup: true,
+      needsClarification: true,
+      saMissingFields: missingSaFields,
+      clarificationFields: missingSaFields,
+      followupMessage,
+      clarificationQuestion: followupMessage,
+      recordCount: 0,
+      records: [],
+    };
+  }
+
+  if (records.some((record) => record.recordType === 'sa_case' && !/^SA案件｜.+/.test(record.dealTheme))) {
+    return {
+      success: false,
+      errorMessage: 'SA案件の案件テーマを特定できませんでした。入力内容を確認して再送してください。',
+    };
+  }
 
   try {
     writeRecordsToSheet(records);
@@ -206,12 +230,15 @@ function normalizeSubmitMemoRecord_(record, metadata) {
   const visitStoreId = String(metadata.visitStoreId || '').trim();
   const inputMethod = String(metadata.inputMethod || '').trim();
   const extractStatus = String(sourceRecord.extractStatus ?? sourceRecord.extract_status ?? '').trim() || (dealTheme && dealContent ? 'OK' : '要確認');
+  const recordType = normalizeSubmitMemoRecordType_(sourceRecord.recordType ?? sourceRecord.record_type);
+  const normalizedDealTheme = formatDealThemeForRecord_(dealTheme, recordType, dealContent);
 
   return {
     customerName,
     customerType,
-    dealTheme,
+    dealTheme: normalizedDealTheme,
     dealContent,
+    recordType,
     todoItem,
     todoDeadline,
     extractStatus,
@@ -229,6 +256,64 @@ function normalizeSubmitMemoRecord_(record, metadata) {
     inputMethod,
     userKey: String(metadata.userKey || '').trim(),
   };
+}
+
+function getMissingSaRequestFields_(records) {
+  const fields = [
+    ['saRecipient', '誰に'], ['saSubject', '何を'], ['saRequestType', '依頼の種類'],
+    ['saDecidedInfo', '決まっていること'], ['saDeadline', 'いつまで'],
+  ];
+  const missing = new Set();
+  records.forEach((record) => {
+    if (normalizeSubmitMemoRecordType_(record.recordType ?? record.record_type) !== 'sa_case') return;
+    fields.forEach(([key, label]) => {
+      const value = String(record[key] || '').trim();
+      const explicitlyNone = value === '特になし';
+      if (!explicitlyNone && (!value || value === '不明' || value === '未定')) missing.add(label);
+    });
+  });
+  return fields.map(([, label]) => label).filter((label) => missing.has(label));
+}
+
+function normalizeSubmitMemoRecordType_(recordType) {
+  const normalized = String(recordType || '').trim();
+  return ['normal', 'issue', 'sa_case'].includes(normalized) ? normalized : 'normal';
+}
+
+function formatDealThemeForRecord_(dealTheme, recordType, dealContent) {
+  const titleParts = String(dealTheme || '').trim().split('｜')
+    .map((part) => part.trim())
+    .filter((part) => part && part !== '課題' && part !== 'SA案件');
+  const cleanTheme = titleParts.join('｜');
+  const label = recordType === 'issue' ? '課題' : (recordType === 'sa_case' ? 'SA案件' : '');
+  if (recordType === 'sa_case') {
+    const saTheme = cleanTheme || inferSaCaseThemeFromContent_(dealContent);
+    return saTheme ? `SA案件｜${saTheme}` : '';
+  }
+  return label ? (cleanTheme ? `${label}｜${cleanTheme}` : label) : cleanTheme;
+}
+
+function inferSaCaseThemeFromContent_(dealContent) {
+  const content = String(dealContent || '').replace(/[\r\n]+/g, ' ').trim();
+  if (!content) return '';
+
+  const actionMatch = content.match(/(.+?)(?:を)(作って|作成して|作成|作る|用意して|準備して|送って|送付して|手配して|調べて|確認して)/);
+  if (actionMatch) {
+    const subject = String(actionMatch[1] || '').split(/[にへ]/).pop().split('の').pop().trim();
+    const verb = actionMatch[2];
+    const action = /作って|作成|作る/.test(verb) ? '作成'
+      : (/送って|送付/.test(verb) ? '送付'
+        : (/手配/.test(verb) ? '手配'
+          : (/用意|準備/.test(verb) ? '準備' : '確認')));
+    if (subject) return `${subject}${action}`;
+  }
+
+  if (/価格表/.test(content)) return '価格表作成';
+  if (/見積(?:書)?/.test(content)) return '見積作成';
+  if (/提案書/.test(content)) return '提案書作成';
+  if (/資料/.test(content)) return '資料作成';
+  if (/サンプル/.test(content)) return 'サンプル手配';
+  return content.replace(/[。.!！?？]+$/g, '').slice(0, 24).trim();
 }
 
 function resolveCustomerStore(payload) {
