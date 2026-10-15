@@ -271,6 +271,18 @@
         outline: none;
       }
       .textarea { min-height: 180px; max-height: 260px; overflow: auto; }
+      .sa-followup-notice {
+        display: grid;
+        gap: 2px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff7e9;
+        color: #70420d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .sa-followup-notice strong { font-size: 0.9rem; }
       .text-input { min-height: 48px; }
       .textarea:focus, .text-input:focus { border-color: #98b3cb; box-shadow: 0 0 0 4px rgba(26, 58, 92, 0.12); }
       .textarea::placeholder, .text-input::placeholder { color: #8795a6; }
@@ -346,6 +358,10 @@
           </div>
           <div class="field">
             <label class="field-label" for="memoInput">確認・修正する文章</label>
+            <div id="saFollowupNotice" class="sa-followup-notice hidden" role="status" aria-live="polite">
+              <strong>SA案件の確認</strong>
+              <span id="saFollowupMessage"></span>
+            </div>
             <textarea id="memoInput" class="textarea" placeholder="認識した内容が末尾へ追記されます。"></textarea>
           </div>
           <p id="unsentNotice" class="notice notice--subtle hidden">前回入力した文章が残っています。内容を確認して送信してください。</p>
@@ -459,6 +475,8 @@
         sendStatus: document.getElementById('sendStatus'),
         unsentNotice: document.getElementById('unsentNotice'),
         sendFeedback: document.getElementById('sendFeedback'),
+        saFollowupNotice: document.getElementById('saFollowupNotice'),
+        saFollowupMessage: document.getElementById('saFollowupMessage'),
         gpsStatus: document.getElementById('gpsStatus'),
         candidateStatus: document.getElementById('candidateStatus'),
         searchStatus: document.getElementById('searchStatus'),
@@ -602,6 +620,15 @@
       function clearSendFeedback() {
         elements.sendFeedback.textContent = '';
         elements.sendFeedback.classList.add('hidden');
+      }
+      function showSaFollowupMessage(payload) {
+        const message = safeString(payload && (payload.followupMessage || payload.clarificationQuestion)).trim();
+        elements.saFollowupMessage.textContent = message || '不足している項目だけ、入力欄の末尾へ追加してください。単語・短文で構いません。';
+        elements.saFollowupNotice.classList.remove('hidden');
+      }
+      function clearSaFollowupMessage() {
+        elements.saFollowupMessage.textContent = '';
+        elements.saFollowupNotice.classList.add('hidden');
       }
       function setViewMode(mode) {
         const isCompleted = mode === 'complete';
@@ -1100,6 +1127,7 @@
         const inputMethod = safeString(payload && payload.inputMethod).trim() || state.inputMethod;
         const recordLines = records.map((record, index) => formatRecordLine(record, index + 1));
         elements.memoInput.value = '';
+        clearSaFollowupMessage();
         elements.storeManualInput.value = '';
         state.nearby.selectedId = '';
         state.search.selectedId = '';
@@ -1192,6 +1220,9 @@
         }
         const latitude = state.inputMethod === '訪問' && state.gps.status === 'success' ? state.gps.latitude : '';
         const longitude = state.inputMethod === '訪問' && state.gps.status === 'success' ? state.gps.longitude : '';
+        sendMemoText(inputText, resolvedStore, latitude, longitude);
+      }
+      function sendMemoText(inputText, resolvedStore, latitude, longitude) {
         saveUnsentText(inputText);
         setSendingMode(true);
         clearSendFeedback();
@@ -1205,6 +1236,19 @@
           latitude,
           longitude,
         }).then((payload) => {
+          if (payload.requiresSaFollowup === true || payload.needsClarification === true) {
+            showSaFollowupMessage(payload);
+            saveUnsentText(inputText);
+            setStatus(elements.sendStatus, '追加回答が必要です。入力内容は保存されていません。', '');
+            elements.memoInput.focus();
+            elements.memoInput.setSelectionRange(elements.memoInput.value.length, elements.memoInput.value.length);
+            return;
+          }
+          const savedRecordCount = Number(payload && payload.recordCount);
+          if (!Number.isFinite(savedRecordCount) || savedRecordCount <= 0) {
+            renderFailure('保存件数を確認できませんでした。入力内容は保持されています。');
+            return;
+          }
           clearUnsentTextAfterWriteSuccess();
           renderSuccess(payload);
         }).catch((error) => {
