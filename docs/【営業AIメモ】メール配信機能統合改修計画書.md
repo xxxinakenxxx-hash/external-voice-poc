@@ -81,3 +81,31 @@
 - 2026-11-04までのユーザーとのメール配信改修設計合意（本書3章に反映）
 
 改訂履歴：2026-11-04 初版。同日、工程をMAIL-00～MAIL-03の4工程に修正し、MAIL-00で本人ToDo権限の現状確認後に関連文書を改訂する方針を追加。
+
+
+---
+
+## MAIL-00現行調査反映（2026-11-04）
+
+### 確認済み事実
+
+- 本番Spreadsheet「営業AIメモ_DB」の `user_master` で、関東販売は23名です。内訳は `sales` 12名、`manager` 6名、`president` 2名で、23名全員が `active_flag=有効` です。これはメール配信対象者数ではなく、所属者数です。
+- 本番 `output_config` は、`morning_enabled=TRUE`、`morning_send_hour=7`、`weekly_enabled=TRUE`、`weekly_send_day=1`、`weekly_send_hour=8`、`manager_summary_enabled=TRUE`、`daily_report_enabled=TRUE` です。設定値の存在は確認できますが、トリガー登録を意味しません。
+- 現行ローカルの `src/09_morning_brief.gs` は `runMorningBriefing` から `active_flag=有効` かつ `role=sales` のみを抽出します。したがって、現行ローカル実装上、manager/presidentは朝メール対象外です。
+- 現行ローカルの `src/06_output.gs` には `triggerDailyReport`、`triggerWeeklyReport`、管理職向けメール送信処理があります。一方、GitHub `main` の `src/06_output.gs` は旧Chat通知系で、ローカルのメール実装とは一致しません。GitHub `main` には `src/09_morning_brief.gs` が存在しません。
+- 本番 `todo_tasks` には関東販売のpresident 2名のうち、`mita@marubishi-group.co.jp` に本人TODO 1件があります。`hongo2751@marubishi-group.co.jp` の行は確認できません。
+
+### MAIL-01以降への反映方針
+
+朝メールの対象役職拡張は未実装であり、MAIL-01で対象抽出・本文生成・配下営業担当の集計範囲を確定してから実施します。本調査では役職対象を変更しません。
+
+本番の関東販売所属者数23名と、現行ローカル朝メール対象sales 12名は別の数値です。今後の配信実績確認では、所属者数と実際の対象者数を分けて記録します。
+
+### 出典と未確認
+
+- 本番データ出典：Spreadsheet「営業AIメモ_DB」の `user_master`、`output_config`、`todo_tasks`（2026-11-04読み取り）。
+- ソース出典：ローカル `src/09_morning_brief.gs`、`src/06_output.gs`、GitHub `main` の同名ファイル。
+- GitHub `main` と本番GASの一致、ローカル未コミット差分の本番反映時期、実際の受信完了は未確認です。
+- `MailApp.sendEmail` の成功記録は受信箱到達の証拠ではありません。
+
+
